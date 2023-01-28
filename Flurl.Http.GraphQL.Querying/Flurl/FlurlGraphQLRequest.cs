@@ -101,7 +101,7 @@ namespace Flurl.Http.GraphQL.Querying
                 completionOption: HttpCompletionOption.ResponseContentRead
             ).ConfigureAwait(false);
 
-            return new FlurlGraphQLResponse(response, graphqlQuery);
+            return new FlurlGraphQLResponse(response, this);
         }
         #endregion
 

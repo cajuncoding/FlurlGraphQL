@@ -2,10 +2,10 @@
 
 namespace Flurl.Http.GraphQL.Querying
 {
-    //TODO: EXTRACT GraphQLQueryCollectionSegmentResult to Interface!!!
-    public class GraphQLQueryCollectionSegmentResult<TResult> : GraphQLQueryPaginatedResult<TResult, GraphQLOffsetPageInfo>
+    public class GraphQLQueryCollectionSegmentResult<TResult> : GraphQLQueryPaginatedResult<TResult, IGraphQLOffsetPageInfo>, IGraphQLQueryCollectionSegmentResult<TResult> 
+        where TResult : class
     {
-        public GraphQLQueryCollectionSegmentResult(IList<TResult> results, int? totalCount = null, GraphQLOffsetPageInfo cursorPageInfo = null)
+        public GraphQLQueryCollectionSegmentResult(IList<TResult> results, int? totalCount = null, IGraphQLOffsetPageInfo cursorPageInfo = null)
             : base(results, totalCount, cursorPageInfo)
         {
         }

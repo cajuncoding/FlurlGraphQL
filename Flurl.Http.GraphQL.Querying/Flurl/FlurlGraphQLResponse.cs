@@ -10,14 +10,17 @@ namespace Flurl.Http.GraphQL.Querying
     public class FlurlGraphQLResponse : IFlurlResponse
     {
         protected IFlurlResponse BaseFlurlResponse { get; set; }
-
-        public FlurlGraphQLResponse(IFlurlResponse response, string originalGraphQLQuery)
-        {
-            BaseFlurlResponse = response.AssertArgIsNotNull(nameof(response));
-            GraphQLQuery = originalGraphQLQuery.AssertArgIsNotNullOrBlank(nameof(originalGraphQLQuery));
-        }
+        
+        public FlurlGraphQLRequest OriginalGraphQLRequest { get; protected set; }
 
         public string GraphQLQuery { get; }
+
+        public FlurlGraphQLResponse(IFlurlResponse response, FlurlGraphQLRequest originalGraphQLRequest)
+        {
+            BaseFlurlResponse = response.AssertArgIsNotNull(nameof(response));
+            OriginalGraphQLRequest = originalGraphQLRequest.AssertArgIsNotNull(nameof(originalGraphQLRequest));
+            GraphQLQuery = originalGraphQLRequest.GraphQLQuery;
+        }
 
         #region IFlurlResponse Implementation
 

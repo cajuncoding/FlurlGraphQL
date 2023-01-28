@@ -10,8 +10,8 @@ namespace Flurl.Http.GraphQL.Querying
     /// </summary>
     /// <typeparam name="TResult"></typeparam>
     /// <typeparam name="TPageInfo"></typeparam>
-    //TODO: EXTRACT GraphQLQueryPaginatedResult to Interface!!!
-    public class GraphQLQueryPaginatedResult<TResult, TPageInfo> : GraphQLQueryResults<TResult>
+    public class GraphQLQueryPaginatedResult<TResult, TPageInfo> : GraphQLQueryResults<TResult>, IGraphQLQueryPaginatedResult<TResult, TPageInfo> 
+        where TResult : class
         where TPageInfo : class
     {
         public GraphQLQueryPaginatedResult(IList<TResult> results, int? totalCount = null, TPageInfo cursorPageInfo = null)
