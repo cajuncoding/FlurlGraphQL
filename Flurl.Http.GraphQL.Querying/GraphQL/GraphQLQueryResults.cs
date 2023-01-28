@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
+using Flurl.Http.GraphQL.Querying;
 
 namespace Flurl.Http.GraphQL.Querying
 {

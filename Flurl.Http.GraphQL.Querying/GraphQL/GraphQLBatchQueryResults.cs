@@ -121,7 +121,7 @@ namespace Flurl.Http.GraphQL.Querying
         {
             return results is IGraphQLQueryConnectionResult<TResult> connectionResults
                 ? connectionResults
-                : new GraphQLQueryConnectionResult<TResult>(results.ToList(), results.TotalCount);
+                : new GraphQLQueryConnectionResult<TResult>(results.GetResultsInternal(), results.TotalCount);
         }
 
         /// <summary>
@@ -152,14 +152,14 @@ namespace Flurl.Http.GraphQL.Querying
         private IGraphQLQueryCollectionSegmentResult<TResult> ToCollectionSegmentResultsInternal<TResult>(IGraphQLQueryConnectionResult<TResult> connectionResults) 
             where TResult : class
         {
-            if (!(connectionResults is GraphQLQueryConnectionResult<TResult> validConnectionResults)) 
+            if(connectionResults == null)
                 return null;
 
-            var pageInfo = validConnectionResults.PageInfo;
+            var pageInfo = connectionResults.PageInfo;
 
             return new GraphQLQueryCollectionSegmentResult<TResult>(
-                validConnectionResults.GetResultsInternal(),
-                validConnectionResults.TotalCount,
+                connectionResults.GetResultsInternal(),
+                connectionResults.TotalCount,
                 new GraphQLOffsetPageInfo(hasNextPage: pageInfo?.HasNextPage, hasPreviousPage: pageInfo?.HasPreviousPage)
             );
         }
