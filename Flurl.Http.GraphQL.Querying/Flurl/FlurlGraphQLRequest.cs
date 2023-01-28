@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,7 +8,7 @@ using Flurl.Util;
 
 namespace Flurl.Http.GraphQL.Querying
 {
-    public class FlurlGraphQLRequest : IFlurlRequest
+    public class FlurlGraphQLRequest : IFlurlGraphQLRequest
     {
         protected IFlurlRequest BaseFlurlRequest { get; set; }
         internal FlurlGraphQLRequest(IFlurlRequest baseRequest)
@@ -21,10 +20,10 @@ namespace Flurl.Http.GraphQL.Querying
 
         public Dictionary<string, object> GraphQLVariables { get; protected set; } = new Dictionary<string, object>();
 
-        public IFlurlRequest SetGraphQLVariables(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        public IFlurlGraphQLRequest SetGraphQLVariables(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
             => SetGraphQLVariables(variables.ToKeyValuePairs(), nullValueHandling);
         
-        public IFlurlRequest SetGraphQLVariables(IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        public IFlurlGraphQLRequest SetGraphQLVariables(IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
         {
             if (variables == null) return this;
 
@@ -35,7 +34,7 @@ namespace Flurl.Http.GraphQL.Querying
             return this;
         }
 
-        public IFlurlRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        public IFlurlGraphQLRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove)
         {
             if (name == null) return this;
 
@@ -47,20 +46,27 @@ namespace Flurl.Http.GraphQL.Querying
             return this;
         }
 
-        public IFlurlRequest RemoveGraphQLVariable(string name)
+        public IFlurlGraphQLRequest RemoveGraphQLVariable(string name)
         {
             if (name == null) return this;
 
             GraphQLVariables.Remove(name);
             return this;
         }
+
+        public IFlurlGraphQLRequest ClearGraphQLVariables()
+        {
+            GraphQLVariables.Clear();
+            return this;
+        }
+
         #endregion
 
         #region GraphQL Query Param/Body
 
         public string GraphQLQuery { get; protected set; } = null;
 
-        public FlurlGraphQLRequest WithGraphQLQuery(string query, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        public IFlurlGraphQLRequest WithGraphQLQuery(string query, NullValueHandling nullValueHandling = NullValueHandling.Remove)
         {
             if (query != null || nullValueHandling == NullValueHandling.Remove)
                 GraphQLQuery = query;
@@ -68,7 +74,7 @@ namespace Flurl.Http.GraphQL.Querying
             return this;
         }
 
-        public FlurlGraphQLRequest ClearGraphQLQuery()
+        public IFlurlGraphQLRequest ClearGraphQLQuery()
         {
             GraphQLQuery = null;
             return this;
@@ -78,7 +84,7 @@ namespace Flurl.Http.GraphQL.Querying
 
         #region GraphQL Query Execution with Server
 
-        public async Task<IFlurlResponse> PostGraphQLQueryAsync<TVariables>(TVariables variables, CancellationToken cancellationToken = default, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        public async Task<IFlurlGraphQLResponse> PostGraphQLQueryAsync<TVariables>(TVariables variables, CancellationToken cancellationToken = default, NullValueHandling nullValueHandling = NullValueHandling.Remove)
             where TVariables : class
         {
             var graphqlQuery = this.GraphQLQuery;
@@ -103,6 +109,7 @@ namespace Flurl.Http.GraphQL.Querying
 
             return new FlurlGraphQLResponse(response, this);
         }
+
         #endregion
 
         #region IFlurlRequest Interface Implementations

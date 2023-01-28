@@ -30,7 +30,7 @@ namespace Flurl.Http.GraphQL.Querying
             if (_cachedParsedResults is IGraphQLQueryResults<TResult> typedResult)
                 return typedResult;
 
-            var parsedResult = ResultJson.ConvertToGraphQLResultsInternal<TResult>();
+            var parsedResult = ResultJson.ParseJsonToGraphQLResultsInternal<TResult>();
             _cachedParsedResults = parsedResult;
             
             return parsedResult;
@@ -50,9 +50,23 @@ namespace Flurl.Http.GraphQL.Querying
         internal GraphQLBatchQueryResults(IReadOnlyList<GraphQLQueryOperationResult> queryOperationResults)
         {
             _queryOperationResults = queryOperationResults ?? new List<GraphQLQueryOperationResult>().AsReadOnly();
-            _queryOperationResultLookup = _queryOperationResults.ToLookup(r => r.OperationName, r => r);
+            
+            _queryOperationResultLookup = _queryOperationResults.ToLookup(
+                r => r.OperationName, 
+                r => r, 
+                StringComparer.OrdinalIgnoreCase
+            );
         }
 
+        /// <summary>
+        /// Simply gets the typed results for the GraphQL query in the batch by it's ordinal index (first query is 0).
+        /// If the query in the batch has pagination or other extended data such as total count, this will not return those details.
+        /// For that information from a Connection or CollectionSegment use one of the other specific methods such as GetConnectionResults() or GetCollectionSegmentResults() respectively.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         public IGraphQLQueryResults<TResult> GetResults<TResult>(int index) where TResult : class
         {
             if(index < 0 || index > (_queryOperationResults.Count - 1))
@@ -62,6 +76,14 @@ namespace Flurl.Http.GraphQL.Querying
             return parsedResults;
         }
 
+        /// <summary>
+        /// Simply gets the typed results for the GraphQL query in the batch by it's operationName (case insensitive).
+        /// If the query in the batch has pagination or other extended data such as total count, this will not return those details.
+        /// For that information from a Connection or CollectionSegment use one of the other specific methods such as GetConnectionResults() or GetCollectionSegmentResults() respectively.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="operationName"></param>
+        /// <returns></returns>
         public IGraphQLQueryResults<TResult> GetResults<TResult>(string operationName) where TResult : class
         {
             operationName.AssertArgIsNotNullOrBlank(nameof(operationName));
@@ -74,8 +96,9 @@ namespace Flurl.Http.GraphQL.Querying
         }
 
         /// <summary>
-        /// Gets the results along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
-        /// This assumes that the query used Cursor Pagination on a GraphQL Connection Operation compatible with the formalized Relay specification for Cursor Paging.
+        /// Gets the results for the batch query by its ordinal index (first query is 0), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
+        /// This assumes that the query used Cursor Pagination on a GraphQL Connection operation compatible with the formalized Relay specification for Cursor Paging.
+        /// See: https://relay.dev/graphql/connections.htm
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="index"></param>
@@ -84,8 +107,9 @@ namespace Flurl.Http.GraphQL.Querying
             => GetResults<TResult>(index) as IGraphQLQueryConnectionResult<TResult>;
 
         /// <summary>
-        /// Gets the results along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
-        /// This assumes that the query used Cursor Pagination on a GraphQL Connection Operation compatible with the formalized Relay specification for Cursor Paging.
+        /// Gets the results for the batch query by its operationName (case insensitive), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
+        /// This assumes that the query used Cursor Pagination on a GraphQL Connection operation compatible with the formalized Relay specification for Cursor Paging.
+        /// See: https://relay.dev/graphql/connections.htm
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="operationName"></param>
@@ -95,8 +119,8 @@ namespace Flurl.Http.GraphQL.Querying
 
 
         /// <summary>
-        /// Gets the results along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
-        /// This assumes that the query used Offset Pagination on a GraphQL CollectionSegment Operation compatible with the HotChocolate GraphQL specification for offset paging.
+        /// Gets the results for the batch query by its ordinal index (first query is 0), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
+        /// This assumes that the query used Offset Pagination on a GraphQL CollectionSegment operation compatible with the HotChocolate GraphQL specification for offset paging.
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="index"></param>
@@ -110,8 +134,8 @@ namespace Flurl.Http.GraphQL.Querying
         }
 
         /// <summary>
-        /// Gets the results along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
-        /// This assumes that the query used Offset Pagination on a GraphQL CollectionSegment Operation compatible with the HotChocolate GraphQL specification for offset paging.
+        /// Gets the results for the batch query by its operationName (case insensitive), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
+        /// This assumes that the query used Offset Pagination on a GraphQL CollectionSegment operation compatible with the HotChocolate GraphQL specification for offset paging.
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="operationName"></param>

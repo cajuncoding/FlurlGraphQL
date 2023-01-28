@@ -7,20 +7,20 @@ using Flurl.Util;
 
 namespace Flurl.Http.GraphQL.Querying
 {
-    public class FlurlGraphQLResponse : IFlurlResponse
+    public class FlurlGraphQLResponse : IFlurlGraphQLResponse
     {
-        protected IFlurlResponse BaseFlurlResponse { get; set; }
-        
-        public FlurlGraphQLRequest OriginalGraphQLRequest { get; protected set; }
-
-        public string GraphQLQuery { get; }
-
         public FlurlGraphQLResponse(IFlurlResponse response, FlurlGraphQLRequest originalGraphQLRequest)
         {
             BaseFlurlResponse = response.AssertArgIsNotNull(nameof(response));
             OriginalGraphQLRequest = originalGraphQLRequest.AssertArgIsNotNull(nameof(originalGraphQLRequest));
             GraphQLQuery = originalGraphQLRequest.GraphQLQuery;
         }
+
+        protected IFlurlResponse BaseFlurlResponse { get; set; }
+        
+        public IFlurlGraphQLRequest OriginalGraphQLRequest { get; protected set; }
+
+        public string GraphQLQuery { get; }
 
         #region IFlurlResponse Implementation
 

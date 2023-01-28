@@ -1,17 +1,24 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Net;
 using System.Threading;
 
 namespace Flurl.Http.GraphQL.Querying
 {
     public static partial class FlurlGraphQLResponseExtensions
     {
-        public static async Task<IGraphQLQueryResults<TResult>> ReceiveGraphQLQueryResults<TResult>(this Task<IFlurlResponse> responseTask, string queryOperationName = null)
+        /// <summary>
+        /// Processes/parses the results of the GraphQL query execution into a simple set of results ready for processing.
+        /// This assumes that the Query did not include paging details or other extension data such as total count, etc.
+        /// This will return the results of the first query if more than one are specified unless an operationName is provided which will then get those results.
+        /// However, if you are executing multiple queries then you should likely be using the ReceiveGraphQLBatchQueryResults() instead.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="responseTask"></param>
+        /// <param name="queryOperationName"></param>
+        /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
+        public static async Task<IGraphQLQueryResults<TResult>> ReceiveGraphQLQueryResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
              where TResult : class
         {
             return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
@@ -22,7 +29,16 @@ namespace Flurl.Http.GraphQL.Querying
             }).ConfigureAwait(false);
         }
 
-        public static async Task<IGraphQLQueryConnectionResult<TResult>> ReceiveGraphQLQueryConnectionResults<TResult>(this Task<IFlurlResponse> responseTask, string queryOperationName = null)
+        /// <summary>
+        /// Processes/parses the results of the GraphQL query execution into the typed results along with associated cursor paging details as defined in the GraphQL Spec for Connections.
+        /// This assumes that the query used Cursor Pagination on a GraphQL Connection operation compatible with the formalized Relay specification for Cursor Paging.
+        /// See: https://relay.dev/graphql/connections.htm
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="responseTask"></param>
+        /// <param name="queryOperationName"></param>
+        /// <returns>Returns an IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
+        public static async Task<IGraphQLQueryConnectionResult<TResult>> ReceiveGraphQLQueryConnectionResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
             where TResult : class
         {
             var graphqlResults = await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false);
@@ -30,22 +46,27 @@ namespace Flurl.Http.GraphQL.Querying
         }
 
         /// <summary>
-        /// Receives all data paginated as an IEnumerable that you can iterate over each resulting Page.
-        /// This uses the formalized Relay spec for Connection pagination: https://relay.dev/graphql/connections.htm
+        /// This will automatically iterate to retrieve ALL possible page results using the GraphQL query. It will return a list of pages containing the typed results
+        /// along with associated cursor paging details as defined in the GraphQL Spec for Connections.
+        /// The GraphQL query MUST support the (after: $after) variable, and return pageInfo.hasNextPage & pageInfo.endCursor in the results!
+        /// This query will block and load all data into memory. If you are looking to stream data you should use the ReceiveGraphQLQueryConnectionPagesAsyncEnumerable()
+        /// method that returns an IAsyncEnumerable to support streaming; but it is only available in .NET Standard 2.1 and later.
+        /// This assumes that the query used Cursor Pagination on a GraphQL Connection operation compatible with the formalized Relay specification for Cursor Paging.
+        /// See: https://relay.dev/graphql/connections.htm
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="responseTask"></param>
         /// <param name="queryOperationName"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Returns a List of ALL IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
         public static async Task<IList<IGraphQLQueryConnectionResult<TResult>>> ReceiveAllGraphQLQueryConnectionPages<TResult>(
-            this Task<IFlurlResponse> responseTask, 
+            this Task<IFlurlGraphQLResponse> responseTask, 
             string queryOperationName = null, 
             CancellationToken cancellationToken = default
         ) where TResult : class
         {
             var pageResultsList = new List<IGraphQLQueryConnectionResult<TResult>>();
-            Task<IFlurlResponse> iterationResponseTask = responseTask;
+            Task<IFlurlGraphQLResponse> iterationResponseTask = responseTask;
             //Track our EndCursor to prevent infinite loops due to incorrect query; will be validated.
             string priorEndCursor = null;
 
@@ -83,7 +104,14 @@ namespace Flurl.Http.GraphQL.Querying
             return pageResultsList;
         }
 
-        public static async Task<IGraphQLBatchQueryResults> ReceiveGraphQLBatchQueryResults(this Task<IFlurlResponse> responseTask)
+        /// <summary>
+        /// Processes/parses the results of multiple GraphQL queries, executed as a single request batch, into the typed results that can then be retrieved
+        /// by the query index or query operation Name (case insensitive). Each query is unique in that it likely returns different Types, may be
+        /// paginated, etc. The IGraphQLBatchQueryResults provides methods to then retrieve and parse the results of each query as needed.
+        /// </summary>
+        /// <param name="responseTask"></param>
+        /// <returns>Returns an IGraphQLBatchQueryResults container that allows retrieval and handling of each query by it's index or operation name.</returns>
+        public static async Task<IGraphQLBatchQueryResults> ReceiveGraphQLBatchQueryResults(this Task<IFlurlGraphQLResponse> responseTask)
         {
             return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
             {

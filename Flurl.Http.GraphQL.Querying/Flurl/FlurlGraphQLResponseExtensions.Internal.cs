@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
-using Flurl.Util;
 
 namespace Flurl.Http.GraphQL.Querying
 {
@@ -40,7 +39,7 @@ namespace Flurl.Http.GraphQL.Querying
             => throw new FlurlGraphQLException(message, flurlGraphQLResponse.GraphQLQuery, responsePayload, (HttpStatusCode)flurlGraphQLResponse.StatusCode);
 
         internal static async Task<TGraphQLResult> ProcessResponsePayloadInternalAsync<TGraphQLResult>(
-            this Task<IFlurlResponse> responseTask, 
+            this Task<IFlurlGraphQLResponse> responseTask, 
             Func<FlurlGraphQLResponsePayload, FlurlGraphQLResponse, TGraphQLResult> payloadHandlerFunc
         )
         {
@@ -65,7 +64,7 @@ namespace Flurl.Http.GraphQL.Querying
             }
         }
 
-        internal static IGraphQLQueryResults<TResult> ConvertToGraphQLResultsInternal<TResult>(this JToken json)
+        internal static IGraphQLQueryResults<TResult> ParseJsonToGraphQLResultsInternal<TResult>(this JToken json)
             where TResult : class
         {
             if (json == null)
