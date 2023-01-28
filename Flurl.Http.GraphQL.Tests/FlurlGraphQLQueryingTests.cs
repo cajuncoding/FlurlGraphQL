@@ -190,6 +190,89 @@ namespace Flurl.Http.GraphQL.Tests
         }
 
         [TestMethod]
+        public async Task TestSingleQueryOffsetPagingResultsAsync()
+        {
+            var results = await GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query($skip:Int, $take:Int) {
+                      charactersWithOffsetPaging(skip: $skip, take: $take) {
+		                totalCount
+                        pageInfo {
+                          hasNextPage
+                          hasPreviousPage
+                        }
+                        items {
+                          personalIdentifier
+                          name
+			              height
+                        }
+                      }
+                    }
+                ")
+                .SetGraphQLVariables(new { skip = 0, take = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLQueryCollectionSegmentResults<StarWarsCharacter>()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(results);
+            Assert.IsTrue(results is IGraphQLQueryCollectionSegmentResult<StarWarsCharacter>);
+            Assert.IsTrue(results.Count > 0);
+
+            Assert.IsNotNull(results.TotalCount);
+            Assert.IsTrue(results.TotalCount > results.Count);
+            Assert.IsNotNull(results.PageInfo);
+            Assert.IsTrue(results.PageInfo.HasNextPage);
+            Assert.IsFalse(results.PageInfo.HasPreviousPage);
+
+            var char1 = results[0];
+            Assert.IsNotNull(char1);
+
+            var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        [TestMethod]
+        public async Task TestOffsetPagingRetrieveAllPagesAsync()
+        {
+            var allResultPages = await GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query($skip:Int, $take:Int) {
+                      charactersWithOffsetPaging(skip: $skip, take: $take) {
+		                pageInfo {
+                          hasNextPage
+                        }
+                        items {
+                          personalIdentifier
+                          name
+			              height
+                        }
+                      }
+                    }
+                ")
+                .SetGraphQLVariables(new { skip = 0, take = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveAllGraphQLQueryCollectionSegmentPages<StarWarsCharacter>()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(allResultPages);
+            Assert.IsTrue(allResultPages is IList<IGraphQLQueryCollectionSegmentResult<StarWarsCharacter>>);
+            Assert.IsTrue(allResultPages.Count > 0);
+
+            foreach (var page in allResultPages)
+            {
+                Assert.IsNotNull(page);
+                Assert.IsTrue(page.HasAnyResults());
+                Assert.IsFalse(page.HasTotalCount());
+                Assert.AreEqual(page != allResultPages.Last(), page.PageInfo.HasNextPage);
+            }
+
+            //Flatten the Page Results to a single set of results via Linq
+            var allResults = allResultPages.SelectMany(p => p);
+            var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        [TestMethod]
         public async Task TestBatchQueryDirectResultsAsync()
         {
             var batchResults = await GraphQLApiEndpoint

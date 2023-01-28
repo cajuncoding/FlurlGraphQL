@@ -23,7 +23,7 @@ namespace Flurl.Http.GraphQL.Querying
         {
             return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
             {
-                var results = resultPayload.LoadTypedResults<TResult>();
+                var results = resultPayload.LoadTypedResults<TResult>(queryOperationName);
                 return results;
 
             }).ConfigureAwait(false);
@@ -51,7 +51,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// The GraphQL query MUST support the (after: $after) variable, and return pageInfo.hasNextPage & pageInfo.endCursor in the results!
         /// This query will block and load all data into memory. If you are looking to stream data you should use the ReceiveGraphQLQueryConnectionPagesAsyncEnumerable()
         /// method that returns an IAsyncEnumerable to support streaming; but it is only available in .NET Standard 2.1 and later.
-        /// This assumes that the query used Cursor Pagination on a GraphQL Connection operation compatible with the formalized Relay specification for Cursor Paging.
+        /// This assumes that the query uses Cursor Pagination on a GraphQL Connection operation compatible with the formalized Relay specification for Cursor Paging.
         /// See: https://relay.dev/graphql/connections.htm
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
@@ -60,8 +60,8 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="cancellationToken"></param>
         /// <returns>Returns a List of ALL IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
         public static async Task<IList<IGraphQLQueryConnectionResult<TResult>>> ReceiveAllGraphQLQueryConnectionPages<TResult>(
-            this Task<IFlurlGraphQLResponse> responseTask, 
-            string queryOperationName = null, 
+            this Task<IFlurlGraphQLResponse> responseTask,
+            string queryOperationName = null,
             CancellationToken cancellationToken = default
         ) where TResult : class
         {
@@ -76,11 +76,16 @@ namespace Flurl.Http.GraphQL.Querying
                 {
                     var originalGraphQLRequest = flurlGraphQLResponse.OriginalGraphQLRequest;
 
-                    var pageResult = responsePayload.LoadTypedResults<TResult>() as IGraphQLQueryConnectionResult<TResult>;
+                    if (!(responsePayload.LoadTypedResults<TResult>(queryOperationName) is IGraphQLQueryConnectionResult<TResult> pageResult))
+                    {
+                        //If the page result is invalid we cancel our iteration loop by setting the iteration value to null and return null.
+                        iterationResponseTask = null;
+                        return null;
+                    }
 
                     //Validate the Page to see if we are able to continue our iteration...
                     var (hasNextPage, endCursor) = AssertCursorPageIsValidForEnumeration(pageResult?.PageInfo, responsePayload, flurlGraphQLResponse, priorEndCursor);
-                    
+
                     //Update our tracking endCursor for validation...
                     priorEndCursor = endCursor;
 
@@ -92,7 +97,90 @@ namespace Flurl.Http.GraphQL.Querying
                     iterationResponseTask = !hasNextPage
                         ? null
                         : originalGraphQLRequest
-                            .SetGraphQLVariable(GraphQLArgs.After, endCursor)
+                            .SetGraphQLVariable(GraphQLConnectionArgs.After, endCursor)
+                            .PostGraphQLQueryAsync(cancellationToken);
+
+                    //Since this is a Func we must return a value.
+                    return pageResult;
+                }).ConfigureAwait(false);
+
+            } while (iterationResponseTask != null);
+
+            return pageResultsList;
+        }
+
+        /// <summary>
+        /// Processes/parses the results of the GraphQL query execution into the typed results along with associated offset paging info
+        /// as CollectionSegment details compatible with the HotChocolate GraphQL server Offset paging specification.
+        /// This assumes that the query uses Offset Pagination on a GraphQL CollectionSegment operation compatible with the Offset Paging specification defined by the
+        /// HotChocolate GraphQL Server for .NET.
+        /// See: https://chillicream.com/docs/hotchocolate/v12/fetching-data/pagination#offset-pagination
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="responseTask"></param>
+        /// <param name="queryOperationName"></param>
+        /// <returns>Returns an IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
+        public static async Task<IGraphQLQueryCollectionSegmentResult<TResult>> ReceiveGraphQLQueryCollectionSegmentResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
+            where TResult : class
+        {
+            var graphqlResults = await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false);
+            return graphqlResults as IGraphQLQueryCollectionSegmentResult<TResult>;
+        }
+
+        /// <summary>
+        /// This will automatically iterate to retrieve ALL possible page results using the GraphQL query. It will return a list of pages containing the typed results
+        /// along with associated offset paging info as CollectionSegment details compatible with the HotChocolate GraphQL server Offset paging specification.
+        /// The GraphQL query MUST support the (skip: $skip) variable, and return pageInfo.hasNextPage in the results!
+        /// This query will block and load all data into memory. If you are looking to stream data you should use the ReceiveGraphQLQueryCollectionSegmentPagesAsyncEnumerable()
+        /// method that returns an IAsyncEnumerable to support streaming; but it is only available in .NET Standard 2.1 and later.
+        /// This assumes that the query uses Offset Pagination on a GraphQL CollectionSegment operation compatible with the Offset Paging specification defined by the
+        /// HotChocolate GraphQL Server for .NET.
+        /// See: https://chillicream.com/docs/hotchocolate/v12/fetching-data/pagination#offset-pagination
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="responseTask"></param>
+        /// <param name="queryOperationName"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns a List of ALL IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
+        public static async Task<IList<IGraphQLQueryCollectionSegmentResult<TResult>>> ReceiveAllGraphQLQueryCollectionSegmentPages<TResult>(
+            this Task<IFlurlGraphQLResponse> responseTask,
+            string queryOperationName = null,
+            CancellationToken cancellationToken = default
+        ) where TResult : class
+        {
+            var pageResultsList = new List<IGraphQLQueryCollectionSegmentResult<TResult>>();
+            Task<IFlurlGraphQLResponse> iterationResponseTask = responseTask;
+
+            do
+            {
+                await iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
+                {
+                    var originalGraphQLRequest = flurlGraphQLResponse.OriginalGraphQLRequest;
+
+                    if (!(responsePayload.LoadTypedResults<TResult>(queryOperationName) is IGraphQLQueryCollectionSegmentResult<TResult> pageResult) || !pageResult.HasAnyResults())
+                    {
+                        //If the page result is invalid we cancel our iteration loop by setting the iteration value to null and return null.
+                        iterationResponseTask = null;
+                        return null;
+                    }
+
+                    //Get the current Skip Variable so that we can dynamically increment it to continue the pagination!
+                    int? skipVariable = originalGraphQLRequest.GetGraphQLVariable(GraphQLCollectionSegmentArgs.Skip) as int?;
+
+                    //Validate the Page to see if we are able to continue our iteration...
+                    var hasNextPage = AssertOffsetPageIsValidForEnumeration(pageResult?.PageInfo, responsePayload, flurlGraphQLResponse, skipVariable);
+
+                    var nextSkipVariable = skipVariable + pageResult.Count;
+
+                    //THIS Page is Good so we add it to our Results...
+                    pageResultsList.Add(pageResult);
+
+                    //If there is another page then Update our Variables and request the NEXT Page;
+                    //  otherwise set our iteration to null to stop processing!
+                    iterationResponseTask = !hasNextPage
+                        ? null
+                        : originalGraphQLRequest
+                            .SetGraphQLVariable(GraphQLCollectionSegmentArgs.Skip, nextSkipVariable)
                             .PostGraphQLQueryAsync(cancellationToken);
 
                     //Since this is a Func we must return a value.

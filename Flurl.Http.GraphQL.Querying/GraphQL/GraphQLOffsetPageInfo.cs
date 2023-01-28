@@ -12,5 +12,13 @@ namespace Flurl.Http.GraphQL.Querying
 
         public bool? HasNextPage { get; }
         public bool? HasPreviousPage { get; }
+
+        internal static IGraphQLOffsetPageInfo FromCursorPageInfo(IGraphQLCursorPageInfo cursorPageInfo)
+        {
+            //Convert the Cursor Page Info to Offset Page Info (which is a subset of Cursor paging details)
+            return cursorPageInfo == null
+                ? new GraphQLOffsetPageInfo()
+                : new GraphQLOffsetPageInfo(cursorPageInfo.HasNextPage, cursorPageInfo.HasPreviousPage);
+        }
     }
 }

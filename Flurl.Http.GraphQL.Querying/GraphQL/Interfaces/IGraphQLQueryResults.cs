@@ -8,5 +8,6 @@ namespace Flurl.Http.GraphQL.Querying
         bool HasAnyResults();
         IList<GraphQLError> Errors { get; }
         bool HasAnyErrors();
+        int? TotalCount { get; }
     }
 }

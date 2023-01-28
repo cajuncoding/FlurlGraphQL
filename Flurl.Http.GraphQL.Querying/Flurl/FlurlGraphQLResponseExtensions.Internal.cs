@@ -1,20 +1,28 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
+using System.Threading;
 
 namespace Flurl.Http.GraphQL.Querying
 {
     public static partial class FlurlGraphQLResponseExtensions
     {
+        internal enum PaginationType
+        {
+            Cursor,
+            Offset
+        };
+
         internal static (bool HasNextPage, string EndCursor) AssertCursorPageIsValidForEnumeration(IGraphQLCursorPageInfo pageInfo, FlurlGraphQLResponsePayload responsePayload, FlurlGraphQLResponse flurlGraphQLResponse, string priorEndCursor)
         {
             if (pageInfo == null)
             {
-                ThrowGraphQLException(responsePayload, flurlGraphQLResponse,
-                    "Unable to enumerate all pages because the pageInfo node is missing. Check that the query is correct and that it correctly returns pageInfo.hasNextPage & pageInfo.endCursor values.");
+                throw NewGraphQLException(responsePayload, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the pageInfo node is missing. Check that the query is correct and that it correctly returns pageInfo.hasNextPage & pageInfo.endCursor values for Cursor based paging.");
             }
 
             bool? hasNextPageFlag = pageInfo.HasNextPage;
@@ -22,21 +30,44 @@ namespace Flurl.Http.GraphQL.Querying
 
             if (hasNextPageFlag == null || endCursor == null)
             {
-                ThrowGraphQLException(responsePayload, flurlGraphQLResponse,
+                throw NewGraphQLException(responsePayload, flurlGraphQLResponse,
                     "Unable to enumerate all pages because the pageInfo.hasNextPage and/or the pageInfo.endCursor values are not available in the GraphQL query response.");
             }
             else if (endCursor == priorEndCursor)
             {
-                ThrowGraphQLException(responsePayload, flurlGraphQLResponse,
+                throw NewGraphQLException(responsePayload, flurlGraphQLResponse,
                     "Unable to enumerate all pages because the pageInfo.endCursor is returning the same value. Check that the query is correct and that it correctly implements the (after:$after) variable.");
             }
-            
-            //WE Know that HasNextPage has a value, but to make intellisense happy we check it here (redundantly)...
-            return (hasNextPageFlag.HasValue && hasNextPageFlag.Value, endCursor);
+
+            return (hasNextPageFlag.Value, endCursor);
         }
 
-        internal static void ThrowGraphQLException(FlurlGraphQLResponsePayload responsePayload, FlurlGraphQLResponse flurlGraphQLResponse, string message)
-            => throw new FlurlGraphQLException(message, flurlGraphQLResponse.GraphQLQuery, responsePayload, (HttpStatusCode)flurlGraphQLResponse.StatusCode);
+        internal static bool AssertOffsetPageIsValidForEnumeration(IGraphQLOffsetPageInfo pageInfo, FlurlGraphQLResponsePayload responsePayload, FlurlGraphQLResponse flurlGraphQLResponse, int? skipVariable)
+        {
+            if (skipVariable == null)
+            {
+                throw NewGraphQLException(responsePayload, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the skip variable is missing. Check that the query is correct and that it correctly implements the (skip: $skip) variable for Offset based paging.");
+            }
+
+            if (pageInfo == null)
+            {
+                throw NewGraphQLException(responsePayload, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the pageInfo node is missing. Check that the query is correct and that it correctly returns pageInfo.hasNextPage value for Offset based paging.");
+            }
+
+            bool? hasNextPageFlag = pageInfo?.HasNextPage;
+            if (hasNextPageFlag == null)
+            {
+                throw NewGraphQLException(responsePayload, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the pageInfo.hasNextPage value is not available in the GraphQL query response.");
+            }
+
+            return hasNextPageFlag.Value;
+        }
+
+        internal static FlurlGraphQLException NewGraphQLException(FlurlGraphQLResponsePayload responsePayload, FlurlGraphQLResponse flurlGraphQLResponse, string message)
+            => new FlurlGraphQLException(message, flurlGraphQLResponse.GraphQLQuery, responsePayload, (HttpStatusCode)flurlGraphQLResponse.StatusCode);
 
         internal static async Task<TGraphQLResult> ProcessResponsePayloadInternalAsync<TGraphQLResult>(
             this Task<IFlurlGraphQLResponse> responseTask, 
@@ -76,18 +107,27 @@ namespace Flurl.Http.GraphQL.Querying
             var pageInfo = json.Field(GraphQLFields.PageInfo)?.ToObject<GraphQLCursorPageInfo>();
             var totalCount = (int?)json.Field(GraphQLFields.TotalCount);
 
+            PaginationType? paginationType = null;
             List<TResult> entityResults = null;
 
             //Dynamically resolve the Nodes from either:
-            // - the Nodes child of the Data Result (for nodes{} based queries)
+            // - the Nodes child of the Data Result (for nodes{} based Cursor Paginated queries)
+            // - the Items child of the Data Result (for items{} based Offset Paginated queries)
             // - the Edges->Node child of the the Data Result (for Edges based queries that provide access to the Cursor)
             if (json.Field(GraphQLFields.Nodes) is JArray nodes)
             {
                 entityResults = nodes.ToObject<List<TResult>>();
+                paginationType = PaginationType.Cursor;
+            }
+            else if (json.Field(GraphQLFields.Items) is JArray items)
+            {
+                entityResults = items.ToObject<List<TResult>>();
+                paginationType = PaginationType.Offset;
             }
             //Handle Edges case (which allow access to the Cursor)
             else if (json.Field(GraphQLFields.Edges) is JArray edges)
             {
+                paginationType = PaginationType.Cursor;
                 var entityType = typeof(TResult);
 
                 //Handle case where GraphQLEdge<TNode> wrapper class is used to simplify retrieving the Edges!
@@ -109,7 +149,6 @@ namespace Flurl.Http.GraphQL.Querying
 
                         return entityEdge;
                     }).ToList();
-
                 }
             }
             else if (json is JArray results)
@@ -117,10 +156,18 @@ namespace Flurl.Http.GraphQL.Querying
                 entityResults = results.ToObject<List<TResult>>();
             }
 
-            if (totalCount != null || pageInfo != null)
+            //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
+            if (paginationType == PaginationType.Cursor)
+            {
                 return new GraphQLQueryConnectionResult<TResult>(entityResults, totalCount, pageInfo);
-            else
-                return new GraphQLQueryResults<TResult>(entityResults);
+            }
+            else if (paginationType == PaginationType.Offset)
+            {
+                return new GraphQLQueryCollectionSegmentResult<TResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
+            }
+
+            //If not a paging result then we simply return the typed results...
+            return new GraphQLQueryResults<TResult>(entityResults, totalCount);
         }
 
     }
