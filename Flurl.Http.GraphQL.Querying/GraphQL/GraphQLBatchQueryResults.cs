@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
@@ -21,12 +22,12 @@ namespace Flurl.Http.GraphQL.Querying
 
         private object _cachedParsedResults = null;
 
-        public GraphQLQueryResults<TResult> GetParsedResults<TResult>() where TResult : class
+        public IGraphQLQueryResults<TResult> GetParsedResults<TResult>() where TResult : class
         {
             if (ResultJson == null)
                 return default;
 
-            if (_cachedParsedResults is GraphQLQueryResults<TResult> typedResult)
+            if (_cachedParsedResults is IGraphQLQueryResults<TResult> typedResult)
                 return typedResult;
 
             var parsedResult = ResultJson.ConvertToGraphQLResultsInternal<TResult>();
@@ -36,11 +37,10 @@ namespace Flurl.Http.GraphQL.Querying
         }
     }
 
-    //TODO: EXTRACT GraphQLBatchQueryResults to Interface!!!
     /// <summary>
     /// Provides Typed Access to multiple Query Results from a Batch Query.
     /// </summary>
-    public class GraphQLBatchQueryResults
+    public class GraphQLBatchQueryResults : IGraphQLBatchQueryResults
     {
         private readonly IReadOnlyList<GraphQLQueryOperationResult> _queryOperationResults;
         private readonly ILookup<string, GraphQLQueryOperationResult> _queryOperationResultLookup;
@@ -53,7 +53,7 @@ namespace Flurl.Http.GraphQL.Querying
             _queryOperationResultLookup = _queryOperationResults.ToLookup(r => r.OperationName, r => r);
         }
 
-        public GraphQLQueryResults<TResult> GetResults<TResult>(int index) where TResult : class
+        public IGraphQLQueryResults<TResult> GetResults<TResult>(int index) where TResult : class
         {
             if(index < 0 || index > (_queryOperationResults.Count - 1))
                 throw new ArgumentOutOfRangeException(nameof(index));
@@ -62,7 +62,7 @@ namespace Flurl.Http.GraphQL.Querying
             return parsedResults;
         }
 
-        public GraphQLQueryResults<TResult> GetResults<TResult>(string operationName) where TResult : class
+        public IGraphQLQueryResults<TResult> GetResults<TResult>(string operationName) where TResult : class
         {
             operationName.AssertArgIsNotNullOrBlank(nameof(operationName));
             
@@ -75,42 +75,65 @@ namespace Flurl.Http.GraphQL.Querying
 
         /// <summary>
         /// Gets the results along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
-        /// This assumes that the query used Cursor Pagination on a GraphQL Connection Operation.
+        /// This assumes that the query used Cursor Pagination on a GraphQL Connection Operation compatible with the formalized Relay specification for Cursor Paging.
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
-        /// <param name="operationName"></param>
+        /// <param name="index"></param>
         /// <returns></returns>
-        public GraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(int index) where TResult : class
-            => GetResults<TResult>(index) as GraphQLQueryConnectionResult<TResult>;
+        public IGraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(int index) where TResult : class
+            => GetResults<TResult>(index) as IGraphQLQueryConnectionResult<TResult>;
 
         /// <summary>
         /// Gets the results along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
-        /// This assumes that the query used Cursor Pagination on a GraphQL Connection Operation.
+        /// This assumes that the query used Cursor Pagination on a GraphQL Connection Operation compatible with the formalized Relay specification for Cursor Paging.
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="operationName"></param>
         /// <returns></returns>
-        public GraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(string operationName) where TResult : class
-            => GetResults<TResult>(operationName) as GraphQLQueryConnectionResult<TResult>;
+        public IGraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(string operationName) where TResult : class
+            => GetResults<TResult>(operationName) as IGraphQLQueryConnectionResult<TResult>;
+
 
         /// <summary>
         /// Gets the results along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
-        /// This assumes that the query used Offset Pagination on a GraphQL CollectionSegment Operation.
+        /// This assumes that the query used Offset Pagination on a GraphQL CollectionSegment Operation compatible with the HotChocolate GraphQL specification for offset paging.
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
-        /// <param name="operationName"></param>
+        /// <param name="index"></param>
         /// <returns></returns>
-        public GraphQLQueryCollectionSegmentResult<TResult> GetCollectionSegmentResults<TResult>(string operationName) where TResult : class
+        public IGraphQLQueryCollectionSegmentResult<TResult> GetCollectionSegmentResults<TResult>(int index) where TResult : class
         {
-            var connectionResults = GetConnectionResults<TResult>(operationName);
-            if (connectionResults == null)
-                return null;
-            
+            if (GetConnectionResults<TResult>(index) is GraphQLQueryConnectionResult<TResult> connectionResults)
+                return ConvertToCollectionSegmentResultsInternal(connectionResults);
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the results along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
+        /// This assumes that the query used Offset Pagination on a GraphQL CollectionSegment Operation compatible with the HotChocolate GraphQL specification for offset paging.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="operationName"></param>
+        /// <returns></returns>
+        public IGraphQLQueryCollectionSegmentResult<TResult> GetCollectionSegmentResults<TResult>(string operationName) where TResult : class
+        {
+            if (GetConnectionResults<TResult>(operationName) is GraphQLQueryConnectionResult<TResult> connectionResults)
+                return ConvertToCollectionSegmentResultsInternal(connectionResults);
+                
+            return null;
+        }
+
+        private IGraphQLQueryCollectionSegmentResult<TResult> ConvertToCollectionSegmentResultsInternal<TResult>(GraphQLQueryConnectionResult<TResult> connectionResults) 
+            where TResult : class
+        {
+            if (connectionResults == null) return null;
+
             var pageInfo = connectionResults.PageInfo;
-            
+
             return new GraphQLQueryCollectionSegmentResult<TResult>(
-                connectionResults.GetResultsInternal(), 
-                connectionResults.TotalCount, 
+                connectionResults.GetResultsInternal(),
+                connectionResults.TotalCount,
                 new GraphQLOffsetPageInfo(hasNextPage: pageInfo?.HasNextPage, hasPreviousPage: pageInfo?.HasPreviousPage)
             );
         }

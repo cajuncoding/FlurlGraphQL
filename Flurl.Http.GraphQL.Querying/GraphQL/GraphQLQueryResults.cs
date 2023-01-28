@@ -7,8 +7,8 @@ namespace Flurl.Http.GraphQL.Querying
     /// Contains the direct typed results of a single GraphQL query.
     /// </summary>
     /// <typeparam name="TResult"></typeparam>
-    //TODO: EXTRACT GraphQLQueryResults to Interface!!!
-    public class GraphQLQueryResults<TResult> : IReadOnlyList<TResult>
+    public class GraphQLQueryResults<TResult> : IReadOnlyList<TResult>, IGraphQLQueryResults<TResult> 
+        where TResult : class
     {
         public GraphQLQueryResults(IList<TResult> results = null, IList<GraphQLError> errors = null)
         {

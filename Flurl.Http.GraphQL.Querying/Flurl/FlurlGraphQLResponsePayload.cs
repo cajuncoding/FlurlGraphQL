@@ -19,5 +19,21 @@ namespace Flurl.Http.GraphQL.Querying
         
         [JsonProperty("errors")]
         public IReadOnlyList<GraphQLError> Errors { get; }
+
+        public IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) 
+            where TResult : class
+        {
+            //BBernard
+            //Extract the Collection Data specified... or first data...
+            //NOTE: GraphQL supports multiple data responses per request so we need to access the correct query type result safely (via Null Coalesce)
+            var queryResultJson = Data;
+
+            var querySingleResultJson = string.IsNullOrWhiteSpace(queryOperationName)
+                ? queryResultJson.First
+                : queryResultJson.Field(queryOperationName);
+
+            var typedResults = querySingleResultJson.ConvertToGraphQLResultsInternal<TResult>();
+            return typedResults;
+        }
     }
 }

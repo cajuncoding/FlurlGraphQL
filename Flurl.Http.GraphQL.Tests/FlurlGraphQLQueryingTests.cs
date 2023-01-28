@@ -1,17 +1,16 @@
-using Flurl.Http;
 using Flurl.Http.GraphQL.Querying;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Flurl.Http.GraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLQueryingTests : BaseFlurlGraphQLTest
     {
+        // ReSharper disable once ClassNeverInstantiated.Local
         private class StarWarsCharacter
         {
             public int PersonalIdentifier { get; set; }
-            public string Name { get; set; }
+            public string? Name { get; set; }
             public decimal Height { get; set; }
         }
 
@@ -77,7 +76,7 @@ namespace Flurl.Http.GraphQL.Tests
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(results);
-            Assert.IsTrue(results is GraphQLQueryConnectionResult<StarWarsCharacter>);
+            Assert.IsTrue(results is IGraphQLQueryConnectionResult<StarWarsCharacter>);
             Assert.IsTrue(results.Count > 0);
 
             Assert.IsNotNull(results.TotalCount);
@@ -92,6 +91,101 @@ namespace Flurl.Http.GraphQL.Tests
             Assert.IsNotNull(char1);
 
             var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        [TestMethod]
+        public async Task TestCursorPagingRetrieveAllPagesAsync()
+        {
+            var allResultPages = await GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query($first:Int, $after:String) {
+                      characters (first:$first, after:$after) {
+		                pageInfo {
+                          hasNextPage
+                          endCursor
+                        }
+                        nodes {
+                          personalIdentifier
+                          name
+			              height
+                        }
+                      }
+                    }
+                ")
+                .SetGraphQLVariables(new { first = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveAllGraphQLQueryConnectionPages<StarWarsCharacter>()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(allResultPages);
+            Assert.IsTrue(allResultPages is IList<IGraphQLQueryConnectionResult<StarWarsCharacter>>);
+            Assert.IsTrue(allResultPages.Count > 0);
+
+            foreach (var page in allResultPages)
+            {
+                Assert.IsNotNull(page);
+                Assert.IsTrue(page.HasAnyResults());
+                Assert.IsFalse(page.HasTotalCount());
+                Assert.IsFalse(string.IsNullOrWhiteSpace(page.PageInfo.EndCursor));
+                Assert.AreEqual(page != allResultPages.Last(), page.PageInfo.HasNextPage);
+            }
+
+            //Flatten the Page Results to a single set of results via Linq
+            var allResults = allResultPages.SelectMany(p => p);
+            var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        [TestMethod]
+        public async Task TestCursorPagingRetrievePagesAsAsyncEnumerableStreamAsync()
+        {
+            var pagesAsyncEnumerable = GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query($first:Int, $after:String) {
+                      characters (first:$first, after:$after) {
+		                pageInfo {
+                          hasNextPage
+                          endCursor
+                        }
+                        nodes {
+                          personalIdentifier
+                          name
+			              height
+                        }
+                      }
+                    }
+                ")
+                .SetGraphQLVariables(new { first = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLQueryConnectionPagesAsyncEnumerable<StarWarsCharacter>();
+
+            Assert.IsNotNull(pagesAsyncEnumerable);
+            Assert.IsTrue(pagesAsyncEnumerable is IAsyncEnumerable<IGraphQLQueryConnectionResult<StarWarsCharacter>>);
+
+            List<IGraphQLQueryConnectionResult<StarWarsCharacter>> pageResultsList = new();
+
+            //Streaming our pages...
+            await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
+            {
+                Assert.IsNotNull(page);
+                Assert.IsTrue(page.HasAnyResults());
+                Assert.IsFalse(page.HasTotalCount());
+                Assert.IsFalse(string.IsNullOrWhiteSpace(page.PageInfo.EndCursor));
+
+                //Aggregate into a List for additional validation...
+                pageResultsList.Add(page);
+            }
+
+            //Additional validation now that we have all pages streamed into memory...
+            foreach (var page in pageResultsList)
+            {
+                Assert.AreEqual(page != pageResultsList.Last(), page.PageInfo.HasNextPage);
+            }
+
+            //Flatten the Page Results to a single set of results via Linq
+            var allResults = pageResultsList.SelectMany(p => p);
+            var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
             TestContext.WriteLine(jsonText);
         }
 

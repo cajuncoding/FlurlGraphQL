@@ -2,8 +2,7 @@
 
 namespace Flurl.Http.GraphQL.Querying
 {
-    //TODO: EXTRACT GraphQLCursorPageInfo to Interface!!!
-    public class GraphQLCursorPageInfo
+    public class GraphQLCursorPageInfo : IGraphQLCursorPageInfo
     {
         public GraphQLCursorPageInfo(string startCursor = null, string endCursor = null, bool? hasNextPage = null, bool? hasPreviousPage = null)
         {
