@@ -11,6 +11,7 @@ namespace Flurl.Http.GraphQL.Querying
         IFlurlGraphQLRequest SetGraphQLVariables(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest SetGraphQLVariables(IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove);
+        object GetGraphQLVariable(string name);
         IFlurlGraphQLRequest ClearGraphQLVariables();
         IFlurlGraphQLRequest RemoveGraphQLVariable(string name);
         IFlurlGraphQLRequest WithGraphQLQuery(string query, NullValueHandling nullValueHandling = NullValueHandling.Remove);

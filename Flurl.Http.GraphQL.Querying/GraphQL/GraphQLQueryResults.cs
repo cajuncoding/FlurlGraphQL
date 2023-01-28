@@ -10,10 +10,11 @@ namespace Flurl.Http.GraphQL.Querying
     public class GraphQLQueryResults<TResult> : IReadOnlyList<TResult>, IGraphQLQueryResults<TResult> 
         where TResult : class
     {
-        public GraphQLQueryResults(IList<TResult> results = null, IList<GraphQLError> errors = null)
+        public GraphQLQueryResults(IList<TResult> results = null, int? totalCount = null, IList < GraphQLError> errors = null)
         {
             //The Results should be null safe as an empty list if no results exist.
             Results = results ?? new List<TResult>();
+            TotalCount = totalCount;
             
             //Errors may be null however as they are an exception case.
             Errors = errors;
@@ -26,6 +27,7 @@ namespace Flurl.Http.GraphQL.Querying
 
         public IList<GraphQLError> Errors { get; }
         public bool HasAnyErrors() => this.Errors?.Count > 0;
+        public int? TotalCount { get; }
 
         #region IReadOnlyList / IEnumerable Implementation
 

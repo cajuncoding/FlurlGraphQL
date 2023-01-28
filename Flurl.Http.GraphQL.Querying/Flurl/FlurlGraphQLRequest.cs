@@ -46,6 +46,8 @@ namespace Flurl.Http.GraphQL.Querying
             return this;
         }
 
+        public object GetGraphQLVariable(string name) => GraphQLVariables.TryGetValue(name, out var value) ? value : null;
+
         public IFlurlGraphQLRequest RemoveGraphQLVariable(string name)
         {
             if (name == null) return this;

@@ -39,7 +39,7 @@ namespace Flurl.Http.GraphQL.Querying
                 {
                     var originalGraphQLRequest = flurlGraphQLResponse.OriginalGraphQLRequest;
 
-                    var pageResult = responsePayload.LoadTypedResults<TResult>() as IGraphQLQueryConnectionResult<TResult>;
+                    var pageResult = responsePayload.LoadTypedResults<TResult>(queryOperationName) as IGraphQLQueryConnectionResult<TResult>;
 
                     //Validate the Page to see if we are able to continue our iteration...
                     var (hasNextPage, endCursor) = AssertCursorPageIsValidForEnumeration(pageResult?.PageInfo, responsePayload, flurlGraphQLResponse, priorEndCursor);
@@ -52,7 +52,7 @@ namespace Flurl.Http.GraphQL.Querying
                     iterationResponseTask = !hasNextPage
                         ? null
                         : originalGraphQLRequest
-                            .SetGraphQLVariable(GraphQLArgs.After, endCursor)
+                            .SetGraphQLVariable(GraphQLConnectionArgs.After, endCursor)
                             .PostGraphQLQueryAsync(cancellationToken);
 
                     //Since this is a Func we must return a value.
