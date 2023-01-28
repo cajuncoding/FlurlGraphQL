@@ -32,7 +32,7 @@ namespace Flurl.Http.GraphQL.Querying
                 ? queryResultJson.First
                 : queryResultJson.Field(queryOperationName);
 
-            var typedResults = querySingleResultJson.ConvertToGraphQLResultsInternal<TResult>();
+            var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>();
             return typedResults;
         }
     }

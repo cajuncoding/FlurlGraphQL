@@ -11,21 +11,25 @@ namespace Flurl.Http.GraphQL.Querying
     public static partial class FlurlGraphQLResponseExtensions
     {
         /// <summary>
-        /// Receives all data paginated as an IEnumerable that you can iterate over each resulting Page.
-        /// This uses the formalized Relay spec for Connection pagination: https://relay.dev/graphql/connections.htm
+        /// This will automatically iterate to retrieve ALL possible page results, using the GraphQL query, as a Stream via IAsyncEnumerable.
+        /// This offers true async streaming in that while you handle one page it's already pre-fetching the next page asynchronously. This is great
+        /// for streaming data from GraphQL to another destination (e.g. a Database).
+        /// The GraphQL query MUST support the (after: $after) variable, and return pageInfo.hasNextPage & pageInfo.endCursor in the results!
+        /// This assumes that the query used Cursor Pagination on a GraphQL Connection operation compatible with the formalized Relay specification for Cursor Paging.
+        /// See: https://relay.dev/graphql/connections.htm
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="responseTask"></param>
         /// <param name="queryOperationName"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Returns an IAsyncEnumerable of IGraphQLQueryConnectionResult sets containing the typed results along with paging information returned by the query.</returns>
         public static async IAsyncEnumerable<IGraphQLQueryConnectionResult<TResult>> ReceiveGraphQLQueryConnectionPagesAsyncEnumerable<TResult>(
-            this Task<IFlurlResponse> responseTask,
+            this Task<IFlurlGraphQLResponse> responseTask,
             string queryOperationName = null,
             [EnumeratorCancellation] CancellationToken cancellationToken = default
         ) where TResult : class
         {
-            Task<IFlurlResponse> iterationResponseTask = responseTask;
+            Task<IFlurlGraphQLResponse> iterationResponseTask = responseTask;
             //Track our EndCursor to prevent infinite loops due to incorrect query; will be validated.
             string priorEndCursor = null;
 
