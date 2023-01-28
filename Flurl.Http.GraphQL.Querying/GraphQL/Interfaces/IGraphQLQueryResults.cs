@@ -10,4 +10,12 @@ namespace Flurl.Http.GraphQL.Querying
         bool HasAnyErrors();
         int? TotalCount { get; }
     }
+
+    //Provide Convenience Method for accessing Internal methods of the interface implementation...
+    public static class IGraphQLQueryResultsExtensions
+    {
+        internal static IList<TResult> GetResultsInternal<TResult>(this IGraphQLQueryResults<TResult> results) where TResult : class
+            => (results as GraphQLQueryResults<TResult>)?.GetResultsInternal() ?? new List<TResult>();
+    }
+
 }
