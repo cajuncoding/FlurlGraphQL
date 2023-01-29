@@ -12,13 +12,15 @@ namespace Flurl.Http.GraphQL.Querying
         public FlurlGraphQLResponse(IFlurlResponse response, FlurlGraphQLRequest originalGraphQLRequest)
         {
             BaseFlurlResponse = response.AssertArgIsNotNull(nameof(response));
-            OriginalGraphQLRequest = originalGraphQLRequest.AssertArgIsNotNull(nameof(originalGraphQLRequest));
             GraphQLQuery = originalGraphQLRequest.GraphQLQuery;
+            //NOTE: We Clone the original request so that any processing of the Response is Disconnected from the original
+            //      and does not accidentally mutate it! For consistency we do this here so that it's ALWAYS enforced!
+            GraphQLRequest = originalGraphQLRequest.AssertArgIsNotNull(nameof(originalGraphQLRequest)).Clone();
         }
 
         protected IFlurlResponse BaseFlurlResponse { get; set; }
         
-        public IFlurlGraphQLRequest OriginalGraphQLRequest { get; protected set; }
+        public IFlurlGraphQLRequest GraphQLRequest { get; protected set; }
 
         public string GraphQLQuery { get; }
 

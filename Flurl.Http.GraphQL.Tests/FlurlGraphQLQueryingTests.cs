@@ -1,4 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Flurl.Http.GraphQL.Querying;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
 namespace Flurl.Http.GraphQL.Tests
@@ -10,7 +14,7 @@ namespace Flurl.Http.GraphQL.Tests
         private class StarWarsCharacter
         {
             public int PersonalIdentifier { get; set; }
-            public string? Name { get; set; }
+            public string Name { get; set; }
             public decimal Height { get; set; }
         }
 
@@ -137,6 +141,8 @@ namespace Flurl.Http.GraphQL.Tests
             TestContext.WriteLine(jsonText);
         }
 
+        #if NET6_0
+
         [TestMethod]
         public async Task TestCursorPagingRetrievePagesAsAsyncEnumerableStreamAsync()
         {
@@ -163,7 +169,7 @@ namespace Flurl.Http.GraphQL.Tests
             Assert.IsNotNull(pagesAsyncEnumerable);
             Assert.IsTrue(pagesAsyncEnumerable is IAsyncEnumerable<IGraphQLQueryConnectionResult<StarWarsCharacter>>);
 
-            List<IGraphQLQueryConnectionResult<StarWarsCharacter>> pageResultsList = new();
+            var pageResultsList = new List<IGraphQLQueryConnectionResult<StarWarsCharacter>>();
 
             //Streaming our pages...
             await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
@@ -188,6 +194,8 @@ namespace Flurl.Http.GraphQL.Tests
             var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
             TestContext.WriteLine(jsonText);
         }
+
+        #endif
 
         [TestMethod]
         public async Task TestSingleQueryOffsetPagingResultsAsync()
@@ -271,6 +279,64 @@ namespace Flurl.Http.GraphQL.Tests
             var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
             TestContext.WriteLine(jsonText);
         }
+
+        #if NET48
+
+        [TestMethod]
+        public async Task TestOffsetPagingRetrievePagesAsEnumerableAsync()
+        {
+            var enumerablePageTasks = GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query($first:Int, $after:String) {
+                      characters (first:$first, after:$after) {
+		                pageInfo {
+                          hasNextPage
+                          endCursor
+                        }
+                        nodes {
+                          personalIdentifier
+                          name
+			              height
+                        }
+                      }
+                    }
+                ")
+                .SetGraphQLVariables(new { first = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLQueryConnectionPagesAsEnumerableTasks<StarWarsCharacter>();
+
+            Assert.IsNotNull(enumerablePageTasks);
+            Assert.IsTrue(enumerablePageTasks is IEnumerable<Task<IGraphQLQueryConnectionResult<StarWarsCharacter>>>);
+
+            List<IGraphQLQueryConnectionResult<StarWarsCharacter>> pageResultsList = new List<IGraphQLQueryConnectionResult<StarWarsCharacter>>();
+
+            //Enumerate the async retrieved pages (as Tasks)...
+            foreach (var pageTask in enumerablePageTasks)
+            {
+                var page = await pageTask.ConfigureAwait(false);
+
+                Assert.IsNotNull(page);
+                Assert.IsTrue(page.HasAnyResults());
+                Assert.IsFalse(page.HasTotalCount());
+                Assert.IsFalse(string.IsNullOrWhiteSpace(page.PageInfo.EndCursor));
+
+                //Aggregate into a List for additional validation...
+                pageResultsList.Add(page);
+            }
+
+            //Additional validation now that we have all pages streamed into memory...
+            foreach (var page in pageResultsList)
+            {
+                Assert.AreEqual(page != pageResultsList.Last(), page.PageInfo.HasNextPage);
+            }
+
+            //Flatten the Page Results to a single set of results via Linq
+            var allResults = pageResultsList.SelectMany(p => p);
+            var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        #endif
 
         [TestMethod]
         public async Task TestBatchQueryDirectResultsAsync()

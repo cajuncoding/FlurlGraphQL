@@ -2,7 +2,7 @@
 {
     public interface IFlurlGraphQLResponse : IFlurlResponse
     {
-        IFlurlGraphQLRequest OriginalGraphQLRequest { get; }
+        IFlurlGraphQLRequest GraphQLRequest { get; }
         string GraphQLQuery { get; }
     }
 }

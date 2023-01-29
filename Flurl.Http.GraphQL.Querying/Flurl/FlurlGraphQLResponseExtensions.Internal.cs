@@ -69,6 +69,52 @@ namespace Flurl.Http.GraphQL.Querying
         internal static FlurlGraphQLException NewGraphQLException(FlurlGraphQLResponsePayload responsePayload, FlurlGraphQLResponse flurlGraphQLResponse, string message)
             => new FlurlGraphQLException(message, flurlGraphQLResponse.GraphQLQuery, responsePayload, (HttpStatusCode)flurlGraphQLResponse.StatusCode);
 
+        /// <summary>
+        /// Internal handler to process the payload in Async Enumeration methods... this method supports both:
+        ///     - netstandard2.0 IEnumerable&lt;Task&lt;?&gt;&gt; for async enumeration of pages one-by-one (legacy)
+        ///     - netstandard2.1+ AsyncEnumerable&lt;?&gt; for true async streaming of pages where the next Page is pre-fetched while yielding the current page.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="queryOperationName"></param>
+        /// <param name="priorEndCursor"></param>
+        /// <param name="responsePayload"></param>
+        /// <param name="flurlGraphQLResponse"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal static (
+            IGraphQLQueryConnectionResult<TResult> PageResult,
+            string PriorEndCursor, 
+            Task<IFlurlGraphQLResponse> NextIterationResponseTask
+        ) ProcessPayloadIterationForAsyncEnumeration<TResult>(
+            string queryOperationName,
+            string priorEndCursor,
+            FlurlGraphQLResponsePayload responsePayload,
+            FlurlGraphQLResponse flurlGraphQLResponse, 
+            CancellationToken cancellationToken = default
+        ) where TResult : class
+        {
+            var originalGraphQLRequest = flurlGraphQLResponse.GraphQLRequest;
+
+            var pageResult = responsePayload.LoadTypedResults<TResult>(queryOperationName) as IGraphQLQueryConnectionResult<TResult>;
+
+            //Validate the Page to see if we are able to continue our iteration...
+            var (hasNextPage, endCursor) = AssertCursorPageIsValidForEnumeration(pageResult?.PageInfo, responsePayload, flurlGraphQLResponse, priorEndCursor);
+
+            //Update our tracking endCursor for validation...
+            priorEndCursor = endCursor;
+
+            //If there is another page then Update our Variables and request the NEXT Page Asynchronously;
+            //  otherwise set our iteration to null to stop processing!
+            var iterationResponseTask = !hasNextPage
+                ? null
+                : originalGraphQLRequest
+                    .SetGraphQLVariable(GraphQLConnectionArgs.After, endCursor)
+                    .PostGraphQLQueryAsync(cancellationToken);
+
+            //Since this is a Func we must return a value.
+            return (pageResult, priorEndCursor, iterationResponseTask);
+        }
+
         internal static async Task<TGraphQLResult> ProcessResponsePayloadInternalAsync<TGraphQLResult>(
             this Task<IFlurlGraphQLResponse> responseTask, 
             Func<FlurlGraphQLResponsePayload, FlurlGraphQLResponse, TGraphQLResult> payloadHandlerFunc
@@ -157,7 +203,9 @@ namespace Flurl.Http.GraphQL.Querying
             }
 
             //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
-            if (paginationType == PaginationType.Cursor)
+            //NOTE: If we have a Total Count then we also must return a Paging result because it's possible to
+            //      request TotalCount by itself without any other PageInfo or Nodes...
+            if (paginationType == PaginationType.Cursor || totalCount.HasValue)
             {
                 return new GraphQLQueryConnectionResult<TResult>(entityResults, totalCount, pageInfo);
             }
@@ -167,7 +215,7 @@ namespace Flurl.Http.GraphQL.Querying
             }
 
             //If not a paging result then we simply return the typed results...
-            return new GraphQLQueryResults<TResult>(entityResults, totalCount);
+            return new GraphQLQueryResults<TResult>(entityResults);
         }
 
     }

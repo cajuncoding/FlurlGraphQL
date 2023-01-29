@@ -1,4 +1,7 @@
 
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace Flurl.Http.GraphQL.Tests
 {
     public abstract class BaseFlurlGraphQLTest
@@ -9,7 +12,7 @@ namespace Flurl.Http.GraphQL.Tests
             GraphQLApiEndpoint = Environment.GetEnvironmentVariable(nameof(GraphQLApiEndpoint)) ?? throw CreateMissingConfigException(nameof(GraphQLApiEndpoint));
         }
 
-        private Exception CreateMissingConfigException(string configName) => new($"The configuration value for [{configName}] could not be loaded.");
+        private Exception CreateMissingConfigException(string configName) => new Exception($"The configuration value for [{configName}] could not be loaded.");
 
         public string GraphQLApiEndpoint { get; }
 

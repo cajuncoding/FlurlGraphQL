@@ -42,7 +42,7 @@ namespace Flurl.Http.GraphQL.Querying
             where TResult : class
         {
             var graphqlResults = await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false);
-            return graphqlResults as IGraphQLQueryConnectionResult<TResult>;
+            return graphqlResults.ToGraphQLConnectionResultsInternal();
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Flurl.Http.GraphQL.Querying
             {
                 await iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
                 {
-                    var originalGraphQLRequest = flurlGraphQLResponse.OriginalGraphQLRequest;
+                    var originalGraphQLRequest = flurlGraphQLResponse.GraphQLRequest;
 
                     if (!(responsePayload.LoadTypedResults<TResult>(queryOperationName) is IGraphQLQueryConnectionResult<TResult> pageResult))
                     {
@@ -124,7 +124,7 @@ namespace Flurl.Http.GraphQL.Querying
             where TResult : class
         {
             var graphqlResults = await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false);
-            return graphqlResults as IGraphQLQueryCollectionSegmentResult<TResult>;
+            return graphqlResults.ToGraphQLConnectionResultsInternal().ToCollectionSegmentResultsInternal();
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace Flurl.Http.GraphQL.Querying
             {
                 await iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
                 {
-                    var originalGraphQLRequest = flurlGraphQLResponse.OriginalGraphQLRequest;
+                    var originalGraphQLRequest = flurlGraphQLResponse.GraphQLRequest;
 
                     if (!(responsePayload.LoadTypedResults<TResult>(queryOperationName) is IGraphQLQueryCollectionSegmentResult<TResult> pageResult) || !pageResult.HasAnyResults())
                     {

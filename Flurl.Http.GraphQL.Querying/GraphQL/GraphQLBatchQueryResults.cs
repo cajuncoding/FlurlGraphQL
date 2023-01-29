@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
@@ -104,7 +103,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="index"></param>
         /// <returns></returns>
         public IGraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(int index) where TResult : class
-            => ToGraphQLConnectionResultsInternal(GetResults<TResult>(index));
+            => GetResults<TResult>(index).ToGraphQLConnectionResultsInternal();
 
         /// <summary>
         /// Gets the results for the batch query by its operationName (case insensitive), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
@@ -115,14 +114,9 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="operationName"></param>
         /// <returns></returns>
         public IGraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(string operationName) where TResult : class
-            => ToGraphQLConnectionResultsInternal(GetResults<TResult>(operationName));
+            => GetResults<TResult>(operationName).ToGraphQLConnectionResultsInternal();
 
-        private IGraphQLQueryConnectionResult<TResult> ToGraphQLConnectionResultsInternal<TResult>(IGraphQLQueryResults<TResult> results) where TResult : class
-        {
-            return results is IGraphQLQueryConnectionResult<TResult> connectionResults
-                ? connectionResults
-                : new GraphQLQueryConnectionResult<TResult>(results.GetResultsInternal(), results.TotalCount);
-        }
+
 
         /// <summary>
         /// Gets the results for the batch query by its ordinal index (first query is 0), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
@@ -134,7 +128,7 @@ namespace Flurl.Http.GraphQL.Querying
         public IGraphQLQueryCollectionSegmentResult<TResult> GetCollectionSegmentResults<TResult>(int index) where TResult : class
         {
             if (GetConnectionResults<TResult>(index) is GraphQLQueryConnectionResult<TResult> connectionResults)
-                return ToCollectionSegmentResultsInternal(connectionResults);
+                return connectionResults.ToCollectionSegmentResultsInternal();
 
             return null;
         }
@@ -147,21 +141,8 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="operationName"></param>
         /// <returns></returns>
         public IGraphQLQueryCollectionSegmentResult<TResult> GetCollectionSegmentResults<TResult>(string operationName) where TResult : class
-            => ToCollectionSegmentResultsInternal(GetConnectionResults<TResult>(operationName));
+            => GetConnectionResults<TResult>(operationName).ToCollectionSegmentResultsInternal();
 
-        private IGraphQLQueryCollectionSegmentResult<TResult> ToCollectionSegmentResultsInternal<TResult>(IGraphQLQueryConnectionResult<TResult> connectionResults) 
-            where TResult : class
-        {
-            if(connectionResults == null)
-                return null;
 
-            var pageInfo = connectionResults.PageInfo;
-
-            return new GraphQLQueryCollectionSegmentResult<TResult>(
-                connectionResults.GetResultsInternal(),
-                connectionResults.TotalCount,
-                new GraphQLOffsetPageInfo(hasNextPage: pageInfo?.HasNextPage, hasPreviousPage: pageInfo?.HasPreviousPage)
-            );
-        }
     }
 }
