@@ -8,7 +8,8 @@ namespace Flurl.Http.GraphQL.Querying
 {
     public static class FlurlGraphQLRequestExtensions
     {
-        #region ToGraphQLRequest()...
+        #region ToGraphQLRequest() Internal Helpers...
+
         private static IFlurlGraphQLRequest ToGraphQLRequest(string url) => new FlurlRequest(url).ToGraphQLRequest();
         private static IFlurlGraphQLRequest ToGraphQLRequest(Uri url) => new FlurlRequest(url).ToGraphQLRequest();
         private static IFlurlGraphQLRequest ToGraphQLRequest(Url url) => new FlurlRequest(url).ToGraphQLRequest();

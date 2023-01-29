@@ -82,6 +82,13 @@ namespace Flurl.Http.GraphQL.Querying
             return this;
         }
 
+        public IFlurlGraphQLRequest Clone()
+        {
+            return new FlurlGraphQLRequest(this.BaseFlurlRequest)
+                .WithGraphQLQuery(this.GraphQLQuery)
+                .SetGraphQLVariables(this.GraphQLVariables);
+        }
+
         #endregion
 
         #region GraphQL Query Execution with Server

@@ -16,6 +16,7 @@ namespace Flurl.Http.GraphQL.Querying
         IFlurlGraphQLRequest RemoveGraphQLVariable(string name);
         IFlurlGraphQLRequest WithGraphQLQuery(string query, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest ClearGraphQLQuery();
+        IFlurlGraphQLRequest Clone();
 
         Task<IFlurlGraphQLResponse> PostGraphQLQueryAsync<TVariables>(TVariables variables, CancellationToken cancellationToken = default, NullValueHandling nullValueHandling = NullValueHandling.Remove)
             where TVariables : class;

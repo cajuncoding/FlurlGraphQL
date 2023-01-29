@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace Flurl.Http.GraphQL.Tests
 {
@@ -12,7 +14,7 @@ namespace Flurl.Http.GraphQL.Tests
         ///     https://stackoverflow.com/a/50223191/7293142
         /// </summary>
         /// <exception cref="Exception"></exception>
-        public static void InitEnvironmentFromLocalSettingsJson(string? jsonFileName = null)
+        public static void InitEnvironmentFromLocalSettingsJson(string jsonFileName = null)
         {
             var settingsFileName = jsonFileName ?? "local.settings.json";
             var basePath = Directory.GetCurrentDirectory();
