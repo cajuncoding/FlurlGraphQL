@@ -38,7 +38,7 @@ namespace Flurl.Http.GraphQL.Querying
                 var currentPage = iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
                 {
                     IGraphQLQueryConnectionResult<TResult> pageResult;
-                    (pageResult, priorEndCursor,iterationResponseTask) = ProcessPayloadIterationForAsyncEnumeration<TResult>(
+                    (pageResult, priorEndCursor,iterationResponseTask) = ProcessPayloadIterationForCursorPaginationAsyncEnumeration<TResult>(
                         queryOperationName, 
                         priorEndCursor, 
                         responsePayload, 

@@ -72,37 +72,21 @@ namespace Flurl.Http.GraphQL.Querying
 
             do
             {
-                await iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
+                var currentPage = await iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
                 {
-                    var originalGraphQLRequest = flurlGraphQLResponse.GraphQLRequest;
+                    IGraphQLQueryConnectionResult<TResult> pageResult;
+                    (pageResult, priorEndCursor, iterationResponseTask) = ProcessPayloadIterationForCursorPaginationAsyncEnumeration<TResult>(
+                        queryOperationName,
+                        priorEndCursor,
+                        responsePayload,
+                        flurlGraphQLResponse,
+                        cancellationToken
+                    );
 
-                    if (!(responsePayload.LoadTypedResults<TResult>(queryOperationName) is IGraphQLQueryConnectionResult<TResult> pageResult))
-                    {
-                        //If the page result is invalid we cancel our iteration loop by setting the iteration value to null and return null.
-                        iterationResponseTask = null;
-                        return null;
-                    }
-
-                    //Validate the Page to see if we are able to continue our iteration...
-                    var (hasNextPage, endCursor) = AssertCursorPageIsValidForEnumeration(pageResult?.PageInfo, responsePayload, flurlGraphQLResponse, priorEndCursor);
-
-                    //Update our tracking endCursor for validation...
-                    priorEndCursor = endCursor;
-
-                    //THIS Page is Good so we add it to our Results...
-                    pageResultsList.Add(pageResult);
-
-                    //If there is another page then Update our Variables and request the NEXT Page;
-                    //  otherwise set our iteration to null to stop processing!
-                    iterationResponseTask = !hasNextPage
-                        ? null
-                        : originalGraphQLRequest
-                            .SetGraphQLVariable(GraphQLConnectionArgs.After, endCursor)
-                            .PostGraphQLQueryAsync(cancellationToken);
-
-                    //Since this is a Func we must return a value.
                     return pageResult;
                 }).ConfigureAwait(false);
+
+                pageResultsList.Add(currentPage);
 
             } while (iterationResponseTask != null);
 
@@ -153,39 +137,21 @@ namespace Flurl.Http.GraphQL.Querying
 
             do
             {
-                await iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
+                var currentPage = await iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
                 {
-                    var originalGraphQLRequest = flurlGraphQLResponse.GraphQLRequest;
+                    IGraphQLQueryCollectionSegmentResult<TResult> pageResult;
+                    (pageResult, iterationResponseTask) = ProcessPayloadIterationForOffsetPaginationAsyncEnumeration<TResult>(
+                        queryOperationName,
+                        responsePayload,
+                        flurlGraphQLResponse,
+                        cancellationToken
+                    );
 
-                    if (!(responsePayload.LoadTypedResults<TResult>(queryOperationName) is IGraphQLQueryCollectionSegmentResult<TResult> pageResult) || !pageResult.HasAnyResults())
-                    {
-                        //If the page result is invalid we cancel our iteration loop by setting the iteration value to null and return null.
-                        iterationResponseTask = null;
-                        return null;
-                    }
-
-                    //Get the current Skip Variable so that we can dynamically increment it to continue the pagination!
-                    int? skipVariable = originalGraphQLRequest.GetGraphQLVariable(GraphQLCollectionSegmentArgs.Skip) as int?;
-
-                    //Validate the Page to see if we are able to continue our iteration...
-                    var hasNextPage = AssertOffsetPageIsValidForEnumeration(pageResult?.PageInfo, responsePayload, flurlGraphQLResponse, skipVariable);
-
-                    var nextSkipVariable = skipVariable + pageResult.Count;
-
-                    //THIS Page is Good so we add it to our Results...
-                    pageResultsList.Add(pageResult);
-
-                    //If there is another page then Update our Variables and request the NEXT Page;
-                    //  otherwise set our iteration to null to stop processing!
-                    iterationResponseTask = !hasNextPage
-                        ? null
-                        : originalGraphQLRequest
-                            .SetGraphQLVariable(GraphQLCollectionSegmentArgs.Skip, nextSkipVariable)
-                            .PostGraphQLQueryAsync(cancellationToken);
-
-                    //Since this is a Func we must return a value.
                     return pageResult;
                 }).ConfigureAwait(false);
+
+                //THIS Page is Good so we add it to our Results...
+                pageResultsList.Add(currentPage);
 
             } while (iterationResponseTask != null);
 
