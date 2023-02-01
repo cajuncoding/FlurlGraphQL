@@ -31,7 +31,7 @@
         /// <typeparam name="TResult"></typeparam>
         /// <param name="index"></param>
         /// <returns></returns>
-        IGraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(int index) where TResult : class;
+        IGraphQLConnectionResults<TResult> GetConnectionResults<TResult>(int index) where TResult : class;
 
         /// <summary>
         /// Gets the results for the batch query by its operationName (case insensitive), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
@@ -40,7 +40,7 @@
         /// <typeparam name="TResult"></typeparam>
         /// <param name="operationName"></param>
         /// <returns></returns>
-        IGraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(string operationName) where TResult : class;
+        IGraphQLConnectionResults<TResult> GetConnectionResults<TResult>(string operationName) where TResult : class;
 
         /// <summary>
         /// Gets the results for the batch query by its ordinal index (first query is 0), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
@@ -49,7 +49,7 @@
         /// <typeparam name="TResult"></typeparam>
         /// <param name="index"></param>
         /// <returns></returns>
-        IGraphQLQueryCollectionSegmentResult<TResult> GetCollectionSegmentResults<TResult>(int index) where TResult : class;
+        IGraphQLCollectionSegmentResults<TResult> GetCollectionSegmentResults<TResult>(int index) where TResult : class;
 
         /// <summary>
         /// Gets the results for the batch query by its operationName (case insensitive), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
@@ -58,6 +58,6 @@
         /// <typeparam name="TResult"></typeparam>
         /// <param name="operationName"></param>
         /// <returns></returns>
-        IGraphQLQueryCollectionSegmentResult<TResult> GetCollectionSegmentResults<TResult>(string operationName) where TResult : class;
+        IGraphQLCollectionSegmentResults<TResult> GetCollectionSegmentResults<TResult>(string operationName) where TResult : class;
     }
 }

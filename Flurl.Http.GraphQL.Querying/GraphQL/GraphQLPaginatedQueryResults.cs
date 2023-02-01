@@ -10,11 +10,11 @@ namespace Flurl.Http.GraphQL.Querying
     /// </summary>
     /// <typeparam name="TResult"></typeparam>
     /// <typeparam name="TPageInfo"></typeparam>
-    public class GraphQLQueryPaginatedResult<TResult, TPageInfo> : GraphQLQueryResults<TResult>, IGraphQLQueryPaginatedResult<TResult, TPageInfo> 
+    public class GraphQLPaginatedQueryResults<TResult, TPageInfo> : GraphQLQueryResults<TResult>, IGraphQLPaginatedQueryResults<TResult, TPageInfo> 
         where TResult : class
         where TPageInfo : class
     {
-        public GraphQLQueryPaginatedResult(IList<TResult> results, int? totalCount = null, TPageInfo cursorPageInfo = null)
+        public GraphQLPaginatedQueryResults(IList<TResult> results, int? totalCount = null, TPageInfo cursorPageInfo = null)
             : base(results)
         {
             //NOTE: The TotalCount and PageInfo are both optional and may be null
