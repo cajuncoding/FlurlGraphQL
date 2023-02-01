@@ -16,17 +16,17 @@ namespace Flurl.Http.GraphQL.Querying
         internal static IList<TResult> GetResultsInternal<TResult>(this IGraphQLQueryResults<TResult> results) where TResult : class
             => (results as GraphQLQueryResults<TResult>)?.GetResultsInternal() ?? new List<TResult>();
 
-        internal static IGraphQLQueryConnectionResult<TResult> ToGraphQLConnectionResultsInternal<TResult>(this IGraphQLQueryResults<TResult> results) where TResult : class
+        internal static IGraphQLConnectionResults<TResult> ToGraphQLConnectionResultsInternal<TResult>(this IGraphQLQueryResults<TResult> results) where TResult : class
         {
             if (results == null)
                 return null;
 
-            return results is IGraphQLQueryConnectionResult<TResult> connectionResults
+            return results is IGraphQLConnectionResults<TResult> connectionResults
                 ? connectionResults
-                : new GraphQLQueryConnectionResult<TResult>(results.GetResultsInternal());
+                : new GraphQLConnectionResults<TResult>(results.GetResultsInternal());
         }
 
-        internal static IGraphQLQueryCollectionSegmentResult<TResult> ToCollectionSegmentResultsInternal<TResult>(this IGraphQLQueryConnectionResult<TResult> connectionResults)
+        internal static IGraphQLCollectionSegmentResults<TResult> ToCollectionSegmentResultsInternal<TResult>(this IGraphQLConnectionResults<TResult> connectionResults)
             where TResult : class
         {
             if (connectionResults == null)
@@ -34,7 +34,7 @@ namespace Flurl.Http.GraphQL.Querying
 
             var pageInfo = connectionResults.PageInfo;
 
-            return new GraphQLQueryCollectionSegmentResult<TResult>(
+            return new GraphQLCollectionSegmentResults<TResult>(
                 connectionResults.GetResultsInternal(),
                 connectionResults.TotalCount,
                 new GraphQLOffsetPageInfo(hasNextPage: pageInfo?.HasNextPage, hasPreviousPage: pageInfo?.HasPreviousPage)

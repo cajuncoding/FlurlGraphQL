@@ -38,7 +38,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="responseTask"></param>
         /// <param name="queryOperationName"></param>
         /// <returns>Returns an IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
-        public static async Task<IGraphQLQueryConnectionResult<TResult>> ReceiveGraphQLQueryConnectionResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
+        public static async Task<IGraphQLConnectionResults<TResult>> ReceiveGraphQLQueryConnectionResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
             where TResult : class
         {
             var graphqlResults = await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false);
@@ -59,13 +59,13 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="queryOperationName"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns a List of ALL IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
-        public static async Task<IList<IGraphQLQueryConnectionResult<TResult>>> ReceiveAllGraphQLQueryConnectionPages<TResult>(
+        public static async Task<IList<IGraphQLConnectionResults<TResult>>> ReceiveAllGraphQLQueryConnectionPages<TResult>(
             this Task<IFlurlGraphQLResponse> responseTask,
             string queryOperationName = null,
             CancellationToken cancellationToken = default
         ) where TResult : class
         {
-            var pageResultsList = new List<IGraphQLQueryConnectionResult<TResult>>();
+            var pageResultsList = new List<IGraphQLConnectionResults<TResult>>();
             Task<IFlurlGraphQLResponse> iterationResponseTask = responseTask;
             //Track our EndCursor to prevent infinite loops due to incorrect query; will be validated.
             string priorEndCursor = null;
@@ -74,7 +74,7 @@ namespace Flurl.Http.GraphQL.Querying
             {
                 var currentPage = await iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
                 {
-                    IGraphQLQueryConnectionResult<TResult> pageResult;
+                    IGraphQLConnectionResults<TResult> pageResult;
                     (pageResult, priorEndCursor, iterationResponseTask) = ProcessPayloadIterationForCursorPaginationAsyncEnumeration<TResult>(
                         queryOperationName,
                         priorEndCursor,
@@ -104,7 +104,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="responseTask"></param>
         /// <param name="queryOperationName"></param>
         /// <returns>Returns an IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
-        public static async Task<IGraphQLQueryCollectionSegmentResult<TResult>> ReceiveGraphQLQueryCollectionSegmentResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
+        public static async Task<IGraphQLCollectionSegmentResults<TResult>> ReceiveGraphQLQueryCollectionSegmentResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
             where TResult : class
         {
             var graphqlResults = await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false);
@@ -126,20 +126,20 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="queryOperationName"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns a List of ALL IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
-        public static async Task<IList<IGraphQLQueryCollectionSegmentResult<TResult>>> ReceiveAllGraphQLQueryCollectionSegmentPages<TResult>(
+        public static async Task<IList<IGraphQLCollectionSegmentResults<TResult>>> ReceiveAllGraphQLQueryCollectionSegmentPages<TResult>(
             this Task<IFlurlGraphQLResponse> responseTask,
             string queryOperationName = null,
             CancellationToken cancellationToken = default
         ) where TResult : class
         {
-            var pageResultsList = new List<IGraphQLQueryCollectionSegmentResult<TResult>>();
+            var pageResultsList = new List<IGraphQLCollectionSegmentResults<TResult>>();
             Task<IFlurlGraphQLResponse> iterationResponseTask = responseTask;
 
             do
             {
                 var currentPage = await iterationResponseTask.ProcessResponsePayloadInternalAsync((responsePayload, flurlGraphQLResponse) =>
                 {
-                    IGraphQLQueryCollectionSegmentResult<TResult> pageResult;
+                    IGraphQLCollectionSegmentResults<TResult> pageResult;
                     (pageResult, iterationResponseTask) = ProcessPayloadIterationForOffsetPaginationAsyncEnumeration<TResult>(
                         queryOperationName,
                         responsePayload,

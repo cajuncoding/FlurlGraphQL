@@ -102,7 +102,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <typeparam name="TResult"></typeparam>
         /// <param name="index"></param>
         /// <returns></returns>
-        public IGraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(int index) where TResult : class
+        public IGraphQLConnectionResults<TResult> GetConnectionResults<TResult>(int index) where TResult : class
             => GetResults<TResult>(index).ToGraphQLConnectionResultsInternal();
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <typeparam name="TResult"></typeparam>
         /// <param name="operationName"></param>
         /// <returns></returns>
-        public IGraphQLQueryConnectionResult<TResult> GetConnectionResults<TResult>(string operationName) where TResult : class
+        public IGraphQLConnectionResults<TResult> GetConnectionResults<TResult>(string operationName) where TResult : class
             => GetResults<TResult>(operationName).ToGraphQLConnectionResultsInternal();
 
 
@@ -125,9 +125,9 @@ namespace Flurl.Http.GraphQL.Querying
         /// <typeparam name="TResult"></typeparam>
         /// <param name="index"></param>
         /// <returns></returns>
-        public IGraphQLQueryCollectionSegmentResult<TResult> GetCollectionSegmentResults<TResult>(int index) where TResult : class
+        public IGraphQLCollectionSegmentResults<TResult> GetCollectionSegmentResults<TResult>(int index) where TResult : class
         {
-            if (GetConnectionResults<TResult>(index) is GraphQLQueryConnectionResult<TResult> connectionResults)
+            if (GetConnectionResults<TResult>(index) is GraphQLConnectionResults<TResult> connectionResults)
                 return connectionResults.ToCollectionSegmentResultsInternal();
 
             return null;
@@ -140,7 +140,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <typeparam name="TResult"></typeparam>
         /// <param name="operationName"></param>
         /// <returns></returns>
-        public IGraphQLQueryCollectionSegmentResult<TResult> GetCollectionSegmentResults<TResult>(string operationName) where TResult : class
+        public IGraphQLCollectionSegmentResults<TResult> GetCollectionSegmentResults<TResult>(string operationName) where TResult : class
             => GetConnectionResults<TResult>(operationName).ToCollectionSegmentResultsInternal();
 
 

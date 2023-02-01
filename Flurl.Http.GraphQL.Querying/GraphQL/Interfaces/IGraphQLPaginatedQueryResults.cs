@@ -1,6 +1,6 @@
 ﻿namespace Flurl.Http.GraphQL.Querying
 {
-    public interface IGraphQLQueryPaginatedResult<out TResult, out TPageInfo> : IGraphQLQueryResults<TResult>
+    public interface IGraphQLPaginatedQueryResults<out TResult, out TPageInfo> : IGraphQLQueryResults<TResult>
         where TResult : class
         where TPageInfo : class
     {

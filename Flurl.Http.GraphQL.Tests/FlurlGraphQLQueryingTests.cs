@@ -80,7 +80,7 @@ namespace Flurl.Http.GraphQL.Tests
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(results);
-            Assert.IsTrue(results is IGraphQLQueryConnectionResult<StarWarsCharacter>);
+            Assert.IsTrue(results is IGraphQLConnectionResults<StarWarsCharacter>);
             Assert.IsTrue(results.Count > 0);
 
             Assert.IsNotNull(results.TotalCount);
@@ -123,7 +123,7 @@ namespace Flurl.Http.GraphQL.Tests
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(allResultPages);
-            Assert.IsTrue(allResultPages is IList<IGraphQLQueryConnectionResult<StarWarsCharacter>>);
+            Assert.IsTrue(allResultPages is IList<IGraphQLConnectionResults<StarWarsCharacter>>);
             Assert.IsTrue(allResultPages.Count > 0);
 
             foreach (var page in allResultPages)
@@ -164,12 +164,12 @@ namespace Flurl.Http.GraphQL.Tests
                 ")
                 .SetGraphQLVariables(new { first = 2 })
                 .PostGraphQLQueryAsync()
-                .ReceiveGraphQLQueryConnectionPagesAsyncEnumerable<StarWarsCharacter>();
+                .ReceiveGraphQLConnectionPagesAsyncEnumerable<StarWarsCharacter>();
 
             Assert.IsNotNull(pagesAsyncEnumerable);
-            Assert.IsTrue(pagesAsyncEnumerable is IAsyncEnumerable<IGraphQLQueryConnectionResult<StarWarsCharacter>>);
+            Assert.IsTrue(pagesAsyncEnumerable is IAsyncEnumerable<IGraphQLConnectionResults<StarWarsCharacter>>);
 
-            var pageResultsList = new List<IGraphQLQueryConnectionResult<StarWarsCharacter>>();
+            var pageResultsList = new List<IGraphQLConnectionResults<StarWarsCharacter>>();
 
             //Streaming our pages...
             await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
@@ -223,7 +223,7 @@ namespace Flurl.Http.GraphQL.Tests
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(results);
-            Assert.IsTrue(results is IGraphQLQueryCollectionSegmentResult<StarWarsCharacter>);
+            Assert.IsTrue(results is IGraphQLCollectionSegmentResults<StarWarsCharacter>);
             Assert.IsTrue(results.Count > 0);
 
             Assert.IsNotNull(results.TotalCount);
@@ -263,7 +263,7 @@ namespace Flurl.Http.GraphQL.Tests
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(allResultPages);
-            Assert.IsTrue(allResultPages is IList<IGraphQLQueryCollectionSegmentResult<StarWarsCharacter>>);
+            Assert.IsTrue(allResultPages is IList<IGraphQLCollectionSegmentResults<StarWarsCharacter>>);
             Assert.IsTrue(allResultPages.Count > 0);
 
             foreach (var page in allResultPages)
@@ -303,12 +303,12 @@ namespace Flurl.Http.GraphQL.Tests
                 ")
                 .SetGraphQLVariables(new { first = 2 })
                 .PostGraphQLQueryAsync()
-                .ReceiveGraphQLQueryConnectionPagesAsEnumerableTasks<StarWarsCharacter>();
+                .ReceiveGraphQLConnectionPagesAsEnumerableTasks<StarWarsCharacter>();
 
             Assert.IsNotNull(enumerablePageTasks);
-            Assert.IsTrue(enumerablePageTasks is IEnumerable<Task<IGraphQLQueryConnectionResult<StarWarsCharacter>>>);
+            Assert.IsTrue(enumerablePageTasks is IEnumerable<Task<IGraphQLConnectionResults<StarWarsCharacter>>>);
 
-            List<IGraphQLQueryConnectionResult<StarWarsCharacter>> pageResultsList = new List<IGraphQLQueryConnectionResult<StarWarsCharacter>>();
+            List<IGraphQLConnectionResults<StarWarsCharacter>> pageResultsList = new List<IGraphQLConnectionResults<StarWarsCharacter>>();
 
             //Enumerate the async retrieved pages (as Tasks)...
             foreach (var pageTask in enumerablePageTasks)

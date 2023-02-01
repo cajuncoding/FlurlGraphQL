@@ -82,7 +82,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         internal static (
-            IGraphQLQueryConnectionResult<TResult> PageResult,
+            IGraphQLConnectionResults<TResult> PageResult,
             string UpdatedPriorEndCursor, 
             Task<IFlurlGraphQLResponse> NextIterationResponseTask
         ) ProcessPayloadIterationForCursorPaginationAsyncEnumeration<TResult>(
@@ -95,7 +95,7 @@ namespace Flurl.Http.GraphQL.Querying
         {
             var originalGraphQLRequest = flurlGraphQLResponse.GraphQLRequest;
 
-            var pageResult = responsePayload.LoadTypedResults<TResult>(queryOperationName) as IGraphQLQueryConnectionResult<TResult>;
+            var pageResult = responsePayload.LoadTypedResults<TResult>(queryOperationName) as IGraphQLConnectionResults<TResult>;
 
             //Validate the Page to see if we are able to continue our iteration...
             var (hasNextPage, endCursor) = AssertCursorPageIsValidForEnumeration(pageResult?.PageInfo, responsePayload, flurlGraphQLResponse, priorEndCursor);
@@ -125,7 +125,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         internal static (
-            IGraphQLQueryCollectionSegmentResult<TResult> PageResult,
+            IGraphQLCollectionSegmentResults<TResult> PageResult,
             Task<IFlurlGraphQLResponse> NextIterationResponseTask
         ) ProcessPayloadIterationForOffsetPaginationAsyncEnumeration<TResult>(
             string queryOperationName,
@@ -136,7 +136,7 @@ namespace Flurl.Http.GraphQL.Querying
         {
             var originalGraphQLRequest = flurlGraphQLResponse.GraphQLRequest;
 
-            if (!(responsePayload.LoadTypedResults<TResult>(queryOperationName) is IGraphQLQueryCollectionSegmentResult<TResult> pageResult) || !pageResult.HasAnyResults())
+            if (!(responsePayload.LoadTypedResults<TResult>(queryOperationName) is IGraphQLCollectionSegmentResults<TResult> pageResult) || !pageResult.HasAnyResults())
             {
                 //If the page result is invalid we cancel our iteration loop by setting the iteration value to null and return null.
                 return (null, null);
@@ -252,11 +252,11 @@ namespace Flurl.Http.GraphQL.Querying
             //      request TotalCount by itself without any other PageInfo or Nodes...
             if (paginationType == PaginationType.Cursor || totalCount.HasValue)
             {
-                return new GraphQLQueryConnectionResult<TResult>(entityResults, totalCount, pageInfo);
+                return new GraphQLConnectionResults<TResult>(entityResults, totalCount, pageInfo);
             }
             else if (paginationType == PaginationType.Offset)
             {
-                return new GraphQLQueryCollectionSegmentResult<TResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
+                return new GraphQLCollectionSegmentResults<TResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
             }
 
             //If not a paging result then we simply return the typed results...
