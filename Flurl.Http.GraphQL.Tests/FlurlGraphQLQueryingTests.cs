@@ -76,7 +76,7 @@ namespace Flurl.Http.GraphQL.Tests
                 ")
                 .SetGraphQLVariables(new { first = 2 })
                 .PostGraphQLQueryAsync()
-                .ReceiveGraphQLQueryConnectionResults<StarWarsCharacter>()
+                .ReceiveGraphQLConnectionResults<StarWarsCharacter>()
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(results);
@@ -141,7 +141,7 @@ namespace Flurl.Http.GraphQL.Tests
             TestContext.WriteLine(jsonText);
         }
 
-        #if NET6_0
+#if NET6_0
 
         [TestMethod]
         public async Task TestCursorPagingRetrievePagesAsAsyncEnumerableStreamAsync()
@@ -151,6 +151,7 @@ namespace Flurl.Http.GraphQL.Tests
                     query($first:Int, $after:String) {
                       characters (first:$first, after:$after) {
 		                pageInfo {
+                          hasPreviousPage
                           hasNextPage
                           endCursor
                         }
@@ -186,6 +187,7 @@ namespace Flurl.Http.GraphQL.Tests
             //Additional validation now that we have all pages streamed into memory...
             foreach (var page in pageResultsList)
             {
+                Assert.AreEqual(page != pageResultsList.First(), page.PageInfo.HasPreviousPage);
                 Assert.AreEqual(page != pageResultsList.Last(), page.PageInfo.HasNextPage);
             }
 
@@ -195,7 +197,58 @@ namespace Flurl.Http.GraphQL.Tests
             TestContext.WriteLine(jsonText);
         }
 
-        #endif
+        public async Task TestOffsetPagingRetrievePagesAsAsyncEnumerableStreamAsync()
+        {
+            var pagesAsyncEnumerable = GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query ($skip: Int, $take: Int) {
+	                    charactersWithOffsetPaging(skip: $skip, take: $take) {
+		                    pageInfo {
+			                    hasNextPage
+			                    hasPreviousPage
+		                    }
+		                    items {
+			                    personalIdentifier
+			                    name
+			                    height
+		                    }
+	                    }
+                    }
+                ")
+                .SetGraphQLVariables(new { take = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLCollectionSegmentPagesAsyncEnumerable<StarWarsCharacter>();
+
+            Assert.IsNotNull(pagesAsyncEnumerable);
+            Assert.IsTrue(pagesAsyncEnumerable is IAsyncEnumerable<IGraphQLConnectionResults<StarWarsCharacter>>);
+
+            var pageResultsList = new List<IGraphQLCollectionSegmentResults<StarWarsCharacter>>();
+
+            //Streaming our pages...
+            await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
+            {
+                Assert.IsNotNull(page);
+                Assert.IsTrue(page.HasAnyResults());
+                Assert.IsFalse(page.HasTotalCount());
+
+                //Aggregate into a List for additional validation...
+                pageResultsList.Add(page);
+            }
+
+            //Additional validation now that we have all pages streamed into memory...
+            foreach (var page in pageResultsList)
+            {
+                Assert.AreEqual(page != pageResultsList.First(), page.PageInfo.HasPreviousPage);
+                Assert.AreEqual(page != pageResultsList.Last(), page.PageInfo.HasNextPage);
+            }
+
+            //Flatten the Page Results to a single set of results via Linq
+            var allResults = pageResultsList.SelectMany(p => p);
+            var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+#endif
 
         [TestMethod]
         public async Task TestSingleQueryOffsetPagingResultsAsync()
@@ -219,7 +272,7 @@ namespace Flurl.Http.GraphQL.Tests
                 ")
                 .SetGraphQLVariables(new { skip = 0, take = 2 })
                 .PostGraphQLQueryAsync()
-                .ReceiveGraphQLQueryCollectionSegmentResults<StarWarsCharacter>()
+                .ReceiveGraphQLCollectionSegmentResults<StarWarsCharacter>()
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(results);
@@ -283,7 +336,7 @@ namespace Flurl.Http.GraphQL.Tests
         #if NET48
 
         [TestMethod]
-        public async Task TestOffsetPagingRetrievePagesAsEnumerableAsync()
+        public async Task TestCursorPagingRetrievePagesAsEnumerableTasksAsync()
         {
             var enumerablePageTasks = GraphQLApiEndpoint
                 .WithGraphQLQuery(@"
@@ -327,6 +380,60 @@ namespace Flurl.Http.GraphQL.Tests
             //Additional validation now that we have all pages streamed into memory...
             foreach (var page in pageResultsList)
             {
+                Assert.AreEqual(page != pageResultsList.Last(), page.PageInfo.HasNextPage);
+            }
+
+            //Flatten the Page Results to a single set of results via Linq
+            var allResults = pageResultsList.SelectMany(p => p);
+            var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        [TestMethod]
+        public async Task TestOffsetPagingRetrievePagesAsEnumerableTasksAsync()
+        {
+            var enumerablePageTasks = GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query ($skip: Int, $take: Int) {
+	                    charactersWithOffsetPaging(skip: $skip, take: $take) {
+		                    pageInfo {
+			                    hasNextPage
+			                    hasPreviousPage
+		                    }
+		                    items {
+			                    personalIdentifier
+			                    name
+			                    height
+		                    }
+	                    }
+                    }
+                ")
+                .SetGraphQLVariables(new { take = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLCollectionSegmentPagesAsEnumerableTasks<StarWarsCharacter>();
+
+            Assert.IsNotNull(enumerablePageTasks);
+            Assert.IsTrue(enumerablePageTasks is IEnumerable<Task<IGraphQLCollectionSegmentResults<StarWarsCharacter>>>);
+
+            var pageResultsList = new List<IGraphQLCollectionSegmentResults<StarWarsCharacter>>();
+
+            //Enumerate the async retrieved pages (as Tasks)...
+            foreach (var pageTask in enumerablePageTasks)
+            {
+                var page = await pageTask.ConfigureAwait(false);
+
+                Assert.IsNotNull(page);
+                Assert.IsTrue(page.HasAnyResults());
+                Assert.IsFalse(page.HasTotalCount());
+
+                //Aggregate into a List for additional validation...
+                pageResultsList.Add(page);
+            }
+
+            //Additional validation now that we have all pages streamed into memory...
+            foreach (var page in pageResultsList)
+            {
+                Assert.AreEqual(page != pageResultsList.First(), page.PageInfo.HasPreviousPage);
                 Assert.AreEqual(page != pageResultsList.Last(), page.PageInfo.HasNextPage);
             }
 

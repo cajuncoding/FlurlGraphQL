@@ -38,7 +38,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="responseTask"></param>
         /// <param name="queryOperationName"></param>
         /// <returns>Returns an IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
-        public static async Task<IGraphQLConnectionResults<TResult>> ReceiveGraphQLQueryConnectionResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
+        public static async Task<IGraphQLConnectionResults<TResult>> ReceiveGraphQLConnectionResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
             where TResult : class
         {
             var graphqlResults = await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false);
@@ -104,7 +104,7 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="responseTask"></param>
         /// <param name="queryOperationName"></param>
         /// <returns>Returns an IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
-        public static async Task<IGraphQLCollectionSegmentResults<TResult>> ReceiveGraphQLQueryCollectionSegmentResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
+        public static async Task<IGraphQLCollectionSegmentResults<TResult>> ReceiveGraphQLCollectionSegmentResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
             where TResult : class
         {
             var graphqlResults = await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false);
