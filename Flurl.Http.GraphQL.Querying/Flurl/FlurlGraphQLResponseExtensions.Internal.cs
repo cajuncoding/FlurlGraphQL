@@ -143,7 +143,7 @@ namespace Flurl.Http.GraphQL.Querying
             }
 
             //Get the current Skip Variable so that we can dynamically increment it to continue the pagination!
-            int? skipVariable = originalGraphQLRequest.GetGraphQLVariable(GraphQLCollectionSegmentArgs.Skip) as int?;
+            int? skipVariable = originalGraphQLRequest.GetGraphQLVariable(GraphQLCollectionSegmentArgs.Skip) as int? ?? 0;
 
             //Validate the Page to see if we are able to continue our iteration...
             var hasNextPage = AssertOffsetPageIsValidForEnumeration(pageResult?.PageInfo, responsePayload, flurlGraphQLResponse, skipVariable);
