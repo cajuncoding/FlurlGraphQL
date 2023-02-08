@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Linq;
 
 namespace Flurl.Http.GraphQL.Querying
 {
@@ -64,6 +66,29 @@ namespace Flurl.Http.GraphQL.Querying
 
         /// <summary>
         /// BBernard
+        /// Safely retrieves the first field of any type as JToken from the Json (JObject/JProperty) with case-insensitive matching. This method
+        ///     enables working with dynamic Json, and field/property investigations much easier.
+        /// NOTE: This is Exception safe, any property that does not exist will return null and can be efficiently
+        ///     used along with null-coalesce (?.) as well as type checking (e.g. 'is SomeType typedVar').
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public static JToken FirstField(this JToken json)
+        {
+            var firstJson = json?.First();
+            switch (firstJson)
+            {
+                case JProperty jProp:
+                    //Extract the JObject value and process if matched...
+                    return jProp.Value;
+
+                default:
+                    return firstJson;
+            }
+        }
+
+        /// <summary>
+        /// BBernard
         /// Safely retrieves the specified field as a JProperty from the Json (JObject/JProperty) with case-insensitive matching; 
         ///     a JProperty allows easy setting of the value and other manipulation of the token/node. In addition, this method
         ///     enables working with dynamic Json, and field/property investigations much easier.
@@ -87,6 +112,26 @@ namespace Flurl.Http.GraphQL.Querying
                 default:
                     return null;
             }
+        }
+
+        /// <summary>
+        /// Creates a new reader for the specified jObject by copying the settings
+        /// from an existing reader.
+        /// Inspired by StackOverflow: https://stackoverflow.com/a/21632292/7293142
+        /// </summary>
+        /// <param name="newJsonReader"></param>
+        /// <param name="originalJsonReader">The reader whose settings should be copied.</param>
+        /// <returns>The new disposable reader.</returns>
+        public static JsonReader CopyReaderSettings(this JsonReader newJsonReader, JsonReader originalJsonReader)
+        {
+            newJsonReader.Culture = originalJsonReader.Culture;
+            newJsonReader.DateFormatString = originalJsonReader.DateFormatString;
+            newJsonReader.DateParseHandling = originalJsonReader.DateParseHandling;
+            newJsonReader.DateTimeZoneHandling = originalJsonReader.DateTimeZoneHandling;
+            newJsonReader.FloatParseHandling = originalJsonReader.FloatParseHandling;
+            newJsonReader.MaxDepth = originalJsonReader.MaxDepth;
+            newJsonReader.SupportMultipleContent = originalJsonReader.SupportMultipleContent;
+            return newJsonReader;
         }
     }
 }

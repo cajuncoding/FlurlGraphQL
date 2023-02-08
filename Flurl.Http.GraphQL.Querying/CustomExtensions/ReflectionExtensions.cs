@@ -36,5 +36,12 @@ namespace Flurl.Http.GraphQL.Querying
 
             return false;
         }
+
+        public static bool InheritsFrom<TInterface>(this Type type)
+            => typeof(TInterface).IsAssignableFrom(type);
+
+        public static bool InheritsFrom(this Type type, Type baseType)
+            => baseType.IsAssignableFrom(type);
+
     }
 }

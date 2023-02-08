@@ -29,7 +29,7 @@ namespace Flurl.Http.GraphQL.Querying
             var queryResultJson = Data;
 
             var querySingleResultJson = string.IsNullOrWhiteSpace(queryOperationName)
-                ? queryResultJson.First
+                ? queryResultJson.FirstField()
                 : queryResultJson.Field(queryOperationName);
 
             var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>();
