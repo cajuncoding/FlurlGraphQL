@@ -5,7 +5,7 @@
     /// that include Cursor details, etc.
     /// </summary>
     /// <typeparam name="TNode"></typeparam>
-    public class GraphQLEdge<TNode>
+    public class GraphQLEdge<TNode> : IGraphQLEdge<TNode>
     {
         public GraphQLEdge(TNode node, string cursor)
         {
@@ -15,6 +15,6 @@
 
         public TNode Node { get; }
         
-        public string Cursor { get; }
+        public string Cursor { get; set; }
     }
 }

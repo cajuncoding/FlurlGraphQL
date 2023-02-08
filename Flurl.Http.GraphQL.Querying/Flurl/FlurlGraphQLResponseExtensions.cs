@@ -21,7 +21,7 @@ namespace Flurl.Http.GraphQL.Querying
         public static async Task<IGraphQLQueryResults<TResult>> ReceiveGraphQLQueryResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
              where TResult : class
         {
-            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
+            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, flurlGraphQLResponse) =>
             {
                 var results = resultPayload.LoadTypedResults<TResult>(queryOperationName);
                 return results;

@@ -11,7 +11,7 @@ namespace Flurl.Http.GraphQL.Querying
     public static partial class FlurlGraphQLResponseExtensions
     {
         /// <summary>
-        /// This will automatically enumerate through ALL possible page results, using the GraphQL query, as a series of IEnumerable Tasks that can then be awaited.
+        /// This will automatically enumerate through ALL possible Connection/Cursor page results, using the GraphQL query, as a series of IEnumerable Tasks that can then be awaited.
         /// This offers a form of async streaming in netstandard2.0 in that while you handle one page another async Task pre-fetching the next page asynchronously is initialized.
         /// This is great for streaming data from GraphQL to another destination (e.g. a Database).
         /// The GraphQL query MUST support the (after: $after) variable, and return pageInfo.hasNextPage & pageInfo.endCursor in the results for Cursor pagination!
@@ -59,12 +59,13 @@ namespace Flurl.Http.GraphQL.Querying
         }
 
         /// <summary>
-        /// This will automatically enumerate through ALL possible page results, using the GraphQL query, as a series of IEnumerable Tasks that can then be awaited.
+        /// This will automatically enumerate through ALL possible CollectionSegment/Offset page results, using the GraphQL query, as a series of IEnumerable Tasks that can then be awaited.
         /// This offers a form of async streaming in netstandard2.0 in that while you handle one page another async Task pre-fetching the next page asynchronously is initialized.
         /// This is great for streaming data from GraphQL to another destination (e.g. a Database).
         /// The GraphQL query MUST support the (skip: $skip) variable, and return pageInfo.hasNextPage in the results for Offset pagination!
-        /// This assumes that the query used Cursor Pagination on a GraphQL Connection operation compatible with the formalized Relay specification for Cursor Paging.
-        /// See: https://relay.dev/graphql/connections.htm
+        /// This assumes that the query uses Offset Pagination on a GraphQL CollectionSegment operation compatible with the Offset Paging specification defined by the
+        /// HotChocolate GraphQL Server for .NET.
+        /// See: https://chillicream.com/docs/hotchocolate/v12/fetching-data/pagination#offset-pagination
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="responseTask"></param>
