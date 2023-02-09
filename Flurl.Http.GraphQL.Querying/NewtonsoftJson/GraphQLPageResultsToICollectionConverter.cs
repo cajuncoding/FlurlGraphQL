@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -32,21 +34,35 @@ namespace Flurl.Http.GraphQL.Querying.NewtonsoftJson
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer jsonSerializer)
         {
-            object results = null;
+            object entityResults = null;
 
             var json = JToken.ReadFrom(reader);
 
+            //All Paginated result sets, that can be flattened, are a Json Object with nested nodes/items/edges properties that are
+            //  the actual array of results we can collapse into. Therefore we only need to process Object nodes, otherwise
+            //  we fallback to original Json handling below...
             if (json.Type == JTokenType.Object)
             {
-                if (json.Field(GraphQLFields.Nodes) is JArray nodes)
+                if (json.Field(GraphQLFields.Nodes) is JArray nodesJson)
                 {
-                    results = nodes.ToObject(objectType, jsonSerializer);
+                    entityResults = nodesJson.ToObject(objectType, jsonSerializer);
+                }
+                else if (json.Field(GraphQLFields.Items) is JArray itemsJson)
+                {
+                    entityResults = itemsJson.ToObject(objectType, jsonSerializer);
+                }
+                else if (json.Field(GraphQLFields.Edges) is JArray edgesJson)
+                {
+                    entityResults = edgesJson
+                        .FlattenGraphQLEdgesJsonToArrayOfNodes()
+                        .ToObject(objectType, jsonSerializer);
                 }
             }
 
-            if (results == null)
+            //We fallback to original Json handling here if not already processed...
+            if (entityResults == null)
             {
-                //Since this is not being handled above we attempt to fallback to default Newtonsoft Json behaviour,
+                //At this point the results have not been handled above therefore we attempt to fallback to default Newtonsoft Json behaviour,
                 //      however due to the design of JsonConverters this results in an Infinite Recursive loop. So we must
                 //      track our state and flag the current objectType as the specific Type to skip when it's next encountered
                 //      which should always be the next call to CanConvert() which will then return false, and reset this Skip flag to Null!
@@ -59,10 +75,10 @@ namespace Flurl.Http.GraphQL.Querying.NewtonsoftJson
                 //      and that this Converter is only accessed by one Serializer at a time (Not Thread-safe) so the Converter should never be
                 //      added to the Global or Default settings of a Serializer... ONLY added just prior to specific de-serialization executions!
                 SkipTypeToPreventInfiniteRecursion = objectType;
-                results = json.ToObject(objectType, jsonSerializer);
+                entityResults = json.ToObject(objectType, jsonSerializer);
             }
 
-            return results;
+            return entityResults;
         }
     }
 
