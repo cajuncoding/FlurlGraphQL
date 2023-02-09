@@ -1,8 +1,12 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Flurl.Http.GraphQL.Querying;
+using Flurl.Http.GraphQL.Querying.NewtonsoftJson;
 using Flurl.Http.GraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Flurl.Http.GraphQL.Tests
 {
@@ -47,6 +51,36 @@ namespace Flurl.Http.GraphQL.Tests
         }
 
         [TestMethod]
+        public async Task TestSingleQueryRawJsonResponseAsync()
+        {
+            var json = await GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query ($ids: [Int!], $friendsCount: Int!) {
+	                    charactersById(ids: $ids) {
+		                    personalIdentifier
+		                    name
+		                    friends(first: $friendsCount) {
+			                    nodes {
+				                    personalIdentifier
+				                    name
+			                    }
+		                    }
+	                    }
+                    }
+                ")
+                .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLRawJsonResponse()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(json);
+            Assert.AreEqual(2, (json["charactersById"] as JArray)?.Count);
+
+            var jsonText = json.ToString(Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        [TestMethod]
         public async Task TestSingleQueryWithNestedResultsAsync()
         {
             var results = await GraphQLApiEndpoint
@@ -71,6 +105,11 @@ namespace Flurl.Http.GraphQL.Tests
 
             Assert.IsNotNull(results);
             Assert.AreEqual(2, results.Count);
+
+            foreach (var result in results)
+            {
+                Assert.AreEqual(2, result.Friends.Count);
+            }
 
             var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
             TestContext.WriteLine(jsonText);
