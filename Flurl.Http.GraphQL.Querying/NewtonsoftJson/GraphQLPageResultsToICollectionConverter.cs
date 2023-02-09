@@ -6,7 +6,6 @@ namespace Flurl.Http.GraphQL.Querying.NewtonsoftJson
 {
     public class GraphQLPageResultsToICollectionConverter : JsonConverter
     {
-
         private Type SkipTypeToPreventInfiniteRecursion = null;
 
         public GraphQLPageResultsToICollectionConverter()
@@ -47,6 +46,18 @@ namespace Flurl.Http.GraphQL.Querying.NewtonsoftJson
 
             if (results == null)
             {
+                //Since this is not being handled above we attempt to fallback to default Newtonsoft Json behaviour,
+                //      however due to the design of JsonConverters this results in an Infinite Recursive loop. So we must
+                //      track our state and flag the current objectType as the specific Type to skip when it's next encountered
+                //      which should always be the next call to CanConvert() which will then return false, and reset this Skip flag to Null!
+                //This process successfully interrupts the recursive loop and allows default processing to take place by NewtonsoftJson, and by
+                //      resetting it we enable support for the type to be re-used multiple times because we only skip this next instance
+                //NOTE: This was the only algorithm that works as expected because CanConvert() only receives a Type and nothing else, and
+                //      all other state monitoring properties of JsonReader such as reader.Path either don't change, get reset due to new
+                //      JsonTokeReader instantiations (inside Newtonsoft) and/or are simply private and not-accessible, etc.
+                //NOTE: This algorithm is based on the assumption that the JsonTokenReaders are always reading in one direction (synchronously)
+                //      and that this Converter is only accessed by one Serializer at a time (Not Thread-safe) so the Converter should never be
+                //      added to the Global or Default settings of a Serializer... ONLY added just prior to specific de-serialization executions!
                 SkipTypeToPreventInfiniteRecursion = objectType;
                 results = json.ToObject(objectType, jsonSerializer);
             }
