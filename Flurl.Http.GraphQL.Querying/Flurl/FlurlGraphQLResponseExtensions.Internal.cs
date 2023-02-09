@@ -85,15 +85,15 @@ namespace Flurl.Http.GraphQL.Querying
         /// <returns></returns>
         internal static (
             IGraphQLConnectionResults<TResult> PageResult,
-            string UpdatedPriorEndCursor, 
+            string UpdatedPriorEndCursor,
             Task<IFlurlGraphQLResponse> NextIterationResponseTask
-        ) ProcessPayloadIterationForCursorPaginationAsyncEnumeration<TResult>(
-            string queryOperationName,
-            string priorEndCursor,
-            FlurlGraphQLResponsePayload responsePayload,
-            FlurlGraphQLResponse flurlGraphQLResponse, 
-            CancellationToken cancellationToken = default
-        ) where TResult : class
+            ) ProcessPayloadIterationForCursorPaginationAsyncEnumeration<TResult>(
+                string queryOperationName,
+                string priorEndCursor,
+                FlurlGraphQLResponsePayload responsePayload,
+                FlurlGraphQLResponse flurlGraphQLResponse,
+                CancellationToken cancellationToken = default
+            ) where TResult : class
         {
             var pageResult = responsePayload.LoadTypedResults<TResult>(queryOperationName) as IGraphQLConnectionResults<TResult>;
 
@@ -129,19 +129,19 @@ namespace Flurl.Http.GraphQL.Querying
         internal static (
             IGraphQLCollectionSegmentResults<TResult> PageResult,
             Task<IFlurlGraphQLResponse> NextIterationResponseTask
-        ) ProcessPayloadIterationForOffsetPaginationAsyncEnumeration<TResult>(
-            string queryOperationName,
-            FlurlGraphQLResponsePayload responsePayload,
-            FlurlGraphQLResponse flurlGraphQLResponse,
-            CancellationToken cancellationToken = default
-        ) where TResult : class
+            ) ProcessPayloadIterationForOffsetPaginationAsyncEnumeration<TResult>(
+                string queryOperationName,
+                FlurlGraphQLResponsePayload responsePayload,
+                FlurlGraphQLResponse flurlGraphQLResponse,
+                CancellationToken cancellationToken = default
+            ) where TResult : class
         {
             var originalGraphQLRequest = flurlGraphQLResponse.GraphQLRequest;
             var pageResult = responsePayload.LoadTypedResults<TResult>(queryOperationName) as IGraphQLCollectionSegmentResults<TResult>;
 
             //Get the current Skip Variable so that we can dynamically increment it to continue the pagination!
             var currentSkipVariable = originalGraphQLRequest.GetGraphQLVariable(GraphQLCollectionSegmentArgs.Skip) as int? ?? 0;
-            
+
             //Detect if we are safely enumerating and encountered the end of the results
             //NOTE: We must check this before our validation to prevent exceptions for otherwise valid end of results;
             //      in which case we stop the iteration by returning null NextIterationResponseTask along with the null results.
@@ -166,7 +166,7 @@ namespace Flurl.Http.GraphQL.Querying
         }
 
         internal static async Task<TGraphQLResult> ProcessResponsePayloadInternalAsync<TGraphQLResult>(
-            this Task<IFlurlGraphQLResponse> responseTask, 
+            this Task<IFlurlGraphQLResponse> responseTask,
             Func<FlurlGraphQLResponsePayload, FlurlGraphQLResponse, TGraphQLResult> payloadHandlerFunc
         )
         {
@@ -175,7 +175,7 @@ namespace Flurl.Http.GraphQL.Querying
                 if (response == null) return default;
 
                 var resultPayload = await response.GetJsonAsync<FlurlGraphQLResponsePayload>().ConfigureAwait(false);
-                
+
                 //Raise an Exception if null or if any errors are returned...
                 if (resultPayload == null)
                 {
@@ -193,7 +193,7 @@ namespace Flurl.Http.GraphQL.Querying
         }
 
         private static readonly Type CachedIGraphQLEdgeGenericType = typeof(IGraphQLEdge<>);
-        
+
         internal static IGraphQLQueryResults<TEntityResult> ParseJsonToGraphQLResultsInternal<TEntityResult>(this JToken json)
             where TEntityResult : class
         {
@@ -203,7 +203,6 @@ namespace Flurl.Http.GraphQL.Querying
             //Ensure that all json parsing uses a Serializer with the GraphQL Contract Resolver...
             //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
             var jsonSerializer = JsonSerializer.CreateDefault();
-            //jsonSerializer.ContractResolver = GraphQLAdaptiveJsonContractResolver.Instance;
             jsonSerializer.Converters.Add(new GraphQLPageResultsToICollectionConverter());
 
             //Dynamically parse the data from the results...
@@ -220,18 +219,18 @@ namespace Flurl.Http.GraphQL.Querying
             // - the Items child of the Data Result (for items{} based Offset Paginated queries)
             // - the Edges->Node child of the the Data Result (for Edges based queries that provide access to the Cursor)
             // - finally use the (non-nested) array of results if not a Paginated result set of any kind above...
-            if (json.Field(GraphQLFields.Nodes) is JArray nodes)
+            if (json.Field(GraphQLFields.Nodes) is JArray nodesJson)
             {
-                entityResults = nodes.ToObject<List<TEntityResult>>(jsonSerializer);
+                entityResults = nodesJson.ToObject<List<TEntityResult>>(jsonSerializer);
                 paginationType = PaginationType.Cursor;
             }
-            else if (json.Field(GraphQLFields.Items) is JArray items)
+            else if (json.Field(GraphQLFields.Items) is JArray itemsJson)
             {
-                entityResults = items.ToObject<List<TEntityResult>>(jsonSerializer);
+                entityResults = itemsJson.ToObject<List<TEntityResult>>(jsonSerializer);
                 paginationType = PaginationType.Offset;
             }
             //Handle Edges case (which allow access to the Cursor)
-            else if (json.Field(GraphQLFields.Edges) is JArray edges)
+            else if (json.Field(GraphQLFields.Edges) is JArray edgesJson)
             {
                 paginationType = PaginationType.Cursor;
                 var entityType = typeof(TEntityResult);
@@ -241,31 +240,27 @@ namespace Flurl.Http.GraphQL.Querying
                 {
                     //If the current type is a Generic GraphQLEdge<TEntity> then we can directly deserialize to the Generic Type!
                     //entityResults = edges.Select(edge => edge?.ToObject<TEntityResult>(jsonSerializer)).ToList();
-                    entityResults = edges.ToObject<List<TEntityResult>>(jsonSerializer);
+                    entityResults = edgesJson.ToObject<List<TEntityResult>>(jsonSerializer);
                 }
                 //Handle all other cases including when the Entity implements IGraphQLEdge (e.g. the entity has a Cursor Property)...
                 else
                 {
-                    entityResults = edges.OfType<JObject>().Select(edge =>
-                    {
-                        var entityEdge = edge.Field(GraphQLFields.Node)?.ToObject<TEntityResult>(jsonSerializer);
-
-                        //If the entity implements IGraphQLEdge (e.g. the entity has a Cursor Property), then we can specify the Cursor...
-                        if (entityEdge is IGraphQLEdge cursorEdge)
-                            cursorEdge.Cursor = (string)edge.Field(GraphQLFields.Cursor);
-
-                        return entityEdge;
-                    }).ToList();
+                    entityResults = edgesJson
+                        .FlattenGraphQLEdgesJsonToArrayOfNodes()
+                        .ToObject<List<TEntityResult>>(jsonSerializer);
                 }
             }
-            else switch (json)
+            else
             {
-                case JArray arrayResults:
-                    entityResults = arrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
-                    break;
-                case JObject jsonObj when jsonObj.First is JArray firstArrayResults:
-                    entityResults = firstArrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
-                    break;
+                switch (json)
+                {
+                    case JArray arrayResults:
+                        entityResults = arrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
+                        break;
+                    case JObject jsonObj when jsonObj.First is JArray firstArrayResults:
+                        entityResults = firstArrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
+                        break;
+                }
             }
 
             //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
@@ -284,5 +279,25 @@ namespace Flurl.Http.GraphQL.Querying
             return new GraphQLQueryResults<TEntityResult>(entityResults);
         }
 
+        internal static JArray FlattenGraphQLEdgesJsonToArrayOfNodes(this JArray edgesJson)
+        {
+            var edgeNodesEnumerable = edgesJson
+                .OfType<JObject>()
+                .Select(edge =>
+                {
+                    var node = edge.Field(GraphQLFields.Node) as JObject;
+
+                    //If not already defined, we map the Edges Cursor value to the Node so that the model is simplified
+                    //  and any consumer can just as a "Cursor" property to their model to get the node's cursor.
+                    if (node != null && node.Field(GraphQLFields.Cursor) == null)
+                        node.Add(GraphQLFields.Cursor, edge.Field(GraphQLFields.Cursor));
+
+                    return node;
+                })
+                .Where(n => n != null && n.Type != JTokenType.Null);
+
+            var edgeNodesJson = new JArray(edgeNodesEnumerable);
+            return edgeNodesJson;
+        }
     }
 }
