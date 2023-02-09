@@ -21,7 +21,7 @@ namespace Flurl.Http.GraphQL.Querying
         public static async Task<IGraphQLQueryResults<TResult>> ReceiveGraphQLQueryResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
              where TResult : class
         {
-            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, flurlGraphQLResponse) =>
+            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
             {
                 var results = resultPayload.LoadTypedResults<TResult>(queryOperationName);
                 return results;
@@ -29,6 +29,21 @@ namespace Flurl.Http.GraphQL.Querying
             }).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Processes/parses the results of the GraphQL query execution into a raw Json Result with all raw Json response Data available for processing.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="responseTask"></param>
+        /// <param name="queryOperationName"></param>
+        /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
+        public static async Task<JObject> ReceiveGraphQLRawJsonResponse(this Task<IFlurlGraphQLResponse> responseTask)
+        {
+            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
+            {
+                var results = resultPayload.Data;
+                return results;
+            }).ConfigureAwait(false);
+        }
         /// <summary>
         /// Processes/parses the results of the GraphQL query execution into the typed results along with associated cursor paging details as defined in the GraphQL Spec for Connections.
         /// This assumes that the query used Cursor Pagination on a GraphQL Connection operation compatible with the formalized Relay specification for Cursor Paging.

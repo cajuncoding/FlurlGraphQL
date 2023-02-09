@@ -204,7 +204,7 @@ namespace Flurl.Http.GraphQL.Querying
             //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
             var jsonSerializer = JsonSerializer.CreateDefault();
             //jsonSerializer.ContractResolver = GraphQLAdaptiveJsonContractResolver.Instance;
-            jsonSerializer.Converters.Add(new GraphQLPaginatedResultsJsonConverter());
+            jsonSerializer.Converters.Add(new GraphQLPageResultsToICollectionConverter());
 
             //Dynamically parse the data from the results...
             //NOTE: We process PageInfo as Cursor Paging as the Default (because it's strongly encouraged by GraphQL.org

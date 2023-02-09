@@ -9,6 +9,6 @@ namespace Flurl.Http.GraphQL.Tests.Models
         public int PersonalIdentifier { get; set; }
         public string Name { get; set; }
         public decimal Height { get; set; }
-        public IList<StarWarsCharacter> Friends { get; set; }
+        public List<StarWarsCharacter> Friends { get; set; }
     }
 }
