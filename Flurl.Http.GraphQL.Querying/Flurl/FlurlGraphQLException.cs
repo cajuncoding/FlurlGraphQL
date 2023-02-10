@@ -28,18 +28,18 @@ namespace Flurl.Http.GraphQL.Querying
             //  error details that may be available in the Error Response Content (but not already parsed and available (e.g. when GraphQL responds with 400-BadRequest).
             GraphQLErrors = ParseGraphQLErrorsFromPayload(ErrorResponseContent);
 
-            _errorMessage = BuildErrorMessage(message, GraphQLErrors);
+            _errorMessage = BuildErrorMessage(message, GraphQLErrors, innerException);
         }
 
-        public FlurlGraphQLException(IReadOnlyList<GraphQLError> graphqlErrors, string graphqlQuery, string graphqlResponsePayloadJson = null, HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest, Exception innerException = null)
+        public FlurlGraphQLException(IReadOnlyList<GraphQLError> graphqlErrors, string graphqlQuery, string graphqlResponsePayloadContent = null, HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest, Exception innerException = null)
             : base(string.Empty, innerException)
         {
             GraphQLErrors = graphqlErrors;
             Query = graphqlQuery;
             HttpStatusCode = httpStatusCode;
-            ErrorResponseContent = graphqlResponsePayloadJson;
+            ErrorResponseContent = graphqlResponsePayloadContent;
 
-            _errorMessage = BuildErrorMessage(string.Empty, graphqlErrors);
+            _errorMessage = BuildErrorMessage(string.Empty, graphqlErrors, innerException);
         }
 
         //BBernard
@@ -65,7 +65,7 @@ namespace Flurl.Http.GraphQL.Querying
         {
             if (errorResponseContent.TryParseJObject(out var errorJson))
             {
-                var graphQLErrors = errorJson?.Field(GraphQLFields.Cursor)?.ToObject<List<GraphQLError>>();
+                var graphQLErrors = errorJson.Field(GraphQLFields.Errors)?.ToObject<List<GraphQLError>>();
                 if (graphQLErrors != null && graphQLErrors.Any())
                 {
                     return graphQLErrors.AsReadOnly();
@@ -75,27 +75,31 @@ namespace Flurl.Http.GraphQL.Querying
             return null;
         }
 
-        protected static string BuildErrorMessage(string message, IReadOnlyList<GraphQLError> graphQLErrors)
+        protected static string BuildErrorMessage(string message, IReadOnlyList<GraphQLError> graphQLErrors, Exception innerException = null)
         {
             if (graphQLErrors == null || !graphQLErrors.Any())
                 return message;
 
             var errorMessages = graphQLErrors.Select(e =>
             {
-                var location = e.Locations?.FirstOrDefault();
+                var locations = String.Join("; ", e.Locations.Select(l => $"At={l.Line},{l.Column}"));
+                var locationText = !string.IsNullOrEmpty(locations) ? $" [{locations}]" : null;
+
                 //TODO: Fix Path to build fully qualified Path using Json notation "path.to.element[0].prop"
                 var path = e.Path?.FirstOrDefault();
-
-                var locationText = location != null ? $" [At={location.Line},{location.Column}]" : null;
                 var pathText = path != null ? $" [For={path}]" : null;
 
                 var errorMetaText = string.Concat(pathText, locationText);
-
-                var graphqlMessage = e.Message.AppendSentence(errorMetaText);
+                var graphqlMessage = e.Message.AppendToSentence(errorMetaText);
+                
                 return graphqlMessage;
             }).ToList();
 
             var fullMessage = message.MergeSentences(errorMessages);
+
+            if (innerException != null)
+                fullMessage = fullMessage.MergeSentences(innerException.Message);
+
             return fullMessage;
         }
     }

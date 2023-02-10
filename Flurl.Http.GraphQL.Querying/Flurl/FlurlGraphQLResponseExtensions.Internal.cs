@@ -180,7 +180,8 @@ namespace Flurl.Http.GraphQL.Querying
                 if (resultPayload == null)
                 {
                     throw new FlurlGraphQLException(graphqlQuery: response.GraphQLQuery, httpStatusCode: (HttpStatusCode)response.StatusCode,
-                        message: "The response from GraphQL is null and/or cannot be parsed as Json.");
+                        message: "Unexpected error occurred retrieving the response payload but no Http Exception was thrown and the response"
+                                  + " from GraphQL is null and/or cannot be parsed as Json.");
                 }
                 else if (resultPayload.Errors?.Any() ?? false)
                 {

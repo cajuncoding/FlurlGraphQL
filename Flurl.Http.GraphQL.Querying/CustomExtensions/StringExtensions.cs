@@ -6,6 +6,7 @@ namespace Flurl.Http.GraphQL.Querying
 {
     internal static class StringExtensions
     {
+        public const string SPACE = " ";
         private static readonly char[] _sentencePunctuationChars = { ' ', '.', ';', '?', '!' };
 
         public static string EndSentence(this string sentence, char endSentenceCharIfNoneExists = '.')
@@ -22,7 +23,7 @@ namespace Flurl.Http.GraphQL.Querying
             return trimmedString;
         }
 
-        public static string AppendSentence(this string text, string newSentence, char endSentenceCharIfNoneExists = '.')
+        public static string AppendToSentence(this string text, string newSentence, char endSentenceCharIfNoneExists = '.')
         {
             if (string.IsNullOrWhiteSpace(text))
                 return null;
@@ -35,13 +36,16 @@ namespace Flurl.Http.GraphQL.Querying
             return punctuatedText;
         }
 
+        public static string MergeSentences(this string text, params string[] newSentences)
+            => text.MergeSentences(newSentences.AsEnumerable());
+
         public static string MergeSentences(this string text, IEnumerable<string> newSentences)
         {
             var sentences = new List<string> { text.EndSentence() };
             sentences.AddRange(newSentences.Select(s => s.EndSentence()));
             
             //string.Join() is Null Safe and will skip any Null Strings!
-            var mergedSentences = string.Join(" ", sentences);
+            var mergedSentences = string.Join(SPACE, sentences);
             
             return mergedSentences;
         }

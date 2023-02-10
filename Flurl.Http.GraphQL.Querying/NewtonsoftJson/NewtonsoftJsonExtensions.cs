@@ -14,7 +14,7 @@ namespace Flurl.Http.GraphQL.Querying
                 if (IsDuckTypedJson(jsonText))
                 {
                     json = JObject.Parse(jsonText);
-                    return true;
+                    return json != null && json.Type != JTokenType.Null;
                 }
             }
             catch (Exception)
@@ -26,7 +26,7 @@ namespace Flurl.Http.GraphQL.Querying
             return false;
         }
 
-        public static bool IsDuckTypedJson(string jsonText)
+        public static bool IsDuckTypedJson(this string jsonText)
         {
             if (string.IsNullOrWhiteSpace(jsonText))
                 return false;
