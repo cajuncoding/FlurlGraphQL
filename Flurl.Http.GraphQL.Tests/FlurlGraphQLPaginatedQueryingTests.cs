@@ -12,7 +12,7 @@ namespace Flurl.Http.GraphQL.Tests
     public class FlurlGraphQLPaginatedQueryingTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public async Task TestSingleQueryCursorPagingResultsAsync()
+        public async Task TestSingleQueryCursorPagingNodeResultsAsync()
         {
             var results = await GraphQLApiEndpoint
                 .WithGraphQLQuery(@"
@@ -40,7 +40,7 @@ namespace Flurl.Http.GraphQL.Tests
 
             Assert.IsNotNull(results);
             Assert.IsTrue(results is IGraphQLConnectionResults<StarWarsCharacter>);
-            Assert.IsTrue(results.Count > 0);
+            Assert.AreEqual(2, results.Count);
 
             Assert.IsNotNull(results.TotalCount);
             Assert.IsTrue(results.TotalCount > results.Count);
@@ -52,6 +52,75 @@ namespace Flurl.Http.GraphQL.Tests
 
             var char1 = results[0];
             Assert.IsNotNull(char1);
+
+            var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        [TestMethod]
+        public async Task TestSingleQueryCursorPagingEdgeResultsAndNestedEdgeResultsAsync()
+        {
+            var results = await GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query ($first: Int, $after: String) {
+	                    characters(first: $first, after: $after) {
+		                    totalCount
+		                    pageInfo {
+			                    hasNextPage
+			                    hasPreviousPage
+			                    startCursor
+			                    endCursor
+		                    }
+		                    edges {
+			                    cursor
+			                    node {
+				                    personalIdentifier
+				                    name
+				                    height
+				                    friends(first: $first)
+				                    {
+					                    edges {
+						                    cursor
+					                      node
+						                    {
+							                    personalIdentifier
+							                    name
+							                    height
+						                    }
+					                    }
+				                    }
+			                    }
+		                    }
+	                    }
+                    }
+                ")
+                .SetGraphQLVariables(new { first = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLConnectionResults<StarWarsCharacter>()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(results);
+            Assert.IsTrue(results is IGraphQLConnectionResults<StarWarsCharacter>);
+            Assert.AreEqual(2, results.Count);
+
+            Assert.IsNotNull(results.TotalCount);
+            Assert.IsTrue(results.TotalCount > results.Count);
+            Assert.IsNotNull(results.PageInfo);
+            Assert.IsTrue(results.PageInfo.HasNextPage);
+            Assert.IsFalse(results.PageInfo.HasPreviousPage);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(results.PageInfo.StartCursor));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(results.PageInfo.EndCursor));
+
+            foreach (var result in results)
+            {
+                Assert.IsNotNull(result);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(result.Cursor));
+                foreach (var friend in result.Friends)
+                {
+                    Assert.IsNotNull(friend);
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(friend.Cursor));
+                }
+            }
 
             var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
             TestContext.WriteLine(jsonText);
@@ -84,7 +153,7 @@ namespace Flurl.Http.GraphQL.Tests
 
             Assert.IsNotNull(results);
             Assert.IsTrue(results is IGraphQLCollectionSegmentResults<StarWarsCharacter>);
-            Assert.IsTrue(results.Count > 0);
+            Assert.AreEqual(2, results.Count);
 
             Assert.IsNotNull(results.TotalCount);
             Assert.IsTrue(results.TotalCount > results.Count);
@@ -125,7 +194,7 @@ namespace Flurl.Http.GraphQL.Tests
 
             Assert.IsNotNull(allResultPages);
             Assert.IsTrue(allResultPages is IList<IGraphQLConnectionResults<StarWarsCharacter>>);
-            Assert.IsTrue(allResultPages.Count > 0);
+            Assert.IsTrue(allResultPages.Count > 2);
 
             foreach (var page in allResultPages)
             {
@@ -167,7 +236,7 @@ namespace Flurl.Http.GraphQL.Tests
 
             Assert.IsNotNull(allResultPages);
             Assert.IsTrue(allResultPages is IList<IGraphQLCollectionSegmentResults<StarWarsCharacter>>);
-            Assert.IsTrue(allResultPages.Count > 0);
+            Assert.IsTrue(allResultPages.Count > 2);
 
             foreach (var page in allResultPages)
             {
@@ -235,6 +304,8 @@ namespace Flurl.Http.GraphQL.Tests
 
             //Flatten the Page Results to a single set of results via Linq
             var allResults = pageResultsList.SelectMany(p => p);
+            Assert.IsTrue(allResults.Count() > 2);
+
             var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
             TestContext.WriteLine(jsonText);
         }
@@ -286,6 +357,8 @@ namespace Flurl.Http.GraphQL.Tests
 
             //Flatten the Page Results to a single set of results via Linq
             var allResults = pageResultsList.SelectMany(p => p);
+            Assert.IsTrue(allResults.Count() > 2);
+
             var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
             TestContext.WriteLine(jsonText);
         }
@@ -344,6 +417,8 @@ namespace Flurl.Http.GraphQL.Tests
 
             //Flatten the Page Results to a single set of results via Linq
             var allResults = pageResultsList.SelectMany(p => p);
+            Assert.IsTrue(allResults.Count() > 2);
+
             var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
             TestContext.WriteLine(jsonText);
         }
@@ -398,6 +473,8 @@ namespace Flurl.Http.GraphQL.Tests
 
             //Flatten the Page Results to a single set of results via Linq
             var allResults = pageResultsList.SelectMany(p => p);
+            Assert.IsTrue(allResults.Count() > 2);
+
             var jsonText = JsonConvert.SerializeObject(allResults, Formatting.Indented);
             TestContext.WriteLine(jsonText);
         }
