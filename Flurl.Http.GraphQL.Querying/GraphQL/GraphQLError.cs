@@ -29,9 +29,9 @@ namespace Flurl.Http.GraphQL.Querying
 
     public class GraphQLErrorLocation
     {
-        public GraphQLErrorLocation(uint colunn, uint line)
+        public GraphQLErrorLocation(uint column, uint line)
         {
-            Column = colunn;
+            Column = column;
             Line = line;
         }
 
