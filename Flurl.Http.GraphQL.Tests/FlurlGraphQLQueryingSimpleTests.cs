@@ -11,7 +11,7 @@ using Newtonsoft.Json.Linq;
 namespace Flurl.Http.GraphQL.Tests
 {
     [TestClass]
-    public class FlurlGraphQLQueryingTests : BaseFlurlGraphQLTest
+    public class FlurlGraphQLQueryingSimpleTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
         public async Task TestSimpleSingleQueryDirectResultsAsync()

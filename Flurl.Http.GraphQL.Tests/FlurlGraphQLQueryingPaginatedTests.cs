@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 namespace Flurl.Http.GraphQL.Tests
 {
     [TestClass]
-    public class FlurlGraphQLPaginatedQueryingTests : BaseFlurlGraphQLTest
+    public class FlurlGraphQLQueryingPaginatedTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
         public async Task TestSingleQueryCursorPagingNodeResultsAsync()

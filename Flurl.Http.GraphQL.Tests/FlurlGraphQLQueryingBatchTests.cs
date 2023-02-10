@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace Flurl.Http.GraphQL.Tests
 {
     [TestClass]
-    public class FlurlGraphQLBatchQueryingTests : BaseFlurlGraphQLTest
+    public class FlurlGraphQLQueryingBatchTests : BaseFlurlGraphQLTest
     {
  
         [TestMethod]

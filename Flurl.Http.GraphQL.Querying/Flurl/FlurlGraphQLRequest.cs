@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -110,13 +111,30 @@ namespace Flurl.Http.GraphQL.Querying
             //Execute the Query with the GraphQL Server...
             var graphqlPayload = new FlurlGraphQLRequestPayload(graphqlQuery, this.GraphQLVariables);
 
-            var response = await this.PostJsonAsync(
-                graphqlPayload,
-                cancellationToken,
-                completionOption: HttpCompletionOption.ResponseContentRead
-            ).ConfigureAwait(false);
+            try
+            {
+                var response = await this.PostJsonAsync(
+                    graphqlPayload,
+                    cancellationToken,
+                    completionOption: HttpCompletionOption.ResponseContentRead
+                ).ConfigureAwait(false);
 
-            return new FlurlGraphQLResponse(response, this);
+                return new FlurlGraphQLResponse(response, this);
+            }
+            catch (FlurlHttpException httpException)
+            {
+                var httpStatusCode = (HttpStatusCode)httpException.StatusCode;
+                var errorContent = await httpException.GetResponseStringSafelyAsync().ConfigureAwait(false);
+
+                if (httpStatusCode == HttpStatusCode.BadRequest)
+                    throw new FlurlGraphQLException(
+                        $"[{(int)HttpStatusCode.BadRequest}-{HttpStatusCode.BadRequest}] The GraphQL server return a bad request response for the query."
+                        + " This is likely caused by a malformed, incorrect, or non-parsable query; validate the query syntax, operation name, arguments, etc."
+                        + " and ensure that the query is valid.", graphqlQuery, errorContent, httpStatusCode, httpException
+                    );
+                else
+                    throw;
+            }
         }
 
         #endregion
