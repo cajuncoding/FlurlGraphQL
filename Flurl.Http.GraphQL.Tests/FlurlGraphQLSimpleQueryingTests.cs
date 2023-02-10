@@ -81,7 +81,7 @@ namespace Flurl.Http.GraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestSingleQueryWithNestedResultsAsync()
+        public async Task TestSingleQueryWithDoubleNestedPagingResultsAsync()
         {
             var results = await GraphQLApiEndpoint
                 .WithGraphQLQuery(@"
@@ -93,6 +93,12 @@ namespace Flurl.Http.GraphQL.Tests
 			                    nodes {
 				                    personalIdentifier
 				                    name
+				                    friends(first: 1) {
+					                    nodes {
+						                    name
+						                    personalIdentifier
+					                    }
+				                    }
 			                    }
 		                    }
 	                    }
@@ -109,6 +115,10 @@ namespace Flurl.Http.GraphQL.Tests
             foreach (var result in results)
             {
                 Assert.AreEqual(2, result.Friends.Count);
+                foreach (var friend in result.Friends)
+                {
+                    Assert.AreEqual(1, friend.Friends.Count);
+                }
             }
 
             var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
