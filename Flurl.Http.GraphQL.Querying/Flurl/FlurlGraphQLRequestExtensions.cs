@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Util;
+using Newtonsoft.Json;
 
 namespace Flurl.Http.GraphQL.Querying
 {
@@ -168,6 +169,23 @@ namespace Flurl.Http.GraphQL.Querying
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
         public static IFlurlGraphQLRequest SetGraphQLVariables(this IFlurlRequest request, IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
             => request.ToGraphQLRequest().SetGraphQLVariables(variables, nullValueHandling);
+
+        #endregion
+
+        #region NewtonsoftJson Serializer Settings (ONLY Available after an IFlurlRequest is initialized...
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="jsonSerializerSettings"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest WithNewtonsoftJsonSerializerSettings(this IFlurlRequest request, JsonSerializerSettings jsonSerializerSettings)
+        {
+            var graphqlRequest = (FlurlGraphQLRequest)request.ToGraphQLRequest();
+            graphqlRequest.ContextBag[nameof(JsonSerializerSettings)] = jsonSerializerSettings;
+            return graphqlRequest;
+        }
 
         #endregion
 

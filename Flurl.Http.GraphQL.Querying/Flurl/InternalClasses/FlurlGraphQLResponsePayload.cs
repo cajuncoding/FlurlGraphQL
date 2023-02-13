@@ -20,6 +20,8 @@ namespace Flurl.Http.GraphQL.Querying
         [JsonProperty("errors")]
         public IReadOnlyList<GraphQLError> Errors { get; }
 
+        public Dictionary<string, object> ContextBag { get; set; }
+
         public IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) 
             where TResult : class
         {
@@ -32,7 +34,11 @@ namespace Flurl.Http.GraphQL.Querying
                 ? queryResultJson.FirstField()
                 : queryResultJson.Field(queryOperationName);
 
-            var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>();
+            var jsonSerializerSettings = ContextBag?.TryGetValue(nameof(JsonSerializerSettings), out var serializerSettings) ?? false
+                ? serializerSettings as JsonSerializerSettings 
+                : null;
+
+            var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(jsonSerializerSettings);
             return typedResults;
         }
     }

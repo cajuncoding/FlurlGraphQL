@@ -175,7 +175,12 @@ namespace Flurl.Http.GraphQL.Querying
                 if (response == null) return default;
 
                 var resultPayload = await response.GetJsonAsync<FlurlGraphQLResponsePayload>().ConfigureAwait(false);
+                
+                //We MUST to pass along the ContextBag (internal) which may contain configuration details for processing the payload results...
+                //NOTE: We have to set this manually since the Payload is initialized via De-serialization above...
+                resultPayload.ContextBag = ((FlurlGraphQLRequest)response.GraphQLRequest).ContextBag;
 
+                //TODO: Clean this up if resultPayload is never null...
                 //Raise an Exception if null or if any errors are returned...
                 if (resultPayload == null)
                 {
@@ -195,7 +200,7 @@ namespace Flurl.Http.GraphQL.Querying
 
         private static readonly Type CachedIGraphQLEdgeGenericType = typeof(IGraphQLEdge<>);
 
-        internal static IGraphQLQueryResults<TEntityResult> ParseJsonToGraphQLResultsInternal<TEntityResult>(this JToken json)
+        internal static IGraphQLQueryResults<TEntityResult> ParseJsonToGraphQLResultsInternal<TEntityResult>(this JToken json, JsonSerializerSettings jsonSerializerSettings = null)
             where TEntityResult : class
         {
             if (json == null)
@@ -203,7 +208,10 @@ namespace Flurl.Http.GraphQL.Querying
 
             //Ensure that all json parsing uses a Serializer with the GraphQL Contract Resolver...
             //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
-            var jsonSerializer = JsonSerializer.CreateDefault();
+            var jsonSerializer = jsonSerializerSettings == null 
+                ? JsonSerializer.CreateDefault() 
+                : JsonSerializer.Create(jsonSerializerSettings);
+
             jsonSerializer.Converters.Add(new GraphQLPageResultsToICollectionConverter());
 
             //Dynamically parse the data from the results...
