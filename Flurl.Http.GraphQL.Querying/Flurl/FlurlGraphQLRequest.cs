@@ -128,9 +128,9 @@ namespace Flurl.Http.GraphQL.Querying
 
                 if (httpStatusCode == HttpStatusCode.BadRequest)
                     throw new FlurlGraphQLException(
-                        $"[{(int)HttpStatusCode.BadRequest}-{HttpStatusCode.BadRequest}] The GraphQL server return a bad request response for the query."
-                        + " This is likely caused by a malformed, incorrect, or non-parsable query; validate the query syntax, operation name, arguments, etc."
-                        + " and ensure that the query is valid.", graphqlQuery, errorContent, httpStatusCode, httpException
+                        $"[{(int)HttpStatusCode.BadRequest}-{HttpStatusCode.BadRequest}] The GraphQL server returned a bad request response for the query."
+                        + " This is likely caused by a malformed, or non-parsable query; validate the query syntax, operation name, arguments, etc."
+                        + " to ensure that the query is valid.", graphqlQuery, errorContent, httpStatusCode, httpException
                     );
                 else
                     throw;

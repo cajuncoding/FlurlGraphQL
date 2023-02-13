@@ -53,6 +53,7 @@ namespace Flurl.Http.GraphQL.Tests
         [TestMethod]
         public async Task TestSingleQueryRawJsonResponseAsync()
         {
+            //INTENTIONALLY Place the Nested Paginated selection as LAST item to validate functionality!
             var json = await GraphQLApiEndpoint
                 .WithGraphQLQuery(@"
                     query ($ids: [Int!], $friendsCount: Int!) {
@@ -80,15 +81,62 @@ namespace Flurl.Http.GraphQL.Tests
             TestContext.WriteLine(jsonText);
         }
 
+
         [TestMethod]
-        public async Task TestSingleQueryWithDoubleNestedPagingResultsAsync()
+        public async Task TestSingleQueryWithOnlyNestedPaginatedResultsAsync()
         {
+            var idArrayParam = new[] { 1000, 2001 };
+            var friendCountParam = 1;
+
+            //INTENTIONALLY Place the Nested Paginated selection as LAST item to validate functionality!
             var results = await GraphQLApiEndpoint
                 .WithGraphQLQuery(@"
                     query ($ids: [Int!], $friendsCount: Int!) {
 	                    charactersById(ids: $ids) {
-		                    personalIdentifier
-		                    name
+		                    friends(first: $friendsCount) {
+			                    nodes {
+				                    friends(first: $friendsCount) {
+					                    nodes {
+						                    name
+						                    personalIdentifier
+					                    }
+				                    }
+			                    }
+		                    }
+	                    }
+                    }
+                ")
+                .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = friendCountParam })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLQueryResults<StarWarsCharacter>()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(results);
+            Assert.AreEqual(2, results.Count);
+
+            foreach (var result in results)
+            {
+                Assert.AreEqual(friendCountParam, result.Friends.Count);
+                foreach (var friend in result.Friends)
+                {
+                    Assert.AreEqual(friendCountParam, friend.Friends.Count);
+                }
+            }
+
+            var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        [TestMethod]
+        public async Task TestSingleQueryWithDoubleNestedPagingResultsAsync()
+        {
+            var idArrayParam = new[] { 1000, 2001 };
+
+            //INTENTIONALLY Place the Nested Paginated selection as FIRST item to validate functionality!
+            var results = await GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query ($ids: [Int!], $friendsCount: Int!) {
+	                    charactersById(ids: $ids) {
 		                    friends(first: $friendsCount) {
 			                    nodes {
 				                    personalIdentifier
@@ -101,10 +149,12 @@ namespace Flurl.Http.GraphQL.Tests
 				                    }
 			                    }
 		                    }
+		                    personalIdentifier
+		                    name
 	                    }
                     }
                 ")
-                .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
+                .SetGraphQLVariables(new { ids = idArrayParam, friendsCount = 2 })
                 .PostGraphQLQueryAsync()
                 .ReceiveGraphQLQueryResults<StarWarsCharacter>()
                 .ConfigureAwait(false);
@@ -112,13 +162,17 @@ namespace Flurl.Http.GraphQL.Tests
             Assert.IsNotNull(results);
             Assert.AreEqual(2, results.Count);
 
+            var index = 0;
             foreach (var result in results)
             {
+                Assert.AreEqual(idArrayParam[index], result.PersonalIdentifier);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(result.Name));
                 Assert.AreEqual(2, result.Friends.Count);
                 foreach (var friend in result.Friends)
                 {
                     Assert.AreEqual(1, friend.Friends.Count);
                 }
+                index++;
             }
 
             var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);

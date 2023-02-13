@@ -28,9 +28,9 @@ namespace Flurl.Http.GraphQL.Tests
             var graphqlException = exc as FlurlGraphQLException;
             Assert.IsNotNull(graphqlException);
             Assert.IsNotNull(graphqlException.Query);
+            Assert.IsNotNull(graphqlException.ErrorResponseContent);
+            Assert.IsNotNull(graphqlException.GraphQLErrors);
             Assert.IsNotNull(graphqlException.InnerException);
-            Assert.IsNull(graphqlException.ErrorResponseContent);
-            Assert.IsNull(graphqlException.GraphQLErrors);
 
             TestContext.WriteLine(graphqlException.Message);
         }
@@ -50,6 +50,37 @@ namespace Flurl.Http.GraphQL.Tests
                         }
                     ")
                     .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }})
+                    .PostGraphQLQueryAsync()
+                    .ReceiveGraphQLRawJsonResponse()
+                    .ConfigureAwait(false);
+            }).ConfigureAwait(false);
+
+            Assert.IsNotNull(exc);
+            var graphqlException = exc as FlurlGraphQLException;
+            Assert.IsNotNull(graphqlException);
+            Assert.IsNotNull(graphqlException.Query);
+            Assert.IsNotNull(graphqlException.ErrorResponseContent);
+            Assert.IsNotNull(graphqlException.GraphQLErrors);
+            Assert.IsNotNull(graphqlException.InnerException);
+
+            TestContext.WriteLine(graphqlException.Message);
+        }
+
+        [TestMethod]
+        public async Task TestSingleQueryErrorForInvalidSelectionAsync()
+        {
+            var exc = await ExecuteAndCaptureException(async () =>
+            {
+                var json = await GraphQLApiEndpoint
+                    .WithGraphQLQuery(@"
+                        query ($ids: [Int!]) {
+	                        charactersById(ids: $ids) {
+		                        personalIdentifierNOT_VALID
+		                        name
+	                        }
+                        }
+                    ")
+                    .SetGraphQLVariables(new { ids = new[] { 1000, 2001 } })
                     .PostGraphQLQueryAsync()
                     .ReceiveGraphQLRawJsonResponse()
                     .ConfigureAwait(false);
