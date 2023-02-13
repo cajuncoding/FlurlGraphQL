@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace Flurl.Http.GraphQL.Querying
@@ -75,18 +76,17 @@ namespace Flurl.Http.GraphQL.Querying
             return null;
         }
 
-        protected static string BuildErrorMessage(string message, IReadOnlyList<GraphQLError> graphQLErrors, Exception innerException = null)
+        protected static string BuildErrorMessage(string message, IReadOnlyList<GraphQLError> graphqlErrors, Exception innerException = null)
         {
-            if (graphQLErrors == null || !graphQLErrors.Any())
+            if (graphqlErrors == null || !graphqlErrors.Any())
                 return message;
 
-            var errorMessages = graphQLErrors.Select(e =>
+            var errorMessages = graphqlErrors.Select(e =>
             {
-                var locations = String.Join("; ", e.Locations.Select(l => $"At={l.Line},{l.Column}"));
+                var locations = string.Join("; ", e.Locations.Select(l => $"At={l.Line},{l.Column}"));
                 var locationText = !string.IsNullOrEmpty(locations) ? $" [{locations}]" : null;
 
-                //TODO: Fix Path to build fully qualified Path using Json notation "path.to.element[0].prop"
-                var path = e.Path?.FirstOrDefault();
+                var path = BuildGraphQLPath(e);
                 var pathText = path != null ? $" [For={path}]" : null;
 
                 var errorMetaText = string.Concat(pathText, locationText);
@@ -101,6 +101,31 @@ namespace Flurl.Http.GraphQL.Querying
                 fullMessage = fullMessage.MergeSentences(innerException.Message);
 
             return fullMessage;
+        }
+
+        protected static string BuildGraphQLPath(GraphQLError graphqlError)
+        {
+            if (graphqlError.Path == null || graphqlError.Path.Count == 0)
+                return null;
+
+            var stringBuilder = new StringBuilder();
+            bool isFirst = true;
+            foreach (var p in graphqlError.Path)
+            {
+                if (p is int pathIndex)
+                {
+                    stringBuilder.Append("[").Append(pathIndex).Append("]");
+                }
+                else if (p is string pathString)
+                {
+                    if (!isFirst) stringBuilder.Append(".");
+                    stringBuilder.Append(pathString);
+                }
+
+                isFirst = false;
+            }
+
+            return stringBuilder.ToString();
         }
     }
 }
