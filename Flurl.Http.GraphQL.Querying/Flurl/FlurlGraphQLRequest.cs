@@ -139,6 +139,12 @@ namespace Flurl.Http.GraphQL.Querying
 
         #endregion
 
+        #region Internal ContextBag/Helpers
+
+        internal Dictionary<string, object> ContextBag { get; } = new Dictionary<string, object>();
+
+        #endregion
+
         #region IFlurlRequest Interface Implementations
 
         public FlurlHttpSettings Settings
