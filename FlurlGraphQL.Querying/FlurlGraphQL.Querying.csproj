@@ -8,8 +8,8 @@
 		<Description>GraphQL client querying extensions for Flurl.Http -- lightweight, simplified, asynchronous, fluent GraphQL client querying API extensions for the amazing Flurl Http library!</Description>
 		<Copyright>Copyright © 2023</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageProjectUrl>https://github.com/cajuncoding/Flurl.Http.GraphQL</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/cajuncoding/Flurl.Http.GraphQL</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/cajuncoding/FlurlGraphQL</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
 			- Initial release of the GraphQL Querying (only) extensions for Flurl.Http.
