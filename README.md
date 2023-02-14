@@ -1,9 +1,9 @@
-﻿# Flurl.Http.GraphQL
+﻿# FlurlGraphQL
 Lightweight, simplified, asynchronous, fluent GraphQL client querying API extensions for the amazing Flurl Http library!
 
 This makes it super easy to execute ad-hoc and simple queries against a GraphQL API such as the awesome [HotChocolate .NET GraphQL Server](https://chillicream.com/docs/hotchocolate/v13).
 
-`Flurl.Http.GraphQL` helps prevent you from getting bogged down in details like what should the GraphQL payload look like, how to handle and parse errors, or polluting your data models with unnecessary properties like `Nodes`, `Items`, etc. for paginated data.
+`FlurlGraphQL.Querying` helps to prevent you from getting bogged down in details like what should the GraphQL payload look like, how to handle and parse errors, or polluting your data models with unnecessary properties like `Nodes`, `Items`, etc. for paginated data.
 Handling paginated queries and results is dramatically simplfied, making it easy and intuitive to retreive any page, all results, and even stream the results via `IAsyncEnumerable` in `netstandard2.1` or `IEnumerable<Task>` in `netstandard2.0`.
 
 The spirit of Flurl is fully maintained so you can start your query from your endpoint, fully configure the request just as you would with any Flurl request (e.g. manage Headers, Auth Tokens, Query params, etc.).
@@ -40,11 +40,11 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 ```
 
 ## Nuget Package (netstandard2.0 & netstandard2.1)
-To use this in your project, add the [Flurl.Http.GraphQL](https://www.nuget.org/packages/Flurl.Http.GraphQL/) NuGet package to your project.
+To use this in your project, add the [Flurl.GraphQL.Querying](https://www.nuget.org/packages/FlurlGraphQL.Querying/) NuGet package to your project.
 
 ## Release Notes:
 ### v1.0.0
- - v1.0.0 requires `Flurl v3.2.4` along with `Newtonsoft.Json`.
+ - v1.0.0 includes `FlurlGraphQL.Querying` api extensions and requires `Flurl v3.2.4` along with `Newtonsoft.Json`.
  - Initial release of the GraphQL Querying (only) extensions for Flurl.Http.
  - Supporting querying of typed data results with support for Relay based Cursor Paging, HotChocolate based Offset paging, Batch querying, Flurl style exception handling, 
      and simplified data models when using nested paginated results from GraphQL.
