@@ -23,15 +23,15 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($ids: [Int!], $friendsCount: Int!) {
 	        charactersById(ids: $ids) {
-		        personalIdentifier
-		        name
-		        friends(first: $friendsCount) {
-			        nodes {
-				        personalIdentifier
-				        name
-			        }
-		        }
-	        }
+                personalIdentifier
+                name
+                friends(first: $friendsCount) {
+                    nodes {
+                        personalIdentifier
+                        name
+                    }
+                }
+            }
         }
     ")
     .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
