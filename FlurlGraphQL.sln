@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33103.201
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlurlGraphQL.Querying", "FlurlGraphQL.Querying\FlurlGraphQL.Querying.csproj", "{97677DEE-0FF8-45B6-B849-025C71FEBF7D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlurlGraphQL.Tests", "FlurlGraphQL.Tests\FlurlGraphQL.Tests.csproj", "{552513FE-6490-46AD-AB8D-415E789AF843}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{97677DEE-0FF8-45B6-B849-025C71FEBF7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97677DEE-0FF8-45B6-B849-025C71FEBF7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97677DEE-0FF8-45B6-B849-025C71FEBF7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97677DEE-0FF8-45B6-B849-025C71FEBF7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{552513FE-6490-46AD-AB8D-415E789AF843}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{552513FE-6490-46AD-AB8D-415E789AF843}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{552513FE-6490-46AD-AB8D-415E789AF843}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{552513FE-6490-46AD-AB8D-415E789AF843}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {92AD1895-73F3-4E55-9A54-CB8EBD7118CB}
+	EndGlobalSection
+EndGlobal
