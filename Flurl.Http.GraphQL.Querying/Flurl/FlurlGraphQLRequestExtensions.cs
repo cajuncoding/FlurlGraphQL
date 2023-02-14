@@ -180,10 +180,10 @@ namespace Flurl.Http.GraphQL.Querying
         /// <param name="request"></param>
         /// <param name="jsonSerializerSettings"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
-        public static IFlurlGraphQLRequest WithNewtonsoftJsonSerializerSettings(this IFlurlRequest request, JsonSerializerSettings jsonSerializerSettings)
+        public static IFlurlGraphQLRequest SetGraphQLNewtonsoftJsonSerializerSettings(this IFlurlRequest request, JsonSerializerSettings jsonSerializerSettings)
         {
             var graphqlRequest = (FlurlGraphQLRequest)request.ToGraphQLRequest();
-            graphqlRequest.ContextBag[nameof(JsonSerializerSettings)] = jsonSerializerSettings;
+            graphqlRequest.SetContextItem(nameof(JsonSerializerSettings), jsonSerializerSettings);
             return graphqlRequest;
         }
 

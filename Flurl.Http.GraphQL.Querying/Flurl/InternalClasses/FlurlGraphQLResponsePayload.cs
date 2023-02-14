@@ -20,7 +20,7 @@ namespace Flurl.Http.GraphQL.Querying
         [JsonProperty("errors")]
         public IReadOnlyList<GraphQLError> Errors { get; }
 
-        public Dictionary<string, object> ContextBag { get; set; }
+        public IReadOnlyDictionary<string, object> ContextBag { get; set; }
 
         public IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) 
             where TResult : class

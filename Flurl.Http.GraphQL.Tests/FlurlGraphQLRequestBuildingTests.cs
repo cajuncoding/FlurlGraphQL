@@ -1,5 +1,8 @@
 using System;
+using System.Threading.Tasks;
+using Flurl.Http.Configuration;
 using Flurl.Http.GraphQL.Querying;
+using Flurl.Http.GraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
@@ -49,6 +52,43 @@ namespace Flurl.Http.GraphQL.Tests
             clonedRequest.WithGraphQLQuery("INVALID QUERY TEXT");
             Assert.AreEqual(query, originalRequest.GraphQLQuery);
             Assert.AreNotEqual(query, clonedRequest.GraphQLQuery);
+        }
+
+        [TestMethod]
+        public async Task TestExecuteRequestWithCustomJsonSerializerSettings()
+        {
+            var response = await GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query($first:Int) {
+                      characters (first:$first) {
+                        nodes {
+                          personalIdentifier
+                          name
+			              height
+                        }
+                      }
+                    }
+                ")
+                //.SetGraphQLVariable("first", 2)
+                .SetGraphQLVariables(new { first = 2 })
+                .SetGraphQLNewtonsoftJsonSerializerSettings(new JsonSerializerSettings()
+                {
+                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                    Formatting = Formatting.Indented
+                })
+                .PostGraphQLQueryAsync()
+                .ConfigureAwait(false);
+
+            Assert.IsTrue(response.GraphQLRequest is FlurlGraphQLRequest);
+            var request = response.GraphQLRequest as FlurlGraphQLRequest;
+            Assert.IsTrue(request.ContextBag.ContainsKey(nameof(JsonSerializerSettings)));
+            var jsonSerializerSettings = (JsonSerializerSettings)request.ContextBag[nameof(JsonSerializerSettings)];
+            Assert.AreEqual(Newtonsoft.Json.NullValueHandling.Ignore, jsonSerializerSettings.NullValueHandling);
+            Assert.AreEqual(Formatting.Indented, jsonSerializerSettings.Formatting);
+
+            var results = await response.ReceiveGraphQLQueryResults<StarWarsCharacter>().ConfigureAwait(false);
+            Assert.IsNotNull(results);
+            Assert.AreEqual(2, results.Count);
         }
     }
 }

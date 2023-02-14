@@ -170,31 +170,33 @@ namespace Flurl.Http.GraphQL.Querying
             Func<FlurlGraphQLResponsePayload, FlurlGraphQLResponse, TGraphQLResult> payloadHandlerFunc
         )
         {
-            using (var response = await responseTask.ConfigureAwait(false) as FlurlGraphQLResponse)
-            {
-                if (response == null) return default;
+            var graphqlResponse = await responseTask.ConfigureAwait(false);
+            var results = await graphqlResponse.ProcessResponsePayloadInternalAsync(payloadHandlerFunc).ConfigureAwait(false);
+            return results;
+        }
 
-                var resultPayload = await response.GetJsonAsync<FlurlGraphQLResponsePayload>().ConfigureAwait(false);
-                
+        internal static async Task<TGraphQLResult> ProcessResponsePayloadInternalAsync<TGraphQLResult>(
+            this IFlurlGraphQLResponse response,
+            Func<FlurlGraphQLResponsePayload, FlurlGraphQLResponse, TGraphQLResult> payloadHandlerFunc
+        )
+        {
+            using (var graphqlResponse = response as FlurlGraphQLResponse)
+            {
+                if (graphqlResponse == null) return default;
+
+                var resultPayload = await graphqlResponse.GetJsonAsync<FlurlGraphQLResponsePayload>().ConfigureAwait(false);
+
                 //We MUST to pass along the ContextBag (internal) which may contain configuration details for processing the payload results...
                 //NOTE: We have to set this manually since the Payload is initialized via De-serialization above...
-                resultPayload.ContextBag = ((FlurlGraphQLRequest)response.GraphQLRequest).ContextBag;
+                resultPayload.ContextBag = ((FlurlGraphQLRequest)graphqlResponse.GraphQLRequest).ContextBag;
 
-                //TODO: Clean this up if resultPayload is never null...
-                //Raise an Exception if null or if any errors are returned...
-                if (resultPayload == null)
+                if (resultPayload.Errors?.Any() ?? false)
                 {
-                    throw new FlurlGraphQLException(graphqlQuery: response.GraphQLQuery, httpStatusCode: (HttpStatusCode)response.StatusCode,
-                        message: "Unexpected error occurred retrieving the response payload but no Http Exception was thrown and the response"
-                                  + " from GraphQL is null and/or cannot be parsed as Json.");
-                }
-                else if (resultPayload.Errors?.Any() ?? false)
-                {
-                    var responseContent = await response.GetStringAsync().ConfigureAwait(false);
-                    throw new FlurlGraphQLException(resultPayload.Errors, response.GraphQLQuery, responseContent, (HttpStatusCode)response.StatusCode);
+                    var responseContent = await graphqlResponse.GetStringAsync().ConfigureAwait(false);
+                    throw new FlurlGraphQLException(resultPayload.Errors, graphqlResponse.GraphQLQuery, responseContent, (HttpStatusCode)graphqlResponse.StatusCode);
                 }
 
-                return payloadHandlerFunc.Invoke(resultPayload, response);
+                return payloadHandlerFunc.Invoke(resultPayload, graphqlResponse);
             }
         }
 
@@ -208,10 +210,7 @@ namespace Flurl.Http.GraphQL.Querying
 
             //Ensure that all json parsing uses a Serializer with the GraphQL Contract Resolver...
             //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
-            var jsonSerializer = jsonSerializerSettings == null 
-                ? JsonSerializer.CreateDefault() 
-                : JsonSerializer.Create(jsonSerializerSettings);
-
+            var jsonSerializer = JsonSerializer.CreateDefault(jsonSerializerSettings);
             jsonSerializer.Converters.Add(new GraphQLPageResultsToICollectionConverter());
 
             //Dynamically parse the data from the results...
