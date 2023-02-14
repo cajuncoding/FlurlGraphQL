@@ -362,9 +362,10 @@ try
 catch(FlurlGraphQLException graphqlException)
 {
     //... handle the exception...
-    graphqlException.Query; //Original Query: 
+    graphqlException.Message; //Message constructed from available details int he GraphQL Errors 
+    graphqlException.Query; //Original Query
     graphqlException.GraphQLErrors; //Parsed GraphQL Errors
     graphqlException.ErrorResponseContent; //Original Error Response Json Text
-    graphqlException.InnerException; //The Original Http Exception: 
+    graphqlException.InnerException; //The Original Http Exception
 }
 ```
