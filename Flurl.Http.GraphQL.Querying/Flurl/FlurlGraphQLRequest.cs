@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -19,7 +20,20 @@ namespace Flurl.Http.GraphQL.Querying
 
         #region GraphQL Variables
 
-        public Dictionary<string, object> GraphQLVariables { get; protected set; } = new Dictionary<string, object>();
+        protected Dictionary<string, object> GraphQLVariablesInternal { get; set; } = new Dictionary<string, object>();
+        public IReadOnlyDictionary<string, object> GraphQLVariables => new ReadOnlyDictionary<string, object>(GraphQLVariablesInternal);
+
+        public IFlurlGraphQLRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        {
+            if (name == null) return this;
+
+            if (value == null && nullValueHandling == NullValueHandling.Remove && GraphQLVariablesInternal.ContainsKey(name))
+                GraphQLVariablesInternal.Remove(name);
+            else
+                GraphQLVariablesInternal[name] = value;
+
+            return this;
+        }
 
         public IFlurlGraphQLRequest SetGraphQLVariables(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
             => SetGraphQLVariables(variables.ToKeyValuePairs(), nullValueHandling);
@@ -35,31 +49,43 @@ namespace Flurl.Http.GraphQL.Querying
             return this;
         }
 
-        public IFlurlGraphQLRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove)
-        {
-            if (name == null) return this;
-
-            if (value == null && nullValueHandling == NullValueHandling.Remove && GraphQLVariables.ContainsKey(name))
-                GraphQLVariables.Remove(name);
-            else
-                GraphQLVariables[name] = value;
-
-            return this;
-        }
-
-        public object GetGraphQLVariable(string name) => GraphQLVariables.TryGetValue(name, out var value) ? value : null;
+        public object GetGraphQLVariable(string name) => GraphQLVariablesInternal.TryGetValue(name, out var value) ? value : null;
 
         public IFlurlGraphQLRequest RemoveGraphQLVariable(string name)
         {
             if (name == null) return this;
 
-            GraphQLVariables.Remove(name);
+            GraphQLVariablesInternal.Remove(name);
             return this;
         }
 
         public IFlurlGraphQLRequest ClearGraphQLVariables()
         {
-            GraphQLVariables.Clear();
+            GraphQLVariablesInternal.Clear();
+            return this;
+        }
+
+        #endregion
+
+        #region ContextBag Helpers
+
+        protected Dictionary<string, object> ContextBagInternal { get; } = new Dictionary<string, object>();
+        public IReadOnlyDictionary<string, object> ContextBag => new ReadOnlyDictionary<string, object>(ContextBagInternal);
+
+        public IFlurlGraphQLRequest SetContextItem(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        {
+            if (name != null)
+                ContextBagInternal.SetObjectBagItem(name, value, nullValueHandling);
+            return this;
+        }
+
+        public IFlurlGraphQLRequest SetContextItems(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+            => SetContextItems(variables.ToKeyValuePairs(), nullValueHandling);
+
+        public IFlurlGraphQLRequest SetContextItems(IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        {
+            if (variables != null)
+                ContextBagInternal.SetObjectBagItems(variables, nullValueHandling);
             return this;
         }
 
@@ -87,7 +113,8 @@ namespace Flurl.Http.GraphQL.Querying
         {
             return new FlurlGraphQLRequest(this.BaseFlurlRequest)
                 .WithGraphQLQuery(this.GraphQLQuery)
-                .SetGraphQLVariables(this.GraphQLVariables);
+                .SetGraphQLVariables(this.GraphQLVariablesInternal)
+                .SetContextItems(this.ContextBagInternal);
         }
 
         #endregion
@@ -109,7 +136,7 @@ namespace Flurl.Http.GraphQL.Querying
                 this.SetGraphQLVariables(variables, nullValueHandling);
 
             //Execute the Query with the GraphQL Server...
-            var graphqlPayload = new FlurlGraphQLRequestPayload(graphqlQuery, this.GraphQLVariables);
+            var graphqlPayload = new FlurlGraphQLRequestPayload(graphqlQuery, this.GraphQLVariablesInternal);
 
             try
             {
@@ -136,12 +163,6 @@ namespace Flurl.Http.GraphQL.Querying
                     throw;
             }
         }
-
-        #endregion
-
-        #region Internal ContextBag/Helpers
-
-        internal Dictionary<string, object> ContextBag { get; } = new Dictionary<string, object>();
 
         #endregion
 

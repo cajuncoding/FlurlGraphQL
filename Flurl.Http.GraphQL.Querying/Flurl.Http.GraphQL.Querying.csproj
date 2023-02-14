@@ -1,11 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+		<Version>12.4.1.1</Version>
+		<Authors>BBernard / CajunCoding</Authors>
+		<Company>CajunCoding</Company>
+		<Description>GraphQL querying extensions for Flurl.Http -- lightweight, simplified, asynchronous, fluent GraphQL client querying API extensions for the amazing Flurl Http library!</Description>
+		<Copyright>Copyright © 2023</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/cajuncoding/Flurl.Http.GraphQL</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/cajuncoding/Flurl.Http.GraphQL</RepositoryUrl>
+		<PackageReleaseNotes>
+			Release Notes:
+			- Initial release of the GraphQL Querying (only) extensions for Flurl.Http.
+			- Supporting querying of typed data results with support for Relay based Cursor Paging, HotChocolate based Offset paging, Batch querying, Flurl style exception handling,
+			and simplified data models when using nested paginated results from GraphQL.
+			- NOTE: This does not currently support Mutations or Subscriptions.
 
-  <ItemGroup>
-    <PackageReference Include="Flurl.Http" Version="3.2.4" />
-  </ItemGroup>
+		</PackageReleaseNotes>
+		<PackageTags>graphql, graph-ql, graphql client, flurl, http, rest, hotchocolate, paging, cursor</PackageTags>
+		<AssemblyVersion>1.0.0</AssemblyVersion>
+		<FileVersion>1.0.0</FileVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Flurl.Http" Version="3.2.4" />
+	</ItemGroup>
 
 </Project>
