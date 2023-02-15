@@ -22,7 +22,7 @@ then I do love-me-some-coffee!*
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($ids: [Int!], $friendsCount: Int!) {
-	        charactersById(ids: $ids) {
+	    charactersById(ids: $ids) {
                 personalIdentifier
                 name
                 friends(first: $friendsCount) {
