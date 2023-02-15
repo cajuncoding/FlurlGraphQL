@@ -129,7 +129,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 ```
 
 ### Cursor Paging results via Connections
-Cursor based paging is handled by what GraphQL calls a [Connection](https://graphql.org/learn/pagination/#complete-connection-model), and the api is compliant with the [GraphQL.org recommended approach](https://graphql.org/learn/pagination/#connection-specification) provided by the [Relay specificaiont for cursor paging](https://relay.dev/graphql/connections.htm).
+Cursor based paging is handled by what GraphQL calls a [Connection](https://graphql.org/learn/pagination/#complete-connection-model), and the api is compliant with the [GraphQL.org recommended approach](https://graphql.org/learn/pagination/#connection-specification) provided by the [Relay specification for cursor paging](https://relay.dev/graphql/connections.htm).
 
 ```csharp
 //Retrive Cursor based Paginated results (aka Connection)...
