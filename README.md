@@ -73,7 +73,7 @@ graphqlUrl.WithGraphQLQuery("...");
 
 ### Set Query Variables
 ```csharp
-graphqlUrl.SetGraphQLVariable(name, value);
+graphqlUrl.SetGraphQLVariable("name", value);
 	
 graphqlUrl.SetGraphQLVariables(new { 
 	ids = new[] {1001, 2001}, 
@@ -107,9 +107,9 @@ These interfaces both expose `PageInfo` & `TotalCount` properties that may optio
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($first: Int, $after: String) {
-	        characters(first: $first, after: $after) {
+	    characters(first: $first, after: $after) {
                 totalCount
-		        pageInfo {
+		pageInfo {
                     hasNextPage
                     hasPreviousPage
                     startCursor
@@ -118,7 +118,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
                 nodes {
                     personalIdentifier
                     name
-			        height
+	            height
                 }
             }
         }
@@ -272,18 +272,18 @@ public class StarWarsCharacter
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($ids: [Int!], $friendsCount: Int!) {
-	        charactersById(ids: $ids) {
+	    charactersById(ids: $ids) {
+	        friends(first: $friendsCount) {
+	            nodes {
 		        friends(first: $friendsCount) {
-			        nodes {
-				        friends(first: $friendsCount) {
-					        nodes {
-						        name
-						        personalIdentifier
-					        }
-				        }
-			        }
+		            nodes {
+			        name
+			        personalIdentifier
+			    }
 		        }
-	        }
+		    }
+		}
+	    }
         }
     ")
     .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 3 })
@@ -314,17 +314,17 @@ Here's an example of a batch query that uses an alias to run multiple queries an
 var batchResults = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($first: Int) {
-	        characters(first: $first) {
-		        nodes {
-			        personalIdentifier
-			        name
-			        height
-		        }
-	        }
+	    characters(first: $first) {
+                nodes {
+	            personalIdentifier
+		    name
+	            height
+		}
+	    }
 
-	        charactersCount: characters {
-		        totalCount
-	        }
+	    charactersCount: characters {
+                totalCount
+	    }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -352,7 +352,7 @@ try
     var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         .WithGraphQLQuery(@"
             query (BAD_REQUEST) {
-	            MALFORMED QUERY
+	        MALFORMED QUERY
             }
         ")
         .PostGraphQLQueryAsync()
