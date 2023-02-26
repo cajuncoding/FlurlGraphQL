@@ -3,8 +3,7 @@ Lightweight, simplified, asynchronous, fluent GraphQL client querying API extens
 
 This makes it super easy to execute ad-hoc and simple queries against a GraphQL API such as the awesome [HotChocolate .NET GraphQL Server](https://chillicream.com/docs/hotchocolate/v13).
 
-`FlurlGraphQL.Querying` helps to prevent you from getting bogged down in details like what should the GraphQL payload look like, how to handle and parse errors, or polluting your data models with unnecessary properties like `Edges`, `Nodes`, `Items`, etc. for paginated data.
-Handling paginated queries and results is dramatically simplfied, making it easy and intuitive to retreive any page, all results, and even stream the results via `IAsyncEnumerable` in `netstandard2.1` or `IEnumerable<Task>` in `netstandard2.0`.
+`FlurlGraphQL.Querying` helps to prevent you from getting bogged down in details like what should the GraphQL payload look like, how to handle and parse errors, or polluting your data models with unnecessary properties like `Edges`, `Nodes`, `Items`, etc. for paginated data. Handling paginated queries and results is dramatically simplified, making it easy and intuitive to retreive any page, all results, and even stream the results via `IAsyncEnumerable` in `netstandard2.1` or `IEnumerable<Task>` in `netstandard2.0`.
 
 The spirit of Flurl is fully maintained so you can start your query from your endpoint, fully configure the request just as you would with any Flurl request (e.g. manage Headers, Auth Tokens, Query params, etc.).
 However, since GraphQL has unique elements we now provide ability to quickly set the query variables (similar to how you wold with Query Params), and retrieve the from the Response in any number of ways.
