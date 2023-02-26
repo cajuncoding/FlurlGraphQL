@@ -49,7 +49,7 @@ To use this in your project, add the [FlurlGraphQL.Querying](https://www.nuget.o
  - Initial release of the GraphQL Querying (only) extensions for Flurl.Http.
  - Supporting querying of typed data results with support for Relay based Cursor Paging, HotChocolate based Offset paging, Batch querying, Flurl style exception handling, 
      and simplified data models when using nested paginated results from GraphQL.
- - *NOTE: This does not currently support Mutations or Subscriptions.*
+ - *NOTE: This does not currently support Subscriptions.*
 
 # Fluent GraphQL Querying (extensions for Flurl.Http):
 These GraphQL apis are an extension of the `Flurl.Http` library.
