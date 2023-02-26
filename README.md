@@ -41,7 +41,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 ```
 
 ## Nuget Package (netstandard2.0 & netstandard2.1)
-To use this in your project, add the [Flurl.GraphQL.Querying](https://www.nuget.org/packages/FlurlGraphQL.Querying/) NuGet package to your project.
+To use this in your project, add the [FlurlGraphQL.Querying](https://www.nuget.org/packages/FlurlGraphQL.Querying/) NuGet package to your project.
 
 ## Release Notes:
 ### v1.0.0
