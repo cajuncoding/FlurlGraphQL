@@ -140,7 +140,7 @@ Cursor based paging is handled by what GraphQL calls a [Connection](https://grap
 var graphqlResults = await graphqlResponse.ReceiveGraphQLConnectionResults<StarWarsCharacter>();
 ```
 
-### Advanced Curosr Pagination (Retrieve or Stream ALL pages)
+### Advanced Cursor Pagination (Retrieve or Stream ALL pages)
 The api significantly simplifies the process of iterating through all pages of a GraphQL query and can either internally retreive all pages (returns an enumerable set of all pages), or allow streaming of the pages for you to handle.
 NOTE: The streaming function is very efficient (esp. `AsyncEnumerable`) and actually pre-fetches the next page (if one exists) while you are processing the current page.
 
