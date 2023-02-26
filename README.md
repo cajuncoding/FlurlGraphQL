@@ -74,11 +74,14 @@ graphqlUrl.WithGraphQLQuery("...");
 
 ### Set Query Variables
 ```csharp
-graphqlUrl.SetGraphQLVariable("name", value);
+graphqlUrl
+	.SetGraphQLVariable("ids", new[] {1001, 2001})
+	.SetGraphQLVariable("friendsCount", 2);
 	
+//OR
 graphqlUrl.SetGraphQLVariables(new { 
 	ids = new[] {1001, 2001}, 
-	first: 10 
+	friendsCount = 2 
 });
 ```
 
