@@ -180,7 +180,7 @@ await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
 ```
 
 #### Stream All Cursor based Page results (netstandard2.0)...
-NOTE: AsyncEnumerable is not available in netstandard2.0, however we can still eumalate the streaming to minimize our server utilization via `IEnumerable<Task<>>` 
+NOTE: AsyncEnumerable is not available in netstandard2.0, however we can still emulate the streaming to minimize our server utilization via `IEnumerable<Task<>>` 
 which awaits each item as we enumerate.
 ```csharp
 //Returns an IEnumerable<Task<IGraphQLConnectionResults<TResult>>>
@@ -244,7 +244,7 @@ await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
 ```
 
 #### Stream All Offset based Page results (netstandard2.0)...
-NOTE: AsyncEnumerable is not available in netstandard2.0, however we can still eumalate the streaming to minimize our server utilization via `IEnumerable<Task<>>` 
+NOTE: AsyncEnumerable is not available in netstandard2.0, however we can still emulate the streaming to minimize our server utilization via `IEnumerable<Task<>>` 
 which awaits each item as we enumerate.
 ```csharp
 //Returns an IEnumerable<Task<IGraphQLCollectionSegmentResults<TResult>>>
