@@ -54,7 +54,7 @@ To use this in your project, add the [FlurlGraphQL.Querying](https://www.nuget.o
 # Fluent GraphQL Querying (extensions for Flurl.Http):
 These GraphQL apis are an extension of the `Flurl.Http` library.
 
-For core Flurl concepts check out the official [FLurl docs here](https://flurl.dev/docs/fluent-http/). 
+For core Flurl concepts check out the official [Flurl docs here](https://flurl.dev/docs/fluent-http/). 
 
 Once you have a GraphQL API endpoint url initialized, you will have access to the following:
 
