@@ -5,8 +5,10 @@ This makes it super easy to execute ad-hoc and simple queries against a GraphQL 
 
 `FlurlGraphQL.Querying` helps to prevent you from getting bogged down in details like what should the GraphQL payload look like, how to handle and parse errors, or polluting your data models with unnecessary properties like `Edges`, `Nodes`, `Items`, etc. for paginated data. Handling paginated queries and results is dramatically simplified, making it easy and intuitive to retreive any page, all results, and even stream the results via `IAsyncEnumerable` in `netstandard2.1` or `IEnumerable<Task>` in `netstandard2.0`.
 
-The spirit of Flurl is fully maintained so you can start your query from your endpoint, fully configure the request just as you would with any Flurl request (e.g. manage Headers, Auth Tokens, Query params, etc.).
-However, since GraphQL has unique elements we now provide ability to quickly set the query variables (similar to how you wold with Query Params), and retrieve the from the Response in any number of ways.
+The spirit of Flurl is fully maintained in this api so you can start your query from your endpoint, fully configure the request just as you would with any Flurl request (e.g. manage Headers, Auth Tokens, Query params, etc.).
+
+However, since GraphQL has unique elements we now provide ability to quickly set the query, query variables (similar to how you would with Query Params), etc. and
+then retrieve the results from the GraphQL Json response in any number of ways.
 
 #### [Buy me a Coffee ☕](https://www.buymeacoffee.com/cajuncoding)
 *I'm happy to share with the community, but if you find this useful (e.g for professional use), and are so inclinded,
