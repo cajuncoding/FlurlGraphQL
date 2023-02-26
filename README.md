@@ -142,11 +142,14 @@ var graphqlResults = await graphqlResponse.ReceiveGraphQLConnectionResults<StarW
 
 ### Advanced Cursor Pagination (Retrieve or Stream ALL pages)
 The api significantly simplifies the process of iterating through all pages of a GraphQL query and can either internally retreive all pages (returns an enumerable set of all pages), or allow streaming of the pages for you to handle.
-NOTE: The streaming function is very efficient (esp. `AsyncEnumerable`) and actually pre-fetches the next page (if one exists) while you are processing the current page.
 
-#### Retrieve All Cursor based Page results...
+**NOTE:** _The streaming function is very efficient (esp. `AsyncEnumerable`) and actually pre-fetches the next page (if one exists) while you are processing the current page._
+
+#### Retrieve All Cursor based Page results ...
+**NOTE:** This will block and await while processing and retrieving all possible pages...
 ```csharp
 //Returns an IList<IGraphQLConnectionResults<TResult>>
+//NOTE: This will block and await while processing and retrieving all possible pages...
 var graphqlPages = await graphqlResponse.ReceiveAllGraphQLQueryConnectionPages<StarWarsCharacter>();
 
 //Iterate the pages...
