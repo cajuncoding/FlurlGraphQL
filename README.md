@@ -106,7 +106,7 @@ The paging apis encapsulate your typed results in a model that provides a greatl
 
 These interfaces both expose `PageInfo` & `TotalCount` properties that may optionally be populated (if requested) along with some helpers such as `HasPageInfo()` or `HasTotalCount()`.
 
-### Cursor Paging Example to retrieve a simple Page
+### Cursor Paging Example to simply retrieve a single Page
 ```csharp
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
