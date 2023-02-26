@@ -265,12 +265,12 @@ In GraphQL it's easy to expose nested selections of a result than itself is a pa
 a normal model is complex and usually results in dedicated data models that are cluttered / polluted with unecessary elements such as `Nodes`, `Items`, `Edges`, or `PageInfo`, `Cursor`, etc.
 
 You can still use these models if you like but in many cases with these nested data elements we primarily care about the results and
-would like to keep a simplified model. This is handled by the api in that any List<> or Array in your data model (aka implements `ICollection`) that
+would like to keep a simplified model. This is handled by the api in that any `List<>` or `Array` in your data model (aka implements `ICollection`) that
 is mapped to a paginated result in the GraphQL response, will automatically be flattened. So if your query requested `Edges` or `Nodes` they
 are collected into the simplified model as a simple list of results without the need to complicate our data model.
 
-Here's and example of how we might just want the Friends as a list of results in our StarWarsCharacter, and we can select them via a complex nested
-recursive graph and this will be automatically handled:
+Here's an example of how we might just want the Friends as a list of results in our StarWarsCharacter (simple model), and we can select them via a complex nested,
+recursive, paginated graph and this will be automatically handled:
 ```csharp
 
 public class StarWarsCharacter
