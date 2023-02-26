@@ -350,12 +350,35 @@ Assert.AreEqual(charactersResultsByName, charactersResultsByIndex);
 
 var countResult = batchResults.GetConnectionResults<StarWarsCharacter>("charactersCount");
 Assert.IsTrue(countResult.TotalCount > charactersResultsByName.Count);
-
 ```
+
+### RAW Json Handling (fully manual)
+You can always request the raw Json response that was returned by the GraphQL server ready to be fully handled manually (for off-the-wall edge cases). 
+Simply use the `.ReceiveGraphQLRawJsonResponse()` api method to get the response as a parsed Json result (e.g. `JObject` for `Newtonsoft.Json`)
+
+```csharp
+var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
+    .WithGraphQLQuery(@"
+        query ($first: Int) {
+	    characters(first: $first) {
+                nodes {
+	            personalIdentifier
+		    name
+	            height
+		}
+	    }
+        }
+    ")
+    .SetGraphQLVariables(new { first = 2 })
+    .PostGraphQLQueryAsync()
+    .ReceiveGraphQLRawJsonResponse()
+    .ConfigureAwait(false);
+```
+
 
 ### Error Handling
 Consistent with the [spirit of Flurl for error handling](https://flurl.dev/docs/error-handling/#error-handling), errors from GraphQL will result 
-in a FlurlGraphQLException being thrown with the details of the errors payload already provided as a helpful error message. However the raw error 
+in a `FlurlGraphQLException` being thrown with the details of the errors payload already parsed & provided as a helpful error message. However the raw error 
 details are also available in the `GraphQLErrors` property.
 
 ```csharp
