@@ -162,13 +162,13 @@ foreach (var page in graphqlPages)
 }
 
 //Gather All results for all the pages...
-var allResults = allResultPages.SelectMany(p => p);
+var allResults = graphqlPages.SelectMany(p => p);
 ```
 
 #### Stream All Cursor based Page results (netstandard2.1)...
 ```csharp
 //Returns an IAsyncEnumerable<IGraphQLConnectionResults<TResult>>
-var graphqlPages = await graphqlResponse.ReceiveGraphQLConnectionPagesAsyncEnumerable<StarWarsCharacter>();
+var pagesAsyncEnumerable = graphqlResponse.ReceiveGraphQLConnectionPagesAsyncEnumerable<StarWarsCharacter>();
 
 //Stream the pages...
 //NOTE: Using this process to store the resulting page data to a Repository/DB would be done in 
@@ -226,13 +226,13 @@ foreach (var page in graphqlPages)
 }
 
 //Gather All results for all the pages...
-var allResults = allResultPages.SelectMany(p => p);
+var allResults = graphqlPages.SelectMany(p => p);
 ```
 
 #### Stream All Offset based Page results (netstandard2.1)...
 ```csharp
 //Returns an IAsyncEnumerable<IGraphQLCollectionSegmentResults<TResult>>
-var graphqlPages = await graphqlResponse.ReceiveGraphQLCollectionSegmentPagesAsyncEnumerable<StarWarsCharacter>();
+var pagesAsyncEnumerable = graphqlResponse.ReceiveGraphQLCollectionSegmentPagesAsyncEnumerable<StarWarsCharacter>();
 
 //Stream the pages...
 //NOTE: Using this process to store the resulting page data to a Repository/DB would be done in 
