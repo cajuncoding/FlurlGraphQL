@@ -132,8 +132,46 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 Cursor based paging is handled by what GraphQL calls a [Connection](https://graphql.org/learn/pagination/#complete-connection-model), and the api is compliant with the [GraphQL.org recommended approach](https://graphql.org/learn/pagination/#connection-specification) provided by the [Relay specification for cursor paging](https://relay.dev/graphql/connections.htm).
 
 ```csharp
-//Retrive Cursor based Paginated results (aka Connection)...
+//Retrieve Cursor based Paginated results (aka Connection)...
 var graphqlResults = await graphqlResponse.ReceiveGraphQLConnectionResults<StarWarsCharacter>();
+
+//Access the TotalCount (if requested in the query)...
+var totalCount = graphqlResults.TotalCount;
+
+//Access the paging details easily (if requested in the query)...
+var pageInfo = graphqlResults.PageInfo;
+var hasNextPage = pageInfo.HasNextPage;
+var hasPreviousPage = pageInfo.HasPreviousPage;
+var startCursor = pageInfo.StartCursor;
+var endCursor = pageInfo.EndCursor;
+
+//Enumerate the actual results of the page...
+foreach(var starWarsCharacter in graphqlResults)
+    Debug.WriteLine(starWarsCharacter.Name);
+```
+
+#### Want access to the actual Cursor?
+```csharp
+//Use the provided GraphQLEdge<> class wrapper when Retrieving your Cursor based Paginated results (aka Connection)...
+var graphqlResults = await graphqlResponse.ReceiveGraphQLConnectionResults<GraphQLEdge<StarWarsCharacter>>();
+
+//Enumerate the actual results of the page...
+foreach(var edge in graphqlResults)
+{
+    var starWarsCharacter = edge.Node;
+    var cursor = edge.Cursor;
+}
+
+//OR Implement the IGraphQLEdge interface on your models...
+public class CursorStarWarsCharacter : StarWarsCharacter, IGraphQLEdge {};
+
+//Retrieve Cursor based Paginated results (aka Connection)...
+var graphqlResults = await graphqlResponse.ReceiveGraphQLConnectionResults<CursorStarWarsCharacter>();
+
+//Enumerate the actual results which will also have the Cursor (if requested in the query)...
+foreach(var result in graphqlResults)
+    Debug.WriteLine($"My Name is {result.Name} and my Cursor is [{result.Cursor}].");
+
 ```
 
 ### Advanced Curosr Pagination (Retrieve or Stream ALL pages)
@@ -197,6 +235,18 @@ NOTE: However the HotChocoalte team also strongly encourages the use of Cursor P
 ```csharp
 //Retrieve Offset based Paginated results (aka CollectionSegment)...
 var graphqlResults = await graphqlResponse.ReceiveGraphQLCollectionSegmentResults<StarWarsCharacter>();
+
+//Access the TotalCount (if requested in the query)...
+var totalCount = graphqlResults.TotalCount;
+
+//Access the paging details easily (if requested in the query)...
+var pageInfo = graphqlResults.PageInfo;
+var hasNextPage = pageInfo.HasNextPage;
+var hasPreviousPage = pageInfo.HasPreviousPage;
+
+//Enumerate the actual results of the page...
+foreach(var starWarsCharacter in graphqlResults)
+    Debug.WriteLine(starWarsCharacter.Name);
 ```
 
 ### Advanced Offset Pagination (Retrieve or Stream ALL pages)
