@@ -8,6 +8,7 @@ namespace FlurlGraphQL.Querying
 {
     public interface IFlurlGraphQLRequest : IFlurlRequest
     {
+        GraphQLQueryType GraphQLQueryType { get; }
         string GraphQLQuery { get; }
         IReadOnlyDictionary<string, object> GraphQLVariables { get; }
         IFlurlGraphQLRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove);
@@ -23,6 +24,7 @@ namespace FlurlGraphQL.Querying
         IFlurlGraphQLRequest ClearGraphQLVariables();
         IFlurlGraphQLRequest RemoveGraphQLVariable(string name);
         IFlurlGraphQLRequest WithGraphQLQuery(string query, NullValueHandling nullValueHandling = NullValueHandling.Remove);
+        IFlurlGraphQLRequest WithGraphQLPersistedQuery(string id, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest ClearGraphQLQuery();
         IFlurlGraphQLRequest Clone();
 
