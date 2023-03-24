@@ -3,11 +3,12 @@ Lightweight, simplified, asynchronous, fluent GraphQL client querying API extens
 
 This makes it super easy to execute ad-hoc and simple queries against a GraphQL API such as the awesome [HotChocolate .NET GraphQL Server](https://chillicream.com/docs/hotchocolate/v13).
 
-`FlurlGraphQL.Querying` helps to prevent you from getting bogged down in details like what should the GraphQL payload look like, how to handle and parse errors, or polluting your data models with unnecessary properties like `Nodes`, `Items`, etc. for paginated data.
-Handling paginated queries and results is dramatically simplfied, making it easy and intuitive to retreive any page, all results, and even stream the results via `IAsyncEnumerable` in `netstandard2.1` or `IEnumerable<Task>` in `netstandard2.0`.
+`FlurlGraphQL.Querying` helps to prevent you from getting bogged down in details like what should the GraphQL payload look like, how to handle and parse errors, or polluting your data models with unnecessary properties like `Edges`, `Nodes`, `Items`, etc. for paginated data. Handling paginated queries and results is dramatically simplified, making it easy and intuitive to retreive any page, all results, and even stream the results via `IAsyncEnumerable` in `netstandard2.1` or `IEnumerable<Task>` in `netstandard2.0`.
 
-The spirit of Flurl is fully maintained so you can start your query from your endpoint, fully configure the request just as you would with any Flurl request (e.g. manage Headers, Auth Tokens, Query params, etc.).
-However, since GraphQL has unique elements we now provide ability to quickly set the query variables (similar to how you wold with Query Params), and retrieve the from the Response in any number of ways.
+The spirit of Flurl is fully maintained in this api so you can start your query from your endpoint, fully configure the request just as you would with any Flurl request (e.g. manage Headers, Auth Tokens, Query params, etc.).
+
+However, since GraphQL has unique elements we now provide ability to quickly set the query, query variables (similar to how you would with Query Params), etc. and
+then retrieve the results from the GraphQL Json response in any number of ways.
 
 #### [Buy me a Coffee ☕](https://www.buymeacoffee.com/cajuncoding)
 *I'm happy to share with the community, but if you find this useful (e.g for professional use), and are so inclinded,
@@ -40,7 +41,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 ```
 
 ## Nuget Package (netstandard2.0 & netstandard2.1)
-To use this in your project, add the [Flurl.GraphQL.Querying](https://www.nuget.org/packages/FlurlGraphQL.Querying/) NuGet package to your project.
+To use this in your project, add the [FlurlGraphQL.Querying](https://www.nuget.org/packages/FlurlGraphQL.Querying/) NuGet package to your project.
 
 ## Release Notes:
 ### v1.0.0
@@ -48,12 +49,12 @@ To use this in your project, add the [Flurl.GraphQL.Querying](https://www.nuget.
  - Initial release of the GraphQL Querying (only) extensions for Flurl.Http.
  - Supporting querying of typed data results with support for Relay based Cursor Paging, HotChocolate based Offset paging, Batch querying, Flurl style exception handling, 
      and simplified data models when using nested paginated results from GraphQL.
- - *NOTE: This does not currently support Mutations or Subscriptions.*
+ - *NOTE: This does not currently support Subscriptions.*
 
 # Fluent GraphQL Querying (extensions for Flurl.Http):
 These GraphQL apis are an extension of the `Flurl.Http` library.
 
-For core Flurl concepts check out the official [FLurl docs here](https://flurl.dev/docs/fluent-http/). 
+For core Flurl concepts check out the official [Flurl docs here](https://flurl.dev/docs/fluent-http/). 
 
 Once you have a GraphQL API endpoint url initialized, you will have access to the following:
 
@@ -73,11 +74,14 @@ graphqlUrl.WithGraphQLQuery("...");
 
 ### Set Query Variables
 ```csharp
-graphqlUrl.SetGraphQLVariable("name", value);
+graphqlUrl
+	.SetGraphQLVariable("ids", new[] {1001, 2001})
+	.SetGraphQLVariable("friendsCount", 2);
 	
+//OR
 graphqlUrl.SetGraphQLVariables(new { 
 	ids = new[] {1001, 2001}, 
-	first: 10 
+	friendsCount = 2 
 });
 ```
 
@@ -102,7 +106,7 @@ The paging apis encapsulate your typed results in a model that provides a greatl
 
 These interfaces both expose `PageInfo` & `TotalCount` properties that may optionally be populated (if requested) along with some helpers such as `HasPageInfo()` or `HasTotalCount()`.
 
-### Cursor Paging Example to retrieve a simple Page
+### Cursor Paging Example to simply retrieve a single Page
 ```csharp
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
@@ -174,13 +178,16 @@ foreach(var result in graphqlResults)
 
 ```
 
-### Advanced Curosr Pagination (Retrieve or Stream ALL pages)
+### Advanced Cursor Pagination (Retrieve or Stream ALL pages)
 The api significantly simplifies the process of iterating through all pages of a GraphQL query and can either internally retreive all pages (returns an enumerable set of all pages), or allow streaming of the pages for you to handle.
-NOTE: The streaming function is very efficient (esp. `AsyncEnumerable`) and actually pre-fetches the next page (if one exists) while you are processing the current page.
 
-#### Retrieve All Cursor based Page results...
+**NOTE:** _The streaming function is very efficient (esp. `AsyncEnumerable`) and actually pre-fetches the next page (if one exists) while you are processing the current page._
+
+#### Retrieve All Cursor based Page results ...
+**NOTE:** This will block and await while processing and retrieving all possible pages...
 ```csharp
 //Returns an IList<IGraphQLConnectionResults<TResult>>
+//NOTE: This will block and await while processing and retrieving all possible pages...
 var graphqlPages = await graphqlResponse.ReceiveAllGraphQLQueryConnectionPages<StarWarsCharacter>();
 
 //Iterate the pages...
@@ -193,16 +200,17 @@ foreach (var page in graphqlPages)
 }
 
 //Gather All results for all the pages...
-var allResults = allResultPages.SelectMany(p => p);
+var allResults = graphqlPages.SelectMany(p => p);
 ```
 
 #### Stream All Cursor based Page results (netstandard2.1)...
 ```csharp
 //Returns an IAsyncEnumerable<IGraphQLConnectionResults<TResult>>
-var graphqlPages = await graphqlResponse.ReceiveGraphQLConnectionPagesAsyncEnumerable<StarWarsCharacter>();
+var pagesAsyncEnumerable = graphqlResponse.ReceiveGraphQLConnectionPagesAsyncEnumerable<StarWarsCharacter>();
 
 //Stream the pages...
-//NOTE: Using this store the resulting page data to a Repository/DB would be done in a streaming fashion minimizing the memory utilization...
+//NOTE: Using this process to store the resulting page data to a Repository/DB would be done in 
+//	a streaming fashion minimizing the memory utilization...
 await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
 {
     //... process the page data...
@@ -210,14 +218,15 @@ await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
 ```
 
 #### Stream All Cursor based Page results (netstandard2.0)...
-NOTE: AsyncEnumerable is not available in netstandard2.0, however we can still eumalate the streaming to minimize our server utilization via `IEnumerable<Task<>>` 
+NOTE: AsyncEnumerable is not available in netstandard2.0, however we can still emulate the streaming to minimize our server utilization via `IEnumerable<Task<>>` 
 which awaits each item as we enumerate.
 ```csharp
 //Returns an IEnumerable<Task<IGraphQLConnectionResults<TResult>>>
 var graphqlPagesTasks = await graphqlResponse.ReceiveGraphQLConnectionPagesAsEnumerableTasks<StarWarsCharacter>();
 
 //Enumerate the async retrieved pages (as Tasks) in a streaming fashion...
-//NOTE: Using this store the resulting page data to a Repository/DB would be done in a streaming fashion minimizing the memory utilization...
+//NOTE: Using this process to store the resulting page data to a Repository/DB would be done in 
+//	a streaming fashion minimizing the memory utilization...
 foreach (var pageTask in graphqlPagesTasks)
 {
     var page = await pageTask.ConfigureAwait(false);
@@ -254,6 +263,7 @@ Just as with Cursor pagination, the api significantly simplifies the process of 
 NOTE: The streaming function is very efficient (esp. `AsyncEnumerable`) and actually pre-fetches the next page (if one exists) while you are processing the current page.
 
 #### Retrive All Offset based Page results...
+**NOTE:** This will block and await while processing and retrieving all possible pages...
 ```csharp
 //Returns an IList<IGraphQLCollectionSegmentResults<TResult>>
 var graphqlPages = await graphqlResponse.ReceiveAllGraphQLQueryCollectionSegmentPages<StarWarsCharacter>();
@@ -266,16 +276,17 @@ foreach (var page in graphqlPages)
 }
 
 //Gather All results for all the pages...
-var allResults = allResultPages.SelectMany(p => p);
+var allResults = graphqlPages.SelectMany(p => p);
 ```
 
 #### Stream All Offset based Page results (netstandard2.1)...
 ```csharp
 //Returns an IAsyncEnumerable<IGraphQLCollectionSegmentResults<TResult>>
-var graphqlPages = await graphqlResponse.ReceiveGraphQLCollectionSegmentPagesAsyncEnumerable<StarWarsCharacter>();
+var pagesAsyncEnumerable = graphqlResponse.ReceiveGraphQLCollectionSegmentPagesAsyncEnumerable<StarWarsCharacter>();
 
 //Stream the pages...
-//NOTE: Using this store the resulting page data to a Repository/DB would be done in a streaming fashion minimizing the memory utilization...
+//NOTE: Using this process to store the resulting page data to a Repository/DB would be done in 
+//	a streaming fashion minimizing the memory utilization...
 await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
 {
     //... process the page data...
@@ -283,14 +294,15 @@ await foreach (var page in pagesAsyncEnumerable.ConfigureAwait(false))
 ```
 
 #### Stream All Offset based Page results (netstandard2.0)...
-NOTE: AsyncEnumerable is not available in netstandard2.0, however we can still eumalate the streaming to minimize our server utilization via `IEnumerable<Task<>>` 
+NOTE: AsyncEnumerable is not available in netstandard2.0, however we can still emulate the streaming to minimize our server utilization via `IEnumerable<Task<>>` 
 which awaits each item as we enumerate.
 ```csharp
 //Returns an IEnumerable<Task<IGraphQLCollectionSegmentResults<TResult>>>
 var graphqlPagesTasks = await graphqlResponse.ReceiveGraphQLCollectionSegmentPagesAsEnumerableTasks<StarWarsCharacter>();
 
 //Enumerate the async retrieved pages (as Tasks) in a streaming fashion...
-//NOTE: Using this store the resulting page data to a Repository/DB would be done in a streaming fashion minimizing the memory utilization...
+//NOTE: Using this process to store the resulting page data to a Repository/DB would be done in 
+//	a streaming fashion minimizing the memory utilization...
 foreach (var pageTask in graphqlPagesTasks)
 {
     var page = await pageTask.ConfigureAwait(false);
@@ -300,15 +312,15 @@ foreach (var pageTask in graphqlPagesTasks)
 
 ### Data Models with Nested Paginated results
 In GraphQL it's easy to expose nested selections of a result than itself is a paginated set of data. Thats why de-serializing this into
-a normal model is complex and usually results in dedicated data models that are cluttered / polluted with unecessary elements such as `Nodes`, `Items`, 'Edges', or `PageInfo`, `Cursor`, etc.
+a normal model is complex and usually results in dedicated data models that are cluttered / polluted with unecessary elements such as `Nodes`, `Items`, `Edges`, or `PageInfo`, `Cursor`, etc.
 
 You can still use these models if you like but in many cases with these nested data elements we primarily care about the results and
-would like to keep a simplified model. This is handled by the api in that any List<> or Array in your data model (aka implements `ICollection`) that
+would like to keep a simplified model. This is handled by the api in that any `List<>` or `Array` in your data model (aka implements `ICollection`) that
 is mapped to a paginated result in the GraphQL response, will automatically be flattened. So if your query requested `Edges` or `Nodes` they
 are collected into the simplified model as a simple list of results without the need to complicate our data model.
 
-Here's and example of how we might just want the Friends as a list of results in our StarWarsCharacter, and we can select them via a complex nested
-recursive graph and this will be automatically handled:
+Here's an example of how we might just want the Friends as a list of results in our StarWarsCharacter (simple model), and we can select them via a complex nested,
+recursive, paginated graph and this will be automatically handled:
 ```csharp
 
 public class StarWarsCharacter
@@ -388,12 +400,35 @@ Assert.AreEqual(charactersResultsByName, charactersResultsByIndex);
 
 var countResult = batchResults.GetConnectionResults<StarWarsCharacter>("charactersCount");
 Assert.IsTrue(countResult.TotalCount > charactersResultsByName.Count);
-
 ```
+
+### RAW Json Handling (fully manual)
+You can always request the raw Json response that was returned by the GraphQL server ready to be fully handled manually (for off-the-wall edge cases). 
+Simply use the `.ReceiveGraphQLRawJsonResponse()` api method to get the response as a parsed Json result (e.g. `JObject` for `Newtonsoft.Json`)
+
+```csharp
+var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
+    .WithGraphQLQuery(@"
+        query ($first: Int) {
+	    characters(first: $first) {
+                nodes {
+	            personalIdentifier
+		    name
+	            height
+		}
+	    }
+        }
+    ")
+    .SetGraphQLVariables(new { first = 2 })
+    .PostGraphQLQueryAsync()
+    .ReceiveGraphQLRawJsonResponse()
+    .ConfigureAwait(false);
+```
+
 
 ### Error Handling
 Consistent with the [spirit of Flurl for error handling](https://flurl.dev/docs/error-handling/#error-handling), errors from GraphQL will result 
-in a FlurlGraphQLException being thrown with the details of the errors payload already provided as a helpful error message. However the raw error 
+in a `FlurlGraphQLException` being thrown with the details of the errors payload already parsed & provided as a helpful error message. However the raw error 
 details are also available in the `GraphQLErrors` property.
 
 ```csharp
