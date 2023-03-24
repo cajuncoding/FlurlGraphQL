@@ -12,6 +12,13 @@ using Flurl.Util;
 
 namespace FlurlGraphQL.Querying
 {
+    public enum GraphQLQueryType
+    {
+        Undefined,
+        Query,
+        PersistedQuery
+    };
+
     public class FlurlGraphQLRequest : IFlurlGraphQLRequest
     {
         protected IFlurlRequest BaseFlurlRequest { get; set; }
@@ -19,6 +26,9 @@ namespace FlurlGraphQL.Querying
         {
             BaseFlurlRequest = baseRequest.AssertArgIsNotNull(nameof(baseRequest));
         }
+
+        public GraphQLQueryType GraphQLQueryType { get; protected set; }
+
 
         #region GraphQL Variables
 
@@ -93,44 +103,91 @@ namespace FlurlGraphQL.Querying
 
         #endregion
 
-        #region GraphQL Query Param/Body
+        #region WithGraphQLQuery()
 
         public string GraphQLQuery { get; protected set; } = null;
 
         public IFlurlGraphQLRequest WithGraphQLQuery(string query, NullValueHandling nullValueHandling = NullValueHandling.Remove)
         {
             if (query != null || nullValueHandling == NullValueHandling.Remove)
+            {
+                //NOTE: By design, Persisted Queries and normal Queries are mutually exclusive so only one will be populated at a time,
+                //          we enforce this by clearing them both when a new item is being set...
+                ClearGraphQLQuery();
                 GraphQLQuery = query;
+                GraphQLQueryType = GraphQLQueryType.Query;
+            }
 
             return this;
         }
 
+        #endregion
+
+        #region WithGraphQLPersistedQuery()
+
+        public IFlurlGraphQLRequest WithGraphQLPersistedQuery(string id, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        {
+            if (id != null || nullValueHandling == NullValueHandling.Remove)
+            {
+                //NOTE: By design, Persisted Queries and normal Queries are mutually exclusive so only one will be populated at a time,
+                //          we enforce this by clearing them both when a new item is being set...
+                ClearGraphQLQuery();
+                GraphQLQuery = id;
+                GraphQLQueryType = GraphQLQueryType.PersistedQuery;
+            }
+
+            return this;
+        }
+
+        #endregion
+
+        #region ClearGraphQLQuery(), Clone()
+
         public IFlurlGraphQLRequest ClearGraphQLQuery()
         {
             GraphQLQuery = null;
+            GraphQLQueryType = GraphQLQueryType.Undefined;
             return this;
         }
 
         public IFlurlGraphQLRequest Clone()
         {
-            return new FlurlGraphQLRequest(this.BaseFlurlRequest)
-                .WithGraphQLQuery(this.GraphQLQuery)
+            var clone = (IFlurlGraphQLRequest)new FlurlGraphQLRequest(this.BaseFlurlRequest);
+
+            switch (this.GraphQLQueryType)
+            {
+                case GraphQLQueryType.PersistedQuery:
+                    clone = clone.WithGraphQLPersistedQuery(this.GraphQLQuery);
+                    break;
+                case GraphQLQueryType.Query:
+                    clone = clone.WithGraphQLQuery(this.GraphQLQuery);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(GraphQLQueryType), "The GraphQL Query Type is undefined or invalid.");
+            }
+
+            clone
                 .SetGraphQLVariables(this.GraphQLVariablesInternal)
                 .SetContextItems(this.ContextBagInternal);
+
+            return clone;
         }
 
         #endregion
+
 
         #region GraphQL Query Execution with Server
 
         public async Task<IFlurlGraphQLResponse> PostGraphQLQueryAsync<TVariables>(TVariables variables, CancellationToken cancellationToken = default, NullValueHandling nullValueHandling = NullValueHandling.Remove)
             where TVariables : class
         {
-            var graphqlQuery = this.GraphQLQuery;
+            //NOTE: By design, Persisted Queries and normal Queries are mutually exclusive so only one will be populated at a time...
+            var graphqlQueryType = this.GraphQLQueryType;
+            var graphqlQueryOrId = this.GraphQLQuery;
 
             //Get the GraphQL Query and remove it from the QueryString...
-            if (string.IsNullOrWhiteSpace(graphqlQuery))
-                throw new InvalidOperationException($"The GraphQL Query is undefined; use {nameof(WithGraphQLQuery)}() to specify the body of the query.");
+            if (graphqlQueryType == GraphQLQueryType.Undefined || string.IsNullOrWhiteSpace(graphqlQueryOrId))
+                throw new InvalidOperationException($"The GraphQL Query is undefined; use {nameof(WithGraphQLQuery)}() or {nameof(WithGraphQLPersistedQuery)}() to specify the query.");
 
             //Process any additional variables that may have been provided directly to this call...
             //NOTE: None of these will have used our prefix convention...
@@ -138,7 +195,7 @@ namespace FlurlGraphQL.Querying
                 this.SetGraphQLVariables(variables, nullValueHandling);
 
             //Execute the Query with the GraphQL Server...
-            var graphqlPayload = new FlurlGraphQLRequestPayload(graphqlQuery, this.GraphQLVariablesInternal);
+            var graphqlPayload = new FlurlGraphQLRequestPayload(graphqlQueryType, graphqlQueryOrId, this.GraphQLVariablesInternal);
 
             try
             {
@@ -159,7 +216,7 @@ namespace FlurlGraphQL.Querying
                     throw new FlurlGraphQLException(
                         $"[{(int)HttpStatusCode.BadRequest}-{HttpStatusCode.BadRequest}] The GraphQL server returned a bad request response for the query."
                         + " This is likely caused by a malformed, or non-parsable query; validate the query syntax, operation name, arguments, etc."
-                        + " to ensure that the query is valid.", graphqlQuery, errorContent, httpStatusCode, httpException
+                        + " to ensure that the query is valid.", graphqlQueryOrId, errorContent, httpStatusCode, httpException
                     );
                 else
                     throw;

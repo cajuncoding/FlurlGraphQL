@@ -1,8 +1,4 @@
-using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
-using FlurlGraphQL.Querying;
-using FlurlGraphQL.Querying.NewtonsoftJson;
 using FlurlGraphQL.Querying.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;

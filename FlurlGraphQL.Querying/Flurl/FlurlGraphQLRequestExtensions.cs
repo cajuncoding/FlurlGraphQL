@@ -20,11 +20,48 @@ namespace FlurlGraphQL.Querying
 
         public static IFlurlGraphQLRequest ToGraphQLRequest(this IFlurlRequest request)
             => request is FlurlGraphQLRequest graphqlRequest ? graphqlRequest : new FlurlGraphQLRequest(request);
-        
+
         #endregion
-        
+
+        #region WithGraphQLPersistedQuery()
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="query"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest WithGraphQLPersistedQuery(this string url, string id) => ToGraphQLRequest(url).WithGraphQLPersistedQuery(id);
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="query"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest WithGraphQLPersistedQuery(this Uri url, string id) => ToGraphQLRequest(url).WithGraphQLPersistedQuery(id);
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="query"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest WithGraphQLPersistedQuery(this Url url, string id) => ToGraphQLRequest(url).WithGraphQLPersistedQuery(id);
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="query"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest WithGraphQLPersistedQuery(this IFlurlRequest request, string id) => request.ToGraphQLRequest().WithGraphQLPersistedQuery(id);
+
+
+        #endregion
+
         #region WithGraphQLQuery()...
-        
+
         /// <summary>
         /// Initialize the query body for a GraphQL query request.
         /// </summary>
