@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FlurlGraphQL.Querying.Tests.Models;
@@ -10,7 +11,7 @@ namespace FlurlGraphQL.Querying.Tests
     public class FlurlGraphQLQueryingPersistedQueryTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public async Task TestPersistedQuerySingleQueryDirectResultsAsync()
+        public async Task TestPersistedPostQuerySingleQueryDirectResultsAsync()
         {
             var results = await GraphQLApiEndpoint
                 .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
@@ -43,7 +44,7 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestPersistedQueryReceiveAllPagesAsync()
+        public async Task TestPersistedPostQueryReceiveAllPagesAsync()
         {
             var results = await GraphQLApiEndpoint
                 .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
@@ -52,6 +53,24 @@ namespace FlurlGraphQL.Querying.Tests
                 .ReceiveAllGraphQLQueryConnectionPages<StarWarsCharacter>()
                 .ConfigureAwait(false);
 
+            AssertPersistedQueryAllPageResultsAreValid(results);
+        }
+
+        [TestMethod]
+        public async Task TestPersistedGetQueryReceiveAllPagesAsync()
+        {
+            var results = await GraphQLApiEndpoint
+                .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
+                .SetGraphQLVariables(new { first = 2, friendsCount = 1 })
+                .GetGraphQLQueryAsync()
+                .ReceiveAllGraphQLQueryConnectionPages<StarWarsCharacter>()
+                .ConfigureAwait(false);
+
+            AssertPersistedQueryAllPageResultsAreValid(results);
+        }
+
+        private void AssertPersistedQueryAllPageResultsAreValid(IList<IGraphQLConnectionResults<StarWarsCharacter>> results)
+        {
             Assert.IsNotNull(results);
             Assert.IsTrue(results.Count > 1);
             var totalCount = results.FirstOrDefault().TotalCount;
@@ -62,7 +81,14 @@ namespace FlurlGraphQL.Querying.Tests
 
             foreach (var character in allResults)
             {
-                TestContext.WriteLine($"Received Character: {character.Name}");
+                Assert.IsNotNull(character);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(character.Name));
+                
+                var friendsComment = character.Friends.Any() 
+                    ? $"who is friends with [{string.Join(",", character.Friends.Select(f => f.Name))}]"
+                    : string.Empty;
+
+                TestContext.WriteLine($"Received Character [{character.Name}] {friendsComment}");
             }
 
             var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
