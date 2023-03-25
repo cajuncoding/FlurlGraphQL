@@ -7,10 +7,10 @@ using Newtonsoft.Json.Linq;
 namespace FlurlGraphQL.Querying.Tests
 {
     [TestClass]
-    public class FlurlGraphQLQueryingSimpleTests : BaseFlurlGraphQLTest
+    public class FlurlGraphQLQueryingSimplePostTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public async Task TestSimpleSingleQueryDirectResultsAsync()
+        public async Task TestSimplePostSingleQueryDirectResultsAsync()
         {
             var results = await GraphQLApiEndpoint
                 .WithGraphQLQuery(@"
@@ -47,7 +47,7 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestSingleQueryRawJsonResponseAsync()
+        public async Task TestSinglePostQueryRawJsonResponseAsync()
         {
             //INTENTIONALLY Place the Nested Paginated selection as LAST item to validate functionality!
             var json = await GraphQLApiEndpoint
@@ -79,7 +79,7 @@ namespace FlurlGraphQL.Querying.Tests
 
 
         [TestMethod]
-        public async Task TestSingleQueryWithOnlyNestedPaginatedResultsAsync()
+        public async Task TestSinglePostQueryWithOnlyNestedPaginatedResultsAsync()
         {
             var idArrayParam = new[] { 1000, 2001 };
             var friendCountParam = 1;
@@ -124,7 +124,7 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestSingleQueryWithDoubleNestedPagingResultsAsync()
+        public async Task TestSinglePostQueryWithDoubleNestedPagingResultsAsync()
         {
             var idArrayParam = new[] { 1000, 2001 };
 

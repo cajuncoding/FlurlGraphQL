@@ -35,7 +35,7 @@ namespace FlurlGraphQL.Querying
                 : queryResultJson.Field(queryOperationName);
 
             var jsonSerializerSettings = ContextBag?.TryGetValue(nameof(JsonSerializerSettings), out var serializerSettings) ?? false
-                ? serializerSettings as JsonSerializerSettings 
+                ? serializerSettings as JsonSerializerSettings
                 : null;
 
             var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(jsonSerializerSettings);
