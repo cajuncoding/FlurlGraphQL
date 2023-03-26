@@ -212,6 +212,15 @@ namespace FlurlGraphQL.Querying
             var jsonSerializer = JsonSerializer.CreateDefault(jsonSerializerSettings);
             jsonSerializer.Converters.Add(new GraphQLPageResultsToICollectionConverter());
 
+            return ParseJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(json, jsonSerializer);
+        }
+
+        internal static IGraphQLQueryResults<TEntityResult> ParseJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(this JToken json, JsonSerializer jsonSerializer)
+            where TEntityResult : class
+        {
+            if (json == null)
+                return new GraphQLQueryResults<TEntityResult>();
+
             //Dynamically parse the data from the results...
             //NOTE: We process PageInfo as Cursor Paging as the Default (because it's strongly encouraged by GraphQL.org
             //          & Offset Paging model is a subset of Cursor Paging (less flexible).

@@ -20,11 +20,48 @@ namespace FlurlGraphQL.Querying
 
         public static IFlurlGraphQLRequest ToGraphQLRequest(this IFlurlRequest request)
             => request is FlurlGraphQLRequest graphqlRequest ? graphqlRequest : new FlurlGraphQLRequest(request);
-        
+
         #endregion
-        
+
+        #region WithGraphQLPersistedQuery()
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="query"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest WithGraphQLPersistedQuery(this string url, string id) => ToGraphQLRequest(url).WithGraphQLPersistedQuery(id);
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="query"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest WithGraphQLPersistedQuery(this Uri url, string id) => ToGraphQLRequest(url).WithGraphQLPersistedQuery(id);
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="query"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest WithGraphQLPersistedQuery(this Url url, string id) => ToGraphQLRequest(url).WithGraphQLPersistedQuery(id);
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="query"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest WithGraphQLPersistedQuery(this IFlurlRequest request, string id) => request.ToGraphQLRequest().WithGraphQLPersistedQuery(id);
+
+
+        #endregion
+
         #region WithGraphQLQuery()...
-        
+
         /// <summary>
         /// Initialize the query body for a GraphQL query request.
         /// </summary>
@@ -195,7 +232,7 @@ namespace FlurlGraphQL.Querying
         #region PostGraphQLQueryAsnc()...
 
         /// <summary>
-        /// Execute the GraphQL Query, along with initialized variables, with the GraphQL Server specified by the original Url.
+        /// Execute the GraphQL Query as a POST request (Strongly Recommended vs GET), along with initialized variables, with the GraphQL Server specified by the original Url.
         /// If no GraphQL Query has been specified via WithGraphQLQuery() then an InvalidOperationException will be thrown; otherwise
         /// any other errors returned by the GraphQL server will result in a FlurlGraphQLException being thrown containing all relevant details about the errors.
         /// </summary>
@@ -204,6 +241,19 @@ namespace FlurlGraphQL.Querying
         /// <returns>Returns an async IFlurlGraphQLResponse ready to be processed by various ReceiveGraphQL*() methods to handle the results based on the type of query.</returns>
         public static Task<IFlurlGraphQLResponse> PostGraphQLQueryAsync(this IFlurlRequest request, CancellationToken cancellationToken = default)
             => request.ToGraphQLRequest().PostGraphQLQueryAsync<object>(null, cancellationToken: cancellationToken);
+
+        /// <summary>
+        /// STRONGLY DISCOURAGED -- Execute the GraphQL Query as a GET request, along with initialized variables, with the GraphQL Server specified by the original Url.
+        /// This is Strongly Discouraged as POST requests are much more robust. But this is provided for edge cases where GET requests must be used.
+        /// If no GraphQL Query has been specified via WithGraphQLQuery() then an InvalidOperationException will be thrown; otherwise
+        /// any other errors returned by the GraphQL server will result in a FlurlGraphQLException being thrown containing all relevant details about the errors.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Returns an async IFlurlGraphQLResponse ready to be processed by various ReceiveGraphQL*() methods to handle the results based on the type of query.</returns>
+        public static Task<IFlurlGraphQLResponse> GetGraphQLQueryAsync(this IFlurlRequest request, CancellationToken cancellationToken = default)
+            => request.ToGraphQLRequest().GetGraphQLQueryAsync<object>(null, cancellationToken: cancellationToken);
+
 
         #endregion
     }
