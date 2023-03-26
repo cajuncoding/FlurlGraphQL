@@ -81,7 +81,7 @@ namespace FlurlGraphQL.Querying.Tests
 				                    {
 					                    edges {
 						                    cursor
-					                      node
+					                        node
 						                    {
 							                    personalIdentifier
 							                    name
