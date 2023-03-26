@@ -8,6 +8,7 @@ namespace FlurlGraphQL.Querying
 {
     public interface IFlurlGraphQLRequest : IFlurlRequest
     {
+        GraphQLQueryType GraphQLQueryType { get; }
         string GraphQLQuery { get; }
         IReadOnlyDictionary<string, object> GraphQLVariables { get; }
         IFlurlGraphQLRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove);
@@ -23,10 +24,37 @@ namespace FlurlGraphQL.Querying
         IFlurlGraphQLRequest ClearGraphQLVariables();
         IFlurlGraphQLRequest RemoveGraphQLVariable(string name);
         IFlurlGraphQLRequest WithGraphQLQuery(string query, NullValueHandling nullValueHandling = NullValueHandling.Remove);
+        IFlurlGraphQLRequest WithGraphQLPersistedQuery(string id, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest ClearGraphQLQuery();
         IFlurlGraphQLRequest Clone();
 
-        Task<IFlurlGraphQLResponse> PostGraphQLQueryAsync<TVariables>(TVariables variables, CancellationToken cancellationToken = default, NullValueHandling nullValueHandling = NullValueHandling.Remove)
-            where TVariables : class;
+        /// <summary>
+        /// Execute the GraphQL query with the Server using POST request (Strongly Recommended vs Get).
+        /// </summary>
+        /// <typeparam name="TVariables"></typeparam>
+        /// <param name="variables"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="nullValueHandling"></param>
+        /// <returns></returns>
+        Task<IFlurlGraphQLResponse> PostGraphQLQueryAsync<TVariables>(
+            TVariables variables, 
+            CancellationToken cancellationToken = default, 
+            NullValueHandling nullValueHandling = NullValueHandling.Remove
+        ) where TVariables : class;
+
+        /// <summary>
+        /// STRONGLY DISCOURAGED -- Execute the GraphQL query with the Server using GET request.
+        /// This is Strongly Discouraged as POST requests are much more robust. But this is provided for edge cases where GET requests must be used.
+        /// </summary>
+        /// <typeparam name="TVariables"></typeparam>
+        /// <param name="variables"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="nullValueHandling"></param>
+        /// <returns></returns>
+        Task<IFlurlGraphQLResponse> GetGraphQLQueryAsync<TVariables>(
+            TVariables variables,
+            CancellationToken cancellationToken = default,
+            NullValueHandling nullValueHandling = NullValueHandling.Remove
+        ) where TVariables : class;
     }
 }

@@ -14,13 +14,20 @@ namespace FlurlGraphQL.Querying.NewtonsoftJson
         
         public override bool CanConvert(Type objectType)
         {
-            bool canConvert = objectType != SkipTypeToPreventInfiniteRecursion && objectType.InheritsFrom(GraphQLTypeCache.ICollection);
+            bool canConvert = objectType != SkipTypeToPreventInfiniteRecursion && IsTypeSupportedForConversion(objectType);
 
             //Clear our RecursionSkip if Not Converting this!
             if(!canConvert)
                 SkipTypeToPreventInfiniteRecursion = null;
             
             return canConvert;
+        }
+
+        private bool IsTypeSupportedForConversion(Type objectType)
+        {
+            return objectType.InheritsFrom(GraphQLTypeCache.ICollection)
+                   //All GraphQL paging wrapper types implement the base GraphQLQueryResultsType...
+                   || objectType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType);
         }
 
         public override bool CanWrite => false;
@@ -41,7 +48,12 @@ namespace FlurlGraphQL.Querying.NewtonsoftJson
             //  we fallback to original Json handling below...
             if (json.Type == JTokenType.Object)
             {
-                if (json.Field(GraphQLFields.Nodes) is JArray nodesJson)
+                //All GraphQL wrapper types implement the base GraphQLQueryResultsType so we check it first to know if it's a complex or simplified Data Model...
+                if (objectType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType))
+                {
+                    entityResults = ConvertToGraphQLWrapperType(objectType, json, jsonSerializer);
+                }
+                else if (json.Field(GraphQLFields.Nodes) is JArray nodesJson)
                 {
                     entityResults = nodesJson.ToObject(objectType, jsonSerializer);
                 }
@@ -77,6 +89,22 @@ namespace FlurlGraphQL.Querying.NewtonsoftJson
             }
 
             return entityResults;
+        }
+
+        protected virtual object ConvertToGraphQLWrapperType(Type objectType, JToken json, JsonSerializer jsonSerializer)
+        {
+            return json.ToObject(objectType, jsonSerializer);
+            //TODO: Finish implementation by Dynamically invoking Generic Parse method, etc.... implement Performance Caching here...
+
+            ////If it's a complex model we then parse it and return the correct type...
+            //if (objectType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLConnectionResultsType))
+            //{
+            //    json.ParseJsonToGraphQLResultsWithJsonSerializerInternal<>()
+            //}
+            //else if (objectType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLCollectionSegmentResultsType))
+            //{
+
+            //}
         }
     }
 
