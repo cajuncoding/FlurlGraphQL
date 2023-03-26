@@ -10,7 +10,7 @@ namespace FlurlGraphQL.Querying
     public class GraphQLQueryResults<TResult> : IReadOnlyList<TResult>, IGraphQLQueryResults<TResult> 
         where TResult : class
     {
-        public GraphQLQueryResults(IList<TResult> results = null, IList < GraphQLError> errors = null)
+        public GraphQLQueryResults(IList<TResult> results = null, IList<GraphQLError> errors = null)
         {
             //The Results should be null safe as an empty list if no results exist.
             Results = results ?? new List<TResult>();
