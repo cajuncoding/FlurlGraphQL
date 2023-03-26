@@ -149,7 +149,7 @@ namespace FlurlGraphQL.Querying
         /// See: https://relay.dev/graphql/connections.htm
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
-        /// <param name="responseTask"></param>
+        /// <param name="response"></param>
         /// <param name="queryOperationName"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns a List of ALL IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
