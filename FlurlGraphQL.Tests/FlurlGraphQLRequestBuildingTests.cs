@@ -1,7 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Flurl.Http.Configuration;
-using FlurlGraphQL.Querying;
 using FlurlGraphQL.Querying.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -81,8 +79,8 @@ namespace FlurlGraphQL.Querying.Tests
 
             Assert.IsTrue(response.GraphQLRequest is FlurlGraphQLRequest);
             var request = response.GraphQLRequest as FlurlGraphQLRequest;
-            Assert.IsTrue(request.ContextBag.ContainsKey(nameof(JsonSerializerSettings)));
-            var jsonSerializerSettings = (JsonSerializerSettings)request.ContextBag[nameof(JsonSerializerSettings)];
+            Assert.IsTrue(request.ContextBag.ContainsKey(ContextItemKeys.NewtonsoftJsonSerializerSettings));
+            var jsonSerializerSettings = (JsonSerializerSettings)request.ContextBag[ContextItemKeys.NewtonsoftJsonSerializerSettings];
             Assert.AreEqual(Newtonsoft.Json.NullValueHandling.Ignore, jsonSerializerSettings.NullValueHandling);
             Assert.AreEqual(Formatting.Indented, jsonSerializerSettings.Formatting);
 

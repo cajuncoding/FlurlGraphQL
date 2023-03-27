@@ -47,6 +47,10 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 To use this in your project, add the [FlurlGraphQL.Querying](https://www.nuget.org/packages/FlurlGraphQL.Querying/) NuGet package to your project.
 
 ## Release Notes:
+### v1.2.0
+- Added support to control the Persisted Query payload field name for other GraphQL servers (e.g. Relay server) which may be different than HotChocolate .NET GraphQL Server.
+- Added global configuration support via FlurlGraphQLConfig.ConfigureDefaults(config => ...) so that configurable options can be set once globlly with current support for Persisted Query Field Name and Json Serializer Settings.
+
 ### v1.1.0
 - Added support for Persisted Queries via `.WithGraphQLPersistedQuery()` api.
 - Added support to execute GraphQL as GET requests via `.GetGraphQLQueryAsync()` api for edge cases, though `POST` requests are highly encouraged.
@@ -478,10 +482,13 @@ The default Flurl serializer interface is very limited and the Json Serializer s
 and not accessible. Therefore we provide support to manually control the Json serializer settings specifically for GraphQL
 processing, and we use these consistently if they are set.
 
+In addition the Json Serialization settings can be controlled per request, or globally by setting them in the FlurlGraphQL default configuration...
+
 *NOTE: These settings will impact both how the initial query paylaod is serialized before being sent to the GraphQL server 
 and how the response is parsed when being de-serailized back into your model.*
 
 ```csharp
+    //Override the Json Serialization Settings per request...
     var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         .WithGraphQLQuery("...")
         .SetGraphQLNewtonsoftJsonSerializerSettings(new JsonSerializerSettings()
@@ -492,4 +499,37 @@ and how the response is parsed when being de-serailized back into your model.*
         .SetGraphQLVariables(...)
         .PostGraphQLQueryAsync()
         .ReceiveGraphQLRawJsonResponse();
+
+    //Override the Json Serialization Settings globally by setting them in the default configuration...
+    FlurlGraphQLConfig.ConfigureDefaults(config =>
+    {
+        config.NewtonsoftJsonSerializerSettings = new JsonSerializerSettings()
+        {
+            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+            Formatting = Formatting.Indented
+        };
+    });
+```
+
+### Need to control the Persisted Query Parameter Field Name?
+
+The .NET HotChocolate GraphQL Server uses `id` for the Persisted query parameter name, however not all servers are consistent here.
+Relay for example uses `doc_id` (see [here for more details](https://chillicream.com/docs/hotchocolate/v13/performance/persisted-queries#client-expectations)).
+
+This can be controlled per request, or globally by setting them in the FlurlGraphQL default configuration...
+```csharp
+    //Override the Persisted Query field name per request...
+    var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
+        .WithGraphQLPersistedQuery("...")
+        .SetPersistedQueryPayloadFieldName("doc_id")
+        .SetGraphQLVariables(...)
+        .PostGraphQLQueryAsync()
+        .ReceiveGraphQLRawJsonResponse();
+
+
+    //Override the Persisted Query field name globally by setting it in the default configuration...
+    FlurlGraphQLConfig.ConfigureDefaults(config =>
+    {
+        config.PersistedQueryPayloadFieldName = "doc_id";
+    });
 ```

@@ -2,9 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-		<Version>1.1.0</Version>
-		<AssemblyVersion>1.1.0</AssemblyVersion>
-		<FileVersion>1.1.0</FileVersion>
+		<Version>1.2.0</Version>
+		<AssemblyVersion>1.2.0</AssemblyVersion>
+		<FileVersion>1.2.0</FileVersion>
 		<Authors>BBernard / CajunCoding</Authors>
 		<Company>CajunCoding</Company>
 		<Description>GraphQL client querying extensions for Flurl.Http -- lightweight, simplified, asynchronous, fluent GraphQL client querying API extensions for the amazing Flurl Http library!</Description>
@@ -14,13 +14,15 @@
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
-			- Added support for Persisted Queries via .WithGraphQLPersistedQuery() api.
-			- Added support to execute GraphQL as GET requests for edge cases, though POST requests are highly encouraged.
-			- Improved consistency of use of (optional) custom Json Serialization settings when SetGraphQLNewtonsoftJsonSerializerSettings() is used to override the default GraphQL settings; 
-				now initial query payloads sent also use these instead of the default Flurl settings. Some edge cases in GraphQL may require more advanced control over the Json serialization process 
-				than the default Flurl Serializer interface offers and the default settings are internal and not accessible so we provide a way to control this for GraphQL specifically.
+			- Added support to control the Persisted Query payload field name for other GraphQL servers (e.g. Relay server) which may be different than HotChocolate .NET GraphQL Server.
+			- Added global configuration support via FlurlGraphQLConfig.ConfigureDefaults(config => ...) so that configurable options can be set once globlly with current support for Persisted Query Field Name and Json Serializer Settings.
 
 			Prior Release Notes:
+			- Added support for Persisted Queries via .WithGraphQLPersistedQuery() api.
+			- Added support to execute GraphQL as GET requests for edge cases, though POST requests are highly encouraged.
+			- Improved consistency of use of (optional) custom Json Serialization settings when SetGraphQLNewtonsoftJsonSerializerSettings() is used to override the default GraphQL settings;
+			now initial query payloads sent also use these instead of the default Flurl settings. Some edge cases in GraphQL may require more advanced control over the Json serialization process
+			than the default Flurl Serializer interface offers and the default settings are internal and not accessible so we provide a way to control this for GraphQL specifically.
 			- Initial release of the GraphQL Querying (only) extensions for Flurl.Http.
 			- Supporting querying of typed data results with support for Relay based Cursor Paging, HotChocolate based Offset paging, Batch querying, Flurl style exception handling,
 			and simplified data models when using nested paginated results from GraphQL.

@@ -10,6 +10,12 @@ using NullValueHandling = Flurl.NullValueHandling;
 
 namespace FlurlGraphQL.Querying
 {
+    public static class ContextItemKeys
+    {
+        public const string NewtonsoftJsonSerializerSettings = nameof(NewtonsoftJsonSerializerSettings);
+        public const string PersistedQueryPayloadFieldName = nameof(PersistedQueryPayloadFieldName);
+    }
+
     public static class FlurlGraphQLRequestExtensions
     {
         #region ToGraphQLRequest() Internal Helpers...
@@ -212,7 +218,8 @@ namespace FlurlGraphQL.Querying
 
         #endregion
 
-        #region NewtonsoftJson Serializer Settings (ONLY Available after an IFlurlRequest is initialized...
+        #region Configuration Extension - NewtonsoftJson Serializer Settings (ONLY Available after an IFlurlRequest is initialized)...
+
 
         /// <summary>
         /// Initialize the query body for a GraphQL query request.
@@ -222,10 +229,26 @@ namespace FlurlGraphQL.Querying
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
         public static IFlurlGraphQLRequest SetGraphQLNewtonsoftJsonSerializerSettings(this IFlurlRequest request, JsonSerializerSettings jsonSerializerSettings)
         {
+            jsonSerializerSettings.AssertArgIsNotNull(nameof(jsonSerializerSettings));
             var graphqlRequest = (FlurlGraphQLRequest)request.ToGraphQLRequest();
-            graphqlRequest.SetContextItem(nameof(JsonSerializerSettings), jsonSerializerSettings);
+            graphqlRequest.SetContextItem(ContextItemKeys.NewtonsoftJsonSerializerSettings, jsonSerializerSettings);
             return graphqlRequest;
         }
+
+        /// <summary>
+        /// Initialize the query body for a GraphQL query request.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="fieldName"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest SetPersistedQueryPayloadFieldName(this IFlurlRequest request, string fieldName)
+        {
+            fieldName.AssertArgIsNotNullOrBlank(nameof(fieldName));
+            var graphqlRequest = (FlurlGraphQLRequest)request.ToGraphQLRequest();
+            graphqlRequest.SetContextItem(ContextItemKeys.PersistedQueryPayloadFieldName, fieldName);
+            return graphqlRequest;
+        }
+
 
         #endregion
 
