@@ -12,6 +12,7 @@ using Flurl.Http.Configuration;
 using Flurl.Http.Content;
 using Flurl.Util;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NullValueHandling = Flurl.NullValueHandling;
 
 namespace FlurlGraphQL.Querying
@@ -214,9 +215,7 @@ namespace FlurlGraphQL.Querying
             //Execute the Request with shared Exception handling...
             return await ExecuteRequestWithExceptionHandling(async () =>
             {
-                //Execute the Query with the GraphQL Server...
-                var graphqlPayload = new FlurlGraphQLRequestPayload(graphqlQueryType, graphqlQueryOrId, this.GraphQLVariablesInternal);
-                var jsonPayload = SerializeToJsonWithOptionalGraphQLSerializerSettings(graphqlPayload);
+                var jsonPayload = BuildPostRequestJsonPayload();
 
                 //Since we have our own GraphQL Serializer Settings, our payload is already serialized so we can just send it!
                 //NOTE: Borrowed directly from the Flurl.PostJsonAsync() method but 
@@ -230,6 +229,29 @@ namespace FlurlGraphQL.Querying
                 return new FlurlGraphQLResponse(response, this);
 
             }).ConfigureAwait(false);
+        }
+
+        protected string BuildPostRequestJsonPayload()
+        {
+            //Execute the Query with the GraphQL Server...
+            //var graphqlPayload = new FlurlGraphQLRequestPayloadBuilder(graphqlQueryType, graphqlQueryOrId, this.GraphQLVariablesInternal);
+            var graphqlPayload = new Dictionary<string, object>();
+            graphqlPayload.Add("variables", this.GraphQLVariablesInternal);
+
+            switch (GraphQLQueryType)
+            {
+                case GraphQLQueryType.Query: 
+                    graphqlPayload.Add("query", this.GraphQLQuery);
+                    break;
+                case GraphQLQueryType.PersistedQuery:
+                    graphqlPayload.Add(GetPersistedQueryPayloadFieldName(), this.GraphQLQuery);
+                    break;
+                default: 
+                    throw new ArgumentOutOfRangeException(nameof(this.GraphQLQueryType), $"GraphQL payload for Query Type [{this.GraphQLQueryType}] cannot be initialized.");
+            }
+
+            var json = SerializeToJsonWithOptionalGraphQLSerializerSettings(graphqlPayload);
+            return json;
         }
 
         /// <summary>
@@ -267,9 +289,14 @@ namespace FlurlGraphQL.Querying
             {
                 switch (this.GraphQLQueryType)
                 {
-                    case GraphQLQueryType.Query: this.SetQueryParam("query", this.GraphQLQuery); break;
-                    case GraphQLQueryType.PersistedQuery: this.SetQueryParam("id", this.GraphQLQuery); break;
-                    default: throw new ArgumentOutOfRangeException(nameof(graphqlQueryType), $"GraphQL Query Type [{graphqlQueryType}] cannot be initialized.");
+                    case GraphQLQueryType.Query: 
+                        this.SetQueryParam("query", this.GraphQLQuery); 
+                        break;
+                    case GraphQLQueryType.PersistedQuery: 
+                        this.SetQueryParam(GetPersistedQueryPayloadFieldName(), this.GraphQLQuery); 
+                        break;
+                    default: 
+                        throw new ArgumentOutOfRangeException(nameof(graphqlQueryType), $"GraphQL Query Type [{graphqlQueryType}] cannot be initialized.");
                 }
 
                 if (this.GraphQLVariablesInternal?.Any() ?? false)
@@ -286,6 +313,26 @@ namespace FlurlGraphQL.Querying
                 return new FlurlGraphQLResponse(response, this);
 
             }).ConfigureAwait(false);
+        }
+
+        protected string GetPersistedQueryPayloadFieldName()
+        {
+            return ContextBag.TryGetValue(ContextItemKeys.PersistedQueryPayloadFieldName, out var fieldName)
+                ? fieldName.ToString()
+                : FlurlGraphQLConfig.DefaultConfig.PersistedQueryPayloadFieldName ?? FlurlGraphQLConfig.DefaultPersistedQueryFieldName;
+        }
+
+        protected string SerializeToJsonWithOptionalGraphQLSerializerSettings(object obj)
+        {
+            var jsonSerializerSettings = ContextBag?.TryGetValue(nameof(JsonSerializerSettings), out var serializerSettings) ?? false
+                ? serializerSettings as JsonSerializerSettings
+                : null;
+
+            //Ensure that all json parsing uses a Serializer with the GraphQL Contract Resolver...
+            //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
+            //var jsonSerializer = JsonSerializer.CreateDefault(jsonSerializerSettings);
+            var json = JsonConvert.SerializeObject(obj, jsonSerializerSettings);
+            return json;
         }
 
         protected async Task<FlurlGraphQLResponse> ExecuteRequestWithExceptionHandling(Func<Task<FlurlGraphQLResponse>> sendRequestFunc)
@@ -311,20 +358,6 @@ namespace FlurlGraphQL.Querying
                     throw;
             }
         }
-
-        protected string SerializeToJsonWithOptionalGraphQLSerializerSettings(object obj)
-        {
-            var jsonSerializerSettings = ContextBag?.TryGetValue(nameof(JsonSerializerSettings), out var serializerSettings) ?? false
-                ? serializerSettings as JsonSerializerSettings
-                : null;
-
-            //Ensure that all json parsing uses a Serializer with the GraphQL Contract Resolver...
-            //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
-            //var jsonSerializer = JsonSerializer.CreateDefault(jsonSerializerSettings);
-            var json = JsonConvert.SerializeObject(obj, jsonSerializerSettings);
-            return json;
-        }
-
 
         #endregion
 
