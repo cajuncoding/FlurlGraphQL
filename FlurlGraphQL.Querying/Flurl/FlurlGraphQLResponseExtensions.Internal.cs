@@ -273,26 +273,31 @@ namespace FlurlGraphQL.Querying
                     case JArray arrayResults:
                         entityResults = arrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
                         break;
+                    // ReSharper disable once MergeIntoPattern
                     case JObject jsonObj when jsonObj.First is JArray firstArrayResults:
                         entityResults = firstArrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
+                        break;
+                    //If only a single Object was returned then this is likely a Mutation so we return the single
+                    //  item as the first-and-only result of the set...
+                    case JObject jsonObj:
+                        var singleResult = jsonObj.ToObject<TEntityResult>(jsonSerializer);
+                        entityResults = new List<TEntityResult>() { singleResult };
                         break;
                 }
             }
 
             //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
-            //NOTE: If we have a Total Count then we also must return a Paging result because it's possible to
-            //      request TotalCount by itself without any other PageInfo or Nodes...
-            if (paginationType == PaginationType.Cursor || totalCount.HasValue)
-            {
+            if (paginationType == PaginationType.Cursor)
                 return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
-            }
             else if (paginationType == PaginationType.Offset)
-            {
                 return new GraphQLCollectionSegmentResults<TEntityResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
-            }
-
+            //If we have a Total Count then we also must return a Paging result because it's possible to request TotalCount by itself without any other PageInfo or Nodes...
+            //NOTE: WE must check this AFTER we process based on Cursor Type to make sure Cursor/Offset are both handled (if specified)...
+            else if (totalCount.HasValue)
+                return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
             //If not a paging result then we simply return the typed results...
-            return new GraphQLQueryResults<TEntityResult>(entityResults);
+            else
+                return new GraphQLQueryResults<TEntityResult>(entityResults);
         }
 
         internal static JArray FlattenGraphQLEdgesJsonToArrayOfNodes(this JArray edgesJson)

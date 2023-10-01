@@ -260,7 +260,6 @@ foreach (var pageTask in graphqlPagesTasks)
 }
 ```
 
-
 ### Offset/Slice Paging results via CollectionSegment...
 Offset based paging is not recommeded by GraphQL.org and therefore is less formalized with [no recommended implemenation](https://graphql.org/learn/pagination/#pagination-and-edges). 
 So this api is compliant with the [HotChocolate .NET GraphQL Server] approach wich is fully GraphQL Spec compliant and [provides a formal implementaiton of Offset paging](https://chillicream.com/docs/hotchocolate/v12/fetching-data/pagination#offset-pagination) 
@@ -388,6 +387,49 @@ foreach (var result in results)
     }
 }
 ```
+
+### Mutations...
+GraphQL provides the ability to create, update, delete data in what are called mutation operations. In addition, *mutations* are different from queries in that they
+have different conventions and best practices for their implementations. In general, GraphQL mutations should take in a single *Input* and return a single 
+result *Payload*; the result payload may be a single business object type but is more commonly a root type for a collection of Results & Errors (as defined by the GraphQL Schema).
+
+Due to the complexity of all the varying types of Mutation Input & result Paylaod designs the API for mutations will fallback to parse the response as a single
+object result model (as opposed to a an Array that a Query would return). Therefore, your model should implement any/all of the response Payload field features you are interested in.
+
+And if you need even more low level processing or just want to handle the Mutation result more dynamically then you can always use raw Json handling 
+via the ReceiveGraphQLRawJsonResponse API (see below).
+
+```csharp
+var newCharacterModel = new CharacterModel()
+{
+    //...Populate the new Character Model...
+};
+
+var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
+    .WithGraphQLQuery(@"
+        mutation ($newCharacter: Character) {
+            characterCreateOrUpdate(input: $newCharacter) {
+		        result {
+                    personalIdentifier
+	                name
+		        }
+		        errors {
+			        ... on Error {
+				        errorCode
+				        message
+			        }
+		        }
+	        }
+        }
+    ")
+    .SetGraphQLVariables(new { newCharacter: newCharacterModel })
+    .PostGraphQLQueryAsync()
+    //NOTE: Here CharacterCreateOrUpdate Result will a single Payload result (vs a List as  Query would return)
+    //      for which teh model would have both a Result property & an Errors property to be deserialized based
+    //      on the unique GraphQL Schema Mutation design...
+    .ReceiveGraphQLMutationResult<CharacterCreateOrUpdateResult>();
+```
+
 
 ### Batch Querying...
 GraphQL provides the ability to execute multiple queries in a single request as a batch. When this is done each response is provided in the same order as requested

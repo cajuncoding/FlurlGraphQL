@@ -39,6 +39,10 @@ namespace FlurlGraphQL.Querying
                 : null;
 
             var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(jsonSerializerSettings);
+            
+            if(typedResults is GraphQLQueryResults<TResult> graphqlResults)
+                graphqlResults.SetErrorsInternal(Errors);
+
             return typedResults;
         }
     }

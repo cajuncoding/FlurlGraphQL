@@ -1,6 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -40,6 +41,42 @@ namespace FlurlGraphQL.Querying
         /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
         public static Task<IGraphQLQueryResults<TResult>> ReceiveGraphQLQueryResults<TResult>(this IFlurlGraphQLResponse response, string queryOperationName = null)
             where TResult : class => Task.FromResult(response).ReceiveGraphQLQueryResults<TResult>(queryOperationName);
+
+        /// <summary>
+        /// Processes/parses the results of the GraphQL mutation execution into the specified result payload. 
+        /// This assumes that the Mutation conventions used follow best practices in that GraphQL mutations should take in and Input payload
+        /// and return a result Payload; the result payload may be the single object type or a root type for a collection of results & errors (as defined by the GraphQL Schema).
+        /// However, if you need more control over the processing of the Results you can dynamically handle it with the ReceiveGraphQLRawJsonResponse() method.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="responseTask"></param>
+        /// <param name="queryOperationName"></param>
+        /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
+        public static async Task<TResult> ReceiveGraphQLMutationResult<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
+            where TResult : class
+        {
+            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
+            {
+                var results = resultPayload.LoadTypedResults<TResult>(queryOperationName);
+                //For Single Item Mutation Result, we process with the same logic but there will be only one item (vs many for a Query)...
+                var mutationResult = results.FirstOrDefault();
+                return mutationResult;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Processes/parses the results of the GraphQL mutation execution into the specified result payload. 
+        /// This assumes that the Mutation conventions used follow best practices in that GraphQL mutations should take in and Input payload
+        /// and return a result Payload; the result payload may be the single object type or a root type for a collection of results & errors (as defined by the GraphQL Schema).
+        /// However, if you need more control over the processing of the Results you can dynamically handle it with the ReceiveGraphQLRawJsonResponse() method.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="response"></param>
+        /// <param name="queryOperationName"></param>
+        /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
+        public static Task<TResult> ReceiveGraphQLMutationResult<TResult>(this IFlurlGraphQLResponse response, string queryOperationName = null)
+            where TResult : class => Task.FromResult(response).ReceiveGraphQLMutationResult<TResult>(queryOperationName);
+
 
         /// <summary>
         /// Processes/parses the results of the GraphQL query execution into a raw Json Result with all raw Json response Data available for processing.
