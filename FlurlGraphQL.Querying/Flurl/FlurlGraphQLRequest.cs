@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -33,6 +34,8 @@ namespace FlurlGraphQL.Querying
         }
 
         public GraphQLQueryType GraphQLQueryType { get; protected set; }
+
+        public bool IsMutationQuery { get; protected set; }
 
 
         #region GraphQL Variables
@@ -121,6 +124,7 @@ namespace FlurlGraphQL.Querying
                 ClearGraphQLQuery();
                 GraphQLQuery = query;
                 GraphQLQueryType = GraphQLQueryType.Query;
+                IsMutationQuery = DetermineIfMutationQuery(query);
             }
 
             return this;
@@ -139,10 +143,18 @@ namespace FlurlGraphQL.Querying
                 ClearGraphQLQuery();
                 GraphQLQuery = id;
                 GraphQLQueryType = GraphQLQueryType.PersistedQuery;
+                IsMutationQuery = false;
             }
 
             return this;
         }
+
+        #endregion
+
+        #region QueryParsing Helpers
+
+        protected bool DetermineIfMutationQuery(string query)
+            => query?.TrimStart().StartsWith("mutation", StringComparison.OrdinalIgnoreCase) ?? false;
 
         #endregion
 
@@ -235,8 +247,7 @@ namespace FlurlGraphQL.Querying
         {
             //Execute the Query with the GraphQL Server...
             //var graphqlPayload = new FlurlGraphQLRequestPayloadBuilder(graphqlQueryType, graphqlQueryOrId, this.GraphQLVariablesInternal);
-            var graphqlPayload = new Dictionary<string, object>();
-            graphqlPayload.Add("variables", this.GraphQLVariablesInternal);
+            var graphqlPayload = new Dictionary<string, object> { { "variables", this.GraphQLVariablesInternal } };
 
             switch (GraphQLQueryType)
             {

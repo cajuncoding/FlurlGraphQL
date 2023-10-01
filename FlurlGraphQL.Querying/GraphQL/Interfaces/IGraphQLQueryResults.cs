@@ -6,7 +6,7 @@ namespace FlurlGraphQL.Querying
         where TResult: class
     {
         bool HasAnyResults();
-        IList<GraphQLError> Errors { get; }
+        IReadOnlyList<GraphQLError> Errors { get; }
         bool HasAnyErrors();
     }
 
