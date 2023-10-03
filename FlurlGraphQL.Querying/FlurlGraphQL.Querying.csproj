@@ -14,7 +14,7 @@
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
-			- Full Null reference issue in GraphQL/Request Error handling of HttpStatusCode.
+			- Fix null reference issue in GraphQL/Request Error handling of HttpStatusCode.
 			- Added better support for Mutation handling so that single payload (per Mutation convention best practices) can be returned easily via ReceiveGraphQLMutationResult;
 			this eliminates the need to use ReceiveGraphQLRawJsonResponse for dynamic Mutation response handling.
 			- Fixed bug to ensure Errors are returned on IGraphQLQueryResults when possible (not available on Batch Queries).
