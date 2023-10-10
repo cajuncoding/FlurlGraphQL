@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -11,13 +12,17 @@ namespace FlurlGraphQL.Querying
     {
         private readonly string _errorMessage = null;
 
-        public FlurlGraphQLException(string message, string graphqlQuery, object graphQLResponsePayload = null, HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest, Exception innerException = null)
-            : base(message, innerException)
+        public FlurlGraphQLException(
+            string message, 
+            string graphqlQuery, 
+            object graphQLResponsePayload = null, 
+            HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest, 
+            Exception innerException = null
+        ) : base(message, innerException)
         {
             Query = graphqlQuery;
             HttpStatusCode = httpStatusCode;
 
-            //TODO: Verify if string is the optimal way to handle this vs Json JObject, etc.
             switch (graphQLResponsePayload)
             {
                 case string jsonString: ErrorResponseContent = jsonString; break;
@@ -27,13 +32,18 @@ namespace FlurlGraphQL.Querying
 
             //Because this may be a result from a non-200-OK request response we attempt to inspect the response payload and possibly parse out
             //  error details that may be available in the Error Response Content (but not already parsed and available (e.g. when GraphQL responds with 400-BadRequest).
-            GraphQLErrors = ParseGraphQLErrorsFromPayload(ErrorResponseContent);
+            GraphQLErrors = ParseGraphQLErrorsFromPayloadSafely(ErrorResponseContent);
 
             _errorMessage = BuildErrorMessage(message, GraphQLErrors, innerException);
         }
 
-        public FlurlGraphQLException(IReadOnlyList<GraphQLError> graphqlErrors, string graphqlQuery, string graphqlResponsePayloadContent = null, HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest, Exception innerException = null)
-            : base(string.Empty, innerException)
+        public FlurlGraphQLException(
+            IReadOnlyList<GraphQLError> graphqlErrors, 
+            string graphqlQuery, 
+            string graphqlResponsePayloadContent = null, 
+            HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest, 
+            Exception innerException = null
+        ) : base(string.Empty, innerException)
         {
             GraphQLErrors = graphqlErrors;
             Query = graphqlQuery;
@@ -62,7 +72,7 @@ namespace FlurlGraphQL.Querying
                 : _errorMessage;
         }
 
-        protected static IReadOnlyList<GraphQLError> ParseGraphQLErrorsFromPayload(string errorResponseContent)
+        protected static IReadOnlyList<GraphQLError> ParseGraphQLErrorsFromPayloadSafely(string errorResponseContent)
         {
             if (errorResponseContent.TryParseJObject(out var errorJson))
             {
@@ -83,8 +93,8 @@ namespace FlurlGraphQL.Querying
 
             var errorMessages = graphqlErrors.Select(e =>
             {
-                var locations = string.Join("; ", e.Locations.Select(l => $"At={l.Line},{l.Column}"));
-                var locationText = !string.IsNullOrEmpty(locations) ? $" [{locations}]" : null;
+                var concatenatedLocations = string.Join("; ", e.Locations?.Select(l => $"At={l.Line},{l.Column}") ?? Enumerable.Empty<string>());
+                var locationText = !string.IsNullOrEmpty(concatenatedLocations) ? $" [{concatenatedLocations}]" : null;
 
                 var path = BuildGraphQLPath(e);
                 var pathText = path != null ? $" [For={path}]" : null;
@@ -112,9 +122,9 @@ namespace FlurlGraphQL.Querying
             bool isFirst = true;
             foreach (var p in graphqlError.Path)
             {
-                if (p is int pathIndex)
+                if (IsNumeric(p))
                 {
-                    stringBuilder.Append("[").Append(pathIndex).Append("]");
+                    stringBuilder.Append("[").Append(p).Append("]");
                 }
                 else if (p is string pathString)
                 {
@@ -127,5 +137,10 @@ namespace FlurlGraphQL.Querying
 
             return stringBuilder.ToString();
         }
+
+        protected static bool IsNumeric(object obj) => 
+            obj is sbyte || obj is byte || obj is short || obj is ushort 
+            || obj is int || obj is uint || obj is long || obj is ulong 
+            || obj is float || obj is double || obj is decimal;
     }
 }
