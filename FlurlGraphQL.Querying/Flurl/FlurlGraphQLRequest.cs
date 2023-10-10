@@ -356,17 +356,18 @@ namespace FlurlGraphQL.Querying
             }
             catch (FlurlHttpException httpException)
             {
-                var httpStatusCode = (HttpStatusCode?)httpException?.StatusCode;
+                var responseHttpStatusCode = (HttpStatusCode?)httpException?.StatusCode;
                 var errorContent = await httpException.GetResponseStringSafelyAsync().ConfigureAwait(false);
 
-                if (httpStatusCode is HttpStatusCode.BadRequest)
-                    throw new FlurlGraphQLException(
-                        $"[{(int)HttpStatusCode.BadRequest}-{HttpStatusCode.BadRequest}] The GraphQL server returned a bad request response for the query."
-                        + " This is likely caused by a malformed, or non-parsable query; validate the query syntax, operation name, arguments, etc."
-                        + " to ensure that the query is valid.", this.GraphQLQuery, errorContent, httpStatusCode.Value, httpException
-                    );
-                else
+                if (!errorContent.IsDuckTypedJson()) 
                     throw;
+                
+                var httpStatusCode = responseHttpStatusCode ?? HttpStatusCode.BadRequest;
+                throw new FlurlGraphQLException(
+                    $"[{(int)httpStatusCode}-{httpStatusCode}] The GraphQL server returned an error response for the query."
+                    + " This is likely caused by a malformed/non-parsable query, or a Schema validation issue; please validate the query syntax, operation name, and arguments"
+                    + " to ensure that the query is valid.", this.GraphQLQuery, errorContent, httpStatusCode, httpException
+                );
             }
         }
 

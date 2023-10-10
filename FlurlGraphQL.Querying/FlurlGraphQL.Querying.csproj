@@ -2,9 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-		<Version>1.3.1</Version>
-		<AssemblyVersion>1.3.1</AssemblyVersion>
-		<FileVersion>1.3.1</FileVersion>
+		<Version>1.3.2</Version>
+		<AssemblyVersion>1.3.2</AssemblyVersion>
+		<FileVersion>1.3.2</FileVersion>
 		<Authors>BBernard / CajunCoding</Authors>
 		<Company>CajunCoding</Company>
 		<Description>GraphQL client extensions for Flurl.Http -- lightweight, simplified, asynchronous, fluent GraphQL client API extensions for the amazing Flurl Http library!</Description>

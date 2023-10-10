@@ -7,7 +7,7 @@ namespace FlurlGraphQL.Querying
 {
     internal static class NewtonsoftJsonExtensions
     {
-        public static bool TryParseJObject(this string jsonText, out JToken json)
+        public static bool TryParseJObject(this string jsonText, out JObject json)
         {
             try
             {
