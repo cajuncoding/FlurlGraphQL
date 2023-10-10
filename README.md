@@ -47,6 +47,19 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 To use this in your project, add the [FlurlGraphQL.Querying](https://www.nuget.org/packages/FlurlGraphQL.Querying/) NuGet package to your project.
 
 ## Release Notes:
+### v1.3.1
+- Fixed bug in Error handling not identifying GraphQL Server errors correctly in all cases, and therefore not propagating the full details returned by the Server. 
+- Fixed bug in Error handling not processing the error path variables correctly.
+
+### v1.3.1
+- Fixed Null reference issue in GraphQL/Request Error handling of HttpStatusCode.
+
+### v1.3.0
+- Added better support for Mutation handling so that single payload (per Mutation convention best practices) can be returned easily via `.ReceiveGraphQLMutationResult()`.
+  - This eliminates the need to use `.ReceiveGraphQLRawJsonResponse()` for dynamic Mutation response handling; but you may continue to do so if required.
+- Fixed bug to ensure Errors are returned on IGraphQLQueryResults when possible (not available on Batch Queries).
+- Fixed bug in processing logic for paginated requests when TotalCount is the only selected field on a paginated request; only affected CollectionSegment/Offset Paging requests.
+
 ### v1.2.0
 - Added support to control the Persisted Query payload field name for other GraphQL servers (e.g. Relay server) which may be different than HotChocolate .NET GraphQL Server.
 - Added global configuration support via FlurlGraphQLConfig.ConfigureDefaults(config => ...) so that configurable options can be set once globlly with current support for Persisted Query Field Name and Json Serializer Settings.
