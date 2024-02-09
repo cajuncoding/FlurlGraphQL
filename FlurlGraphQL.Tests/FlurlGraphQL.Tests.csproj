@@ -16,7 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FlurlGraphQL.Querying\FlurlGraphQL.Querying.csproj" />
+	  <ProjectReference Include="..\FlurlGraphQL\FlurlGraphQL.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
