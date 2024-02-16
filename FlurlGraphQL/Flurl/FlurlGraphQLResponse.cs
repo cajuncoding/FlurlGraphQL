@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Net.Http;
 using Flurl.Http;
 using Flurl.Util;
+using FlurlGraphQL.ValidationExtensions;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public class FlurlGraphQLResponse : IFlurlGraphQLResponse
     {
@@ -19,7 +16,7 @@ namespace FlurlGraphQL.Querying
             GraphQLRequest = originalGraphQLRequest.AssertArgIsNotNull(nameof(originalGraphQLRequest)).Clone();
         }
 
-        protected IFlurlResponse BaseFlurlResponse { get; set; }
+        public IFlurlResponse BaseFlurlResponse { get; protected set; }
         
         public IFlurlGraphQLRequest GraphQLRequest { get; protected set; }
 
@@ -33,11 +30,8 @@ namespace FlurlGraphQL.Querying
         public int StatusCode => BaseFlurlResponse.StatusCode;
 
         public void Dispose() => BaseFlurlResponse.Dispose();
+        
         public Task<T> GetJsonAsync<T>() => BaseFlurlResponse.GetJsonAsync<T>();
-
-        public Task<dynamic> GetJsonAsync() => BaseFlurlResponse.GetJsonAsync();
-
-        public Task<IList<dynamic>> GetJsonListAsync() => BaseFlurlResponse.GetJsonListAsync();
 
         public Task<string> GetStringAsync() => BaseFlurlResponse.GetStringAsync();
 

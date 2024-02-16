@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public interface IGraphQLQueryResults<out TResult> : IReadOnlyList<TResult>
         where TResult: class

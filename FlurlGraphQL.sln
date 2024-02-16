@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlurlGraphQL", "FlurlGraphQ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlurlGraphQL.Tests", "FlurlGraphQL.Tests\FlurlGraphQL.Tests.csproj", "{552513FE-6490-46AD-AB8D-415E789AF843}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlurlGraphQL.Newtonsoft", "FlurlGraphQL.Newtonsoft\FlurlGraphQL.Newtonsoft.csproj", "{12E411CA-5981-4057-92C0-4C66596A15CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{552513FE-6490-46AD-AB8D-415E789AF843}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{552513FE-6490-46AD-AB8D-415E789AF843}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{552513FE-6490-46AD-AB8D-415E789AF843}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12E411CA-5981-4057-92C0-4C66596A15CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12E411CA-5981-4057-92C0-4C66596A15CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12E411CA-5981-4057-92C0-4C66596A15CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12E411CA-5981-4057-92C0-4C66596A15CA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

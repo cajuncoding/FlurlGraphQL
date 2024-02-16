@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public class GraphQLOffsetPageInfo : IGraphQLOffsetPageInfo
     {
@@ -13,7 +13,7 @@ namespace FlurlGraphQL.Querying
         public bool? HasNextPage { get; }
         public bool? HasPreviousPage { get; }
 
-        internal static IGraphQLOffsetPageInfo FromCursorPageInfo(IGraphQLCursorPageInfo cursorPageInfo)
+        public static IGraphQLOffsetPageInfo FromCursorPageInfo(IGraphQLCursorPageInfo cursorPageInfo)
         {
             //Convert the Cursor Page Info to Offset Page Info (which is a subset of Cursor paging details)
             return cursorPageInfo == null

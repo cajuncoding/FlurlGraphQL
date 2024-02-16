@@ -1,4 +1,4 @@
-﻿namespace FlurlGraphQL.Querying
+﻿namespace FlurlGraphQL
 {
     public interface IGraphQLBatchQueryResults
     {

@@ -1,15 +1,14 @@
-﻿using System;
-using System.Linq;
+﻿using System.Reflection;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL.ReflectionExtensions
 {
-    internal static class ReflectionExtensions
+    public static class ReflectionExtensions
     {
         /// <summary>
         /// BBernard
         /// A wonderful little utility for robust Generic Type comparisons 
         /// Taken from GraphQL Extensions Open Source library here:
-        /// https://github.com/cajuncoding/GraphQL.RepoDB/blob/main/GraphQL.PreProcessingExtensions/DotNetCustomExtensions/TypeCustomExtensions.cs
+        /// https://github.com/cajuncoding/GraphQL.RepoDB/blob/main/GraphQL.ResolverProcessingExtensions/DotNetCustomExtensions/TypeCustomExtensions.cs
         /// Also For more info see: https://stackoverflow.com/a/37184228/7293142
         ///  </summary>
         /// <param name="type"></param>
@@ -43,5 +42,29 @@ namespace FlurlGraphQL.Querying
         public static bool InheritsFrom(this Type type, Type baseType)
             => baseType.IsAssignableFrom(type);
 
+        /// <summary>
+        /// BBernard
+        /// Convenience method for getting a private/protected Property Value of an object instance with brute force reflection...
+        /// NOTE: This is not the highest performance mechanism for doing this because Reflection is always used and the MethodInfo is not cached!
+        ///         Therefore care should be taken to avoid using it in a tight loop.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static T BruteForceGet<T>(this object obj, string name)
+        {
+            BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            Type type = obj.GetType();
+            FieldInfo field = type.GetField(name, flags);
+            if (field != null)
+                return (T)field.GetValue(obj);
+
+            PropertyInfo property = type.GetProperty(name, flags);
+            if (property != null)
+                return (T)property.GetValue(obj, null);
+
+            return default;
+        }
     }
 }

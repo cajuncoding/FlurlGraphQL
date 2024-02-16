@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-
-namespace FlurlGraphQL.Querying
+﻿namespace FlurlGraphQL
 {
     public class GraphQLError
     {
@@ -14,16 +10,9 @@ namespace FlurlGraphQL.Querying
             Extensions = extensions;
         }
 
-        [JsonProperty("message")]
         public string Message { get; }
-
-        [JsonProperty("locations")]
         public IReadOnlyList<GraphQLErrorLocation> Locations { get; }
-
-        [JsonProperty("path")]
         public IReadOnlyList<object> Path { get; }
-
-        [JsonProperty("extensions")]
         public IReadOnlyDictionary<string, object> Extensions { get; }
     }
 
@@ -35,9 +24,7 @@ namespace FlurlGraphQL.Querying
             Line = line;
         }
 
-        [JsonProperty("column")]
         public uint Column { get; }
-        [JsonProperty("line")]
         public uint Line { get; }
     }
 }

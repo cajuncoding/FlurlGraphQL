@@ -1,8 +1,7 @@
 ﻿using Flurl.Util;
-using System.Collections.Generic;
 using Flurl;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     internal static class DictionaryExtensions
     {
@@ -16,8 +15,8 @@ namespace FlurlGraphQL.Querying
                 dictionary[name] = value;
         }
 
-        public static void SetObjectBagItems(IDictionary<string, object> dictionary, object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
-            => dictionary.SetObjectBagItems(variables.ToKeyValuePairs(), nullValueHandling);
+        //public static void SetObjectBagItems(this IDictionary<string, object> dictionary, object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
+        //    => dictionary.SetObjectBagItems(variables.ToKeyValuePairs(), nullValueHandling);
 
         public static void SetObjectBagItems(this IDictionary<string, object> dictionary, IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
         {

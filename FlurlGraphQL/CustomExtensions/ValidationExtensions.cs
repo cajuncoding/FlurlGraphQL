@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL.ValidationExtensions
 {
-    internal static class ValidationExtensions
+    public static class ValidationExtensions
     {
         public static T AssertArgIsNotNull<T>(this T arg, string argName)
         {

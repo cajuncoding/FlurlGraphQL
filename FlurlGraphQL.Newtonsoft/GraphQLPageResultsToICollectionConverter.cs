@@ -1,8 +1,8 @@
-﻿using System;
+﻿using FlurlGraphQL.ReflectionExtensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL.Querying.NewtonsoftJson
+namespace FlurlGraphQL
 {
     public class GraphQLPageResultsToICollectionConverter : JsonConverter
     {
@@ -11,15 +11,15 @@ namespace FlurlGraphQL.Querying.NewtonsoftJson
         public GraphQLPageResultsToICollectionConverter()
         {
         }
-        
+
         public override bool CanConvert(Type objectType)
         {
             bool canConvert = objectType != SkipTypeToPreventInfiniteRecursion && IsTypeSupportedForConversion(objectType);
 
             //Clear our RecursionSkip if Not Converting this!
-            if(!canConvert)
+            if (!canConvert)
                 SkipTypeToPreventInfiniteRecursion = null;
-            
+
             return canConvert;
         }
 
@@ -32,7 +32,7 @@ namespace FlurlGraphQL.Querying.NewtonsoftJson
 
         public override bool CanWrite => false;
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer jsonSerializer) 
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer jsonSerializer)
             => throw new NotImplementedException();
 
         public override bool CanRead => true;

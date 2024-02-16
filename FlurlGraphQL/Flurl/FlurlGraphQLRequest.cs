@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
 using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using Flurl;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Http.Content;
 using Flurl.Util;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using FlurlGraphQL.Flurl;
+using FlurlGraphQL;
+using FlurlGraphQL.ValidationExtensions;
 using NullValueHandling = Flurl.NullValueHandling;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public enum GraphQLQueryType
     {
@@ -28,15 +22,18 @@ namespace FlurlGraphQL.Querying
     public class FlurlGraphQLRequest : IFlurlGraphQLRequest
     {
         protected IFlurlRequest BaseFlurlRequest { get; set; }
+        
         internal FlurlGraphQLRequest(IFlurlRequest baseRequest)
         {
             BaseFlurlRequest = baseRequest.AssertArgIsNotNull(nameof(baseRequest));
+            GraphQLJsonSerializer = FlurlGraphQLJsonSerializerFactory.FromFlurlSerializer(baseRequest.Settings.JsonSerializer);
         }
 
         public GraphQLQueryType GraphQLQueryType { get; protected set; }
 
         public bool IsMutationQuery { get; protected set; }
 
+        public IFlurlGraphQLJsonSerializer GraphQLJsonSerializer { get; protected set; }
 
         #region GraphQL Variables
 
@@ -151,7 +148,7 @@ namespace FlurlGraphQL.Querying
 
         #endregion
 
-        #region QueryParsing Helpers
+        #region Internal Helpers
 
         protected bool DetermineIfMutationQuery(string query)
             => query?.TrimStart().StartsWith("mutation", StringComparison.OrdinalIgnoreCase) ?? false;
@@ -234,8 +231,8 @@ namespace FlurlGraphQL.Querying
                 var response = await this.SendAsync(
                     HttpMethod.Post,
                     new CapturedJsonContent(jsonPayload),
-                    cancellationToken,
-                    completionOption: HttpCompletionOption.ResponseContentRead
+                    completionOption: HttpCompletionOption.ResponseContentRead,
+                    cancellationToken: cancellationToken
                 ).ConfigureAwait(false);
 
                 return new FlurlGraphQLResponse(response, this);
@@ -261,7 +258,7 @@ namespace FlurlGraphQL.Querying
                     throw new ArgumentOutOfRangeException(nameof(this.GraphQLQueryType), $"GraphQL payload for Query Type [{this.GraphQLQueryType}] cannot be initialized.");
             }
 
-            var json = SerializeToJsonWithOptionalGraphQLSerializerSettings(graphqlPayload);
+            var json = SerializeToJsonWithGraphQLSerializer(graphqlPayload);
             return json;
         }
 
@@ -312,13 +309,13 @@ namespace FlurlGraphQL.Querying
 
                 if (this.GraphQLVariablesInternal?.Any() ?? false)
                 {
-                    var variablesJson = SerializeToJsonWithOptionalGraphQLSerializerSettings(this.GraphQLVariablesInternal);
+                    var variablesJson = SerializeToJsonWithGraphQLSerializer(this.GraphQLVariablesInternal);
                     this.SetQueryParam("variables", variablesJson);
                 }
 
                 var response = await this.GetAsync(
-                    cancellationToken,
-                    completionOption: HttpCompletionOption.ResponseContentRead
+                    completionOption: HttpCompletionOption.ResponseContentRead,
+                    cancellationToken: cancellationToken
                 ).ConfigureAwait(false);
 
                 return new FlurlGraphQLResponse(response, this);
@@ -328,31 +325,28 @@ namespace FlurlGraphQL.Querying
 
         protected string GetPersistedQueryPayloadFieldName()
         {
-            return ContextBag.TryGetValue(ContextItemKeys.PersistedQueryPayloadFieldName, out var fieldName)
+            return ContextBagInternal.TryGetValue(ContextItemKeys.PersistedQueryPayloadFieldName, out var fieldName)
                 ? fieldName.ToString()
                 : FlurlGraphQLConfig.DefaultConfig.PersistedQueryPayloadFieldName ?? FlurlGraphQLConfig.DefaultPersistedQueryFieldName;
         }
 
-        protected string SerializeToJsonWithOptionalGraphQLSerializerSettings(object obj)
+        protected string SerializeToJsonWithGraphQLSerializer(object obj)
         {
-            var jsonSerializerSettings = ContextBag?.TryGetValue(nameof(JsonSerializerSettings), out var serializerSettings) ?? false
-                ? serializerSettings as JsonSerializerSettings
-                : null;
-
-            //Ensure that all json parsing uses a Serializer with the GraphQL Contract Resolver...
-            //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
-            //var jsonSerializer = JsonSerializer.CreateDefault(jsonSerializerSettings);
-            var json = JsonConvert.SerializeObject(obj, jsonSerializerSettings);
+            //TODO: Implement legacy compatible support to Override serialization via Serializer from the ContextBag...
+            //var jsonSerializerSettings = ContextBagInternal.TryGetValue(ContextItemKeys.NewtonsoftJsonSerializerSettings, out var serializerSettings) ?? false
+            //    ? serializerSettings as JsonSerializerSettings
+            //    : null;
+            var json = GraphQLJsonSerializer.SerializeToJson(obj);
             return json;
         }
 
-        protected async Task<FlurlGraphQLResponse> ExecuteRequestWithExceptionHandling(Func<Task<FlurlGraphQLResponse>> sendRequestFunc)
+        protected async Task<FlurlGraphQLResponse> ExecuteRequestWithExceptionHandling(Func<Task<FlurlGraphQLResponse>> sendRequestAsyncFunc)
         {
-            sendRequestFunc.AssertArgIsNotNull(nameof(sendRequestFunc));
+            sendRequestAsyncFunc.AssertArgIsNotNull(nameof(sendRequestAsyncFunc));
 
             try
             {
-                return await sendRequestFunc().ConfigureAwait(false);
+                return await sendRequestAsyncFunc().ConfigureAwait(false);
             }
             catch (FlurlHttpException httpException)
             {
@@ -363,10 +357,17 @@ namespace FlurlGraphQL.Querying
                     throw;
                 
                 var httpStatusCode = responseHttpStatusCode ?? HttpStatusCode.BadRequest;
+                
                 throw new FlurlGraphQLException(
                     $"[{(int)httpStatusCode}-{httpStatusCode}] The GraphQL server returned an error response for the query."
-                    + " This is likely caused by a malformed/non-parsable query, or a Schema validation issue; please validate the query syntax, operation name, and arguments"
-                    + " to ensure that the query is valid.", this.GraphQLQuery, errorContent, httpStatusCode, httpException
+                        + " This is likely caused by a malformed/non-parsable query, or a Schema validation issue; please validate the query syntax, operation name, and arguments"
+                        + " to ensure that the query is valid.",
+                    //TODO: RE-ADD Support for dynamically parsing GraphQLErrors in this use case...
+                    null,
+                    this.GraphQLQuery, 
+                    errorContent, 
+                    httpStatusCode, 
+                    httpException
                 );
             }
         }
@@ -375,11 +376,7 @@ namespace FlurlGraphQL.Querying
 
         #region IFlurlRequest Interface Implementations
 
-        public FlurlHttpSettings Settings
-        {
-            get => BaseFlurlRequest.Settings;
-            set => BaseFlurlRequest.Settings = value;
-        }
+        public FlurlHttpSettings Settings => BaseFlurlRequest.Settings;
 
         public INameValueList<string> Headers => BaseFlurlRequest.Headers;
 
@@ -401,6 +398,8 @@ namespace FlurlGraphQL.Querying
             set => BaseFlurlRequest.Url = value;
         }
 
+        public HttpContent Content { get; set; }
+
         public IEnumerable<(string Name, string Value)> Cookies => BaseFlurlRequest.Cookies;
 
         public CookieJar CookieJar
@@ -409,8 +408,18 @@ namespace FlurlGraphQL.Querying
             set => BaseFlurlRequest.CookieJar = value;
         }
 
-        public Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent content = null, CancellationToken cancellationToken = new CancellationToken(), HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
-            => BaseFlurlRequest.SendAsync(verb, content, cancellationToken, completionOption);
+        public FlurlCall RedirectedFrom
+        {
+            get => BaseFlurlRequest.RedirectedFrom;
+            set => BaseFlurlRequest.RedirectedFrom = value;
+        }
+
+        public IList<(FlurlEventType EventType, IFlurlEventHandler Handler)> EventHandlers => BaseFlurlRequest.EventHandlers;
+
+        public IFlurlClient EnsureClient() => BaseFlurlRequest.EnsureClient();
+
+        public Task<IFlurlResponse> SendAsync(HttpMethod verb, HttpContent content = null, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead, CancellationToken cancellationToken = new CancellationToken())
+            => BaseFlurlRequest.SendAsync(verb, content, completionOption, cancellationToken);
 
         #endregion
     }

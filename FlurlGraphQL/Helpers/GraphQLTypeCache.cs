@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL.TypeCacheHelpers
 {
-    internal class GraphQLTypeCache
+    public class GraphQLTypeCache
     {
         public static readonly Type ICollection = typeof(ICollection);
         public static readonly Type IGraphQLQueryResultsType = typeof(IGraphQLQueryResults<>);
         public static readonly Type IGraphQLConnectionResultsType = typeof(IGraphQLConnectionResults<>);
         public static readonly Type IGraphQLCollectionSegmentResultsType = typeof(IGraphQLCollectionSegmentResults<>);
+        public static readonly Type CachedIGraphQLEdgeGenericType = typeof(IGraphQLEdge<>);
     }
 }

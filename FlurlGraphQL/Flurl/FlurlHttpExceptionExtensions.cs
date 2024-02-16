@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Flurl.Http;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public static class FlurlHttpExceptionExtensions
     {

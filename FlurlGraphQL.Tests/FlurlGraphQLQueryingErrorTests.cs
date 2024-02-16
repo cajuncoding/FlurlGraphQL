@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using FlurlGraphQL.Querying;
+using FlurlGraphQL;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLQueryingErrorTests : BaseFlurlGraphQLTest

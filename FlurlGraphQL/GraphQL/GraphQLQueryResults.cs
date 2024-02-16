@@ -1,7 +1,6 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     /// <summary>
     /// Contains the direct typed results of a single GraphQL query.
@@ -21,7 +20,13 @@ namespace FlurlGraphQL.Querying
 
         //NOTE: Due to various code flows and inheritance it's not easy (or clean) to pass the Errors through
         //      to the constructor so to simplify we have support to Internally Set this value when building the Results...
-        internal void SetErrorsInternal(IReadOnlyList<GraphQLError> errors)
+        //      This is NOT part of the public interface and is flagged as Obsolete to ensure it's not used externally!
+        /// <summary>
+        /// This method is for internal use only and may change at any time!
+        /// </summary>
+        /// <param name="errors"></param>
+        [Obsolete("This method is for internal use only and may change at any time!")]
+        public void SetErrorsInternal(IReadOnlyList<GraphQLError> errors)
         {
             Errors = errors;
         }

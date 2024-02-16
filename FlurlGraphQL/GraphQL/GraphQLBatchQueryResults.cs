@@ -1,23 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json.Linq;
+﻿using FlurlGraphQL.ValidationExtensions;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     /// <summary>
     /// Internal class for handling the processing of Operation Results within GraphQLBatchQueryResults
     /// </summary>
-    internal class GraphQLQueryOperationResult
+    internal class GraphQLQueryOperationResult<TJson>
     {
-        public GraphQLQueryOperationResult(string operationName, JObject resultJson)
+        public GraphQLQueryOperationResult(string operationName, TJson resultJson)
         {
             OperationName = operationName.AssertArgIsNotNullOrBlank(nameof(operationName));
             ResultJson = resultJson.AssertArgIsNotNull(nameof(resultJson));
         }
 
         public string OperationName { get; }
-        public JObject ResultJson { get; }
+        public TJson ResultJson { get; }
 
         private object _cachedParsedResults = null;
 

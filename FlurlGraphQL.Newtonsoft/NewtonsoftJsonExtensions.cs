@@ -1,41 +1,9 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Linq;
+﻿using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     internal static class NewtonsoftJsonExtensions
     {
-        public static bool TryParseJObject(this string jsonText, out JObject json)
-        {
-            try
-            {
-                if (IsDuckTypedJson(jsonText))
-                {
-                    json = JObject.Parse(jsonText);
-                    return json != null && json.Type != JTokenType.Null;
-                }
-            }
-            catch (Exception)
-            {
-                //DO NOTHING
-            }
-
-            json = null;
-            return false;
-        }
-
-        public static bool IsDuckTypedJson(this string jsonText)
-        {
-            if (string.IsNullOrWhiteSpace(jsonText))
-                return false;
-
-            var text = jsonText.Trim();
-            return (text.StartsWith("{") && text.EndsWith("}")) //For object
-                   || (text.StartsWith("[") && text.EndsWith("]")); //For array
-        }
-
         /// <summary>
         /// BBernard
         /// Safely retrieves the specified field of any type as JToken from the Json (JObject/JProperty) with case-insensitive matching. This method
@@ -114,24 +82,24 @@ namespace FlurlGraphQL.Querying
             }
         }
 
-        /// <summary>
-        /// Creates a new reader for the specified jObject by copying the settings
-        /// from an existing reader.
-        /// Inspired by StackOverflow: https://stackoverflow.com/a/21632292/7293142
-        /// </summary>
-        /// <param name="newJsonReader"></param>
-        /// <param name="originalJsonReader">The reader whose settings should be copied.</param>
-        /// <returns>The new disposable reader.</returns>
-        public static JsonReader CopyReaderSettings(this JsonReader newJsonReader, JsonReader originalJsonReader)
-        {
-            newJsonReader.Culture = originalJsonReader.Culture;
-            newJsonReader.DateFormatString = originalJsonReader.DateFormatString;
-            newJsonReader.DateParseHandling = originalJsonReader.DateParseHandling;
-            newJsonReader.DateTimeZoneHandling = originalJsonReader.DateTimeZoneHandling;
-            newJsonReader.FloatParseHandling = originalJsonReader.FloatParseHandling;
-            newJsonReader.MaxDepth = originalJsonReader.MaxDepth;
-            newJsonReader.SupportMultipleContent = originalJsonReader.SupportMultipleContent;
-            return newJsonReader;
-        }
+        ///// <summary>
+        ///// Creates a new reader for the specified jObject by copying the settings
+        ///// from an existing reader.
+        ///// Inspired by StackOverflow: https://stackoverflow.com/a/21632292/7293142
+        ///// </summary>
+        ///// <param name="newJsonReader"></param>
+        ///// <param name="originalJsonReader">The reader whose settings should be copied.</param>
+        ///// <returns>The new disposable reader.</returns>
+        //public static JsonReader CopyReaderSettings(this JsonReader newJsonReader, JsonReader originalJsonReader)
+        //{
+        //    newJsonReader.Culture = originalJsonReader.Culture;
+        //    newJsonReader.DateFormatString = originalJsonReader.DateFormatString;
+        //    newJsonReader.DateParseHandling = originalJsonReader.DateParseHandling;
+        //    newJsonReader.DateTimeZoneHandling = originalJsonReader.DateTimeZoneHandling;
+        //    newJsonReader.FloatParseHandling = originalJsonReader.FloatParseHandling;
+        //    newJsonReader.MaxDepth = originalJsonReader.MaxDepth;
+        //    newJsonReader.SupportMultipleContent = originalJsonReader.SupportMultipleContent;
+        //    return newJsonReader;
+        //}
     }
 }

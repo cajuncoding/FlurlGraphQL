@@ -1,56 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
+using System.Net.Mail;
 using System.Text;
-using Newtonsoft.Json;
+using FlurlGraphQL;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public class FlurlGraphQLException : Exception
     {
-        private readonly string _errorMessage = null;
+        private string _errorMessage = null;
 
         public FlurlGraphQLException(
             string message, 
-            string graphqlQuery, 
-            object graphQLResponsePayload = null, 
+            string graphqlQuery,
+            IFlurlGraphQLResponseProcessor graphqlResponseProcessor, 
             HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest, 
             Exception innerException = null
         ) : base(message, innerException)
-        {
-            Query = graphqlQuery;
-            HttpStatusCode = httpStatusCode;
-
-            switch (graphQLResponsePayload)
-            {
-                case string jsonString: ErrorResponseContent = jsonString; break;
-                case null: ErrorResponseContent = null; break;
-                default: ErrorResponseContent = JsonConvert.SerializeObject(graphQLResponsePayload, Formatting.Indented); break;
-            }
-
-            //Because this may be a result from a non-200-OK request response we attempt to inspect the response payload and possibly parse out
-            //  error details that may be available in the Error Response Content (but not already parsed and available (e.g. when GraphQL responds with 400-BadRequest).
-            GraphQLErrors = ParseGraphQLErrorsFromPayloadSafely(ErrorResponseContent);
-
-            _errorMessage = BuildErrorMessage(message, GraphQLErrors, innerException);
-        }
+            => InitInternal(message, graphqlQuery, graphqlResponseProcessor?.Errors, graphqlResponseProcessor?.GetErrorContent(), httpStatusCode, innerException);
 
         public FlurlGraphQLException(
             IReadOnlyList<GraphQLError> graphqlErrors, 
             string graphqlQuery, 
-            string graphqlResponsePayloadContent = null, 
+            string errorResponseContent, 
             HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest, 
             Exception innerException = null
         ) : base(string.Empty, innerException)
+            => InitInternal(null, graphqlQuery, graphqlErrors, errorResponseContent, httpStatusCode, innerException);
+
+        public FlurlGraphQLException(
+            string message,
+            IReadOnlyList<GraphQLError> graphqlErrors,
+            string graphqlQuery,
+            string errorResponseContent,
+            HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest,
+            Exception innerException = null
+        ) : base(message, innerException)
+            => InitInternal(message, graphqlQuery, graphqlErrors, errorResponseContent, httpStatusCode, innerException);
+
+        private void InitInternal(string message, string graphqlQuery, IReadOnlyList<GraphQLError> graphqlErrors, string errorResponseContent, HttpStatusCode httpStatusCode, Exception innerException = null)
         {
-            GraphQLErrors = graphqlErrors;
             Query = graphqlQuery;
             HttpStatusCode = httpStatusCode;
-            ErrorResponseContent = graphqlResponsePayloadContent;
+            GraphQLErrors = graphqlErrors;
+            ErrorResponseContent = errorResponseContent;
 
-            _errorMessage = BuildErrorMessage(string.Empty, graphqlErrors, innerException);
+            _errorMessage = BuildErrorMessage(message, GraphQLErrors, innerException);
         }
 
         //BBernard
@@ -58,32 +52,18 @@ namespace FlurlGraphQL.Querying
         // which is critical for things like Logging, etc. that wouldn't work with custom message properties.
         public override string Message => _errorMessage;
 
-        public HttpStatusCode HttpStatusCode { get; set; }
+        public HttpStatusCode HttpStatusCode { get; protected set; }
 
         public string Query { get; protected set; }
         public string ErrorResponseContent { get; protected set; }
 
-        public IReadOnlyList<GraphQLError> GraphQLErrors { get; }
+        public IReadOnlyList<GraphQLError> GraphQLErrors { get; protected set; }
 
         protected string GetMessageInternal()
         {
             return string.IsNullOrWhiteSpace(_errorMessage)
                 ? "Unknown Error Occurred; no message provided"
                 : _errorMessage;
-        }
-
-        protected static IReadOnlyList<GraphQLError> ParseGraphQLErrorsFromPayloadSafely(string errorResponseContent)
-        {
-            if (errorResponseContent.TryParseJObject(out var errorJson))
-            {
-                var graphQLErrors = errorJson.Field(GraphQLFields.Errors)?.ToObject<List<GraphQLError>>();
-                if (graphQLErrors != null && graphQLErrors.Any())
-                {
-                    return graphQLErrors.AsReadOnly();
-                }
-            }
-
-            return null;
         }
 
         protected static string BuildErrorMessage(string message, IReadOnlyList<GraphQLError> graphqlErrors, Exception innerException = null)

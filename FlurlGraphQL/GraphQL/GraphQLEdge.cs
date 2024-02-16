@@ -1,4 +1,4 @@
-﻿namespace FlurlGraphQL.Querying
+﻿namespace FlurlGraphQL
 {
     /// <summary>
     /// Class that can be used to implement deserialization of GraphQL Connection Results defined as Edges

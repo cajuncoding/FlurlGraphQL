@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL.CursorHelpers
 {
     public class GraphQLCursorHelpers
     {

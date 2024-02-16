@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
-using FlurlGraphQL.Querying.Tests.Models;
+using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLRequestBuildingTests : BaseFlurlGraphQLTest

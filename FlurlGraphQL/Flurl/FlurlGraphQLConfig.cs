@@ -1,11 +1,9 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using FlurlGraphQL.ValidationExtensions;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public interface IFlurlGraphQLConfig
     {
-        JsonSerializerSettings NewtonsoftJsonSerializerSettings { get; }
         string PersistedQueryPayloadFieldName { get; }
     }
 
@@ -13,13 +11,15 @@ namespace FlurlGraphQL.Querying
     {
         public const string DefaultPersistedQueryFieldName = "id";
 
+        public string PersistedQueryPayloadFieldName { get; set; }
+
+        public static IFlurlGraphQLConfig DefaultConfig { get; private set; }
+
         private FlurlGraphQLConfig()
         {
-            NewtonsoftJsonSerializerSettings = JsonConvert.DefaultSettings?.Invoke();
             PersistedQueryPayloadFieldName = DefaultPersistedQueryFieldName;
+            ResetDefaults();
         }
-
-        public static IFlurlGraphQLConfig DefaultConfig { get; private set; } = new FlurlGraphQLConfig();
 
         /// <summary>
         /// Configure the Default values for Sql Bulk Helpers and Materialized Data Helpers.
@@ -28,18 +28,14 @@ namespace FlurlGraphQL.Querying
         public static void ConfigureDefaults(Action<FlurlGraphQLConfig> configAction)
         {
             configAction.AssertArgIsNotNull(nameof(configAction));
-
-            var newConfig = new FlurlGraphQLConfig();
-            configAction.Invoke(newConfig);
-            DefaultConfig = newConfig;
+            configAction.Invoke((FlurlGraphQLConfig)DefaultConfig);
         }
 
-        public static void ResetDefaults()
-        {
-            DefaultConfig = new FlurlGraphQLConfig();
-        }
-
-        public JsonSerializerSettings NewtonsoftJsonSerializerSettings { get; set; }
-        public string PersistedQueryPayloadFieldName { get; set; }
+        /// <summary>
+        /// Reset FlurlGraphQL Configuration to all Default values.
+        /// </summary>
+        /// <returns></returns>
+        public static void ResetDefaults() 
+            => DefaultConfig = new FlurlGraphQLConfig();
     }
 }

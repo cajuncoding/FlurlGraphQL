@@ -1,10 +1,10 @@
-using System;
+ï»¿using System;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLMutationTests : BaseFlurlGraphQLTest
@@ -17,7 +17,7 @@ namespace FlurlGraphQL.Querying.Tests
                 [{
                         ""eventId"": 23,
                         ""eventUUID"": ""c5cd1cca-fe4d-490d-a948-985023c6185c"",
-                        ""name"": ""RÜFÜS DU SOL"",
+                        ""name"": ""Rï¿½Fï¿½S DU SOL"",
                         ""eventType"": ""ONE_OFF"",
                         ""status"": ""APPROVED"",
                         ""eventDate"": ""2018-11-01T07:00:00"",
