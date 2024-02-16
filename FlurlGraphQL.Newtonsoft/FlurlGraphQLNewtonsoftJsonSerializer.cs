@@ -16,7 +16,7 @@ namespace FlurlGraphQL
 
             var graphqlJsonSettings = currentJsonSettings != null
                 ? new JsonSerializerSettings(currentJsonSettings) //Clone existing Options if available!
-                : JsonConvert.DefaultSettings?.Invoke() ?? new JsonSerializerSettings(); ; //Default Options (always Disable Case Sensitivity; which is enabled by default)
+                : JsonConvert.DefaultSettings?.Invoke() ?? new JsonSerializerSettings(); //Default Options (always Disable Case Sensitivity; which is enabled by default)
 
             return new FlurlGraphQLNewtonsoftJsonSerializer(graphqlJsonSettings);
         }
