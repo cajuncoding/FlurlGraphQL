@@ -1,4 +1,7 @@
-﻿using Flurl.Http;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Flurl.Http;
 using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.TypeCacheHelpers;
 using FlurlGraphQL.ValidationExtensions;

@@ -1,4 +1,5 @@
-﻿using Flurl.Http.Configuration;
+﻿using System;
+using Flurl.Http.Configuration;
 using Newtonsoft.Json;
 using FlurlGraphQL.ReflectionExtensions;
 

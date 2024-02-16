@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FlurlGraphQL;
 using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -365,7 +364,7 @@ namespace FlurlGraphQL.Tests
 
 #endif
 
-#if NET48
+#if NET461
 
         [TestMethod]
         public async Task TestCursorPagingRetrievePagesAsEnumerableTasksAsync()

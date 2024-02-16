@@ -1,4 +1,6 @@
-﻿namespace FlurlGraphQL
+﻿using System.Collections.Generic;
+
+namespace FlurlGraphQL
 {
     public interface IFlurlGraphQLResponseProcessor
     {
@@ -7,6 +9,8 @@
         IReadOnlyDictionary<string, object> ContextBag { get; }
 
         IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class;
+
+        IGraphQLBatchQueryResults LoadBatchQueryResults();
 
         string GetErrorContent();
     }

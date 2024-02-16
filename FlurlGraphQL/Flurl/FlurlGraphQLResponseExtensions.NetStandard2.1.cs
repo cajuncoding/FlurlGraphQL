@@ -4,14 +4,14 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Threading;
 
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 
 namespace FlurlGraphQL
 {
     public static partial class FlurlGraphQLResponseExtensions
     {
         /// <summary>
-        /// This will automatically enumerate through ALL possible Connectin/Cursor page results, using the GraphQL query, as a Stream via IAsyncEnumerable.
+        /// This will automatically enumerate through ALL possible Connection/Cursor page results, using the GraphQL query, as a Stream via IAsyncEnumerable.
         /// This offers true async streaming in that while you handle one page it's already pre-fetching the next page asynchronously.
         /// This is great for streaming data from GraphQL to another destination (e.g. a Database).
         /// The GraphQL query MUST support the (after: $after) variable, and return pageInfo.hasNextPage & pageInfo.endCursor in the results for Cursor pagination!

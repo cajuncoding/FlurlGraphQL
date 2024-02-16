@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Threading;
 
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NET461
 
 namespace FlurlGraphQL
 {

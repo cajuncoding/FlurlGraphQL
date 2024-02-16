@@ -1,5 +1,7 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using FlurlGraphQL.NewtonsoftConstants;
+using FlurlGraphQL.ReflectionExtensions;
 
 namespace FlurlGraphQL.Flurl
 {
@@ -16,13 +18,12 @@ namespace FlurlGraphQL.Flurl
 
         public static IFlurlGraphQLResponseProcessor FromGraphQLFlurlResponse(IFlurlGraphQLResponse graphqlResponse)
         {
-            var graphqlJsonSerializer = graphqlResponse.GraphQLRequest.GraphQLJsonSerializer;
-            switch (graphqlJsonSerializer)
-            {
-                case IFlurlGraphQLSystemTextJsonSerializer: return CreateSystemTextJsonResponseProcessor(graphqlResponse);
-                case IFlurlGraphQLNewtonsoftJsonSerializer: return CreateNewtonsoftJsonResponseProcessor(graphqlResponse);
-                default: throw new InvalidOperationException($"The GraphQL Serializer type [{graphqlJsonSerializer?.GetType().Name ?? "null"}] is invalid; the response cannot be processed.");
-            }
+            if (graphqlResponse.GraphQLJsonSerializer is IFlurlGraphQLSystemTextJsonSerializer)
+                return CreateSystemTextJsonResponseProcessor(graphqlResponse);
+            else if (graphqlResponse.GraphQLJsonSerializer is IFlurlGraphQLNewtonsoftJsonSerializer)
+                return CreateNewtonsoftJsonResponseProcessor(graphqlResponse);
+            else
+                throw new InvalidOperationException($"The GraphQL Serializer type [{graphqlResponse.GraphQLJsonSerializer.GetType().Name}] is invalid; the response cannot be processed.");
         }
 
         private static IFlurlGraphQLResponseProcessor CreateSystemTextJsonResponseProcessor(IFlurlGraphQLResponse graphqlResponse)
@@ -41,15 +42,11 @@ namespace FlurlGraphQL.Flurl
         /// <returns></returns>
         static FlurlGraphQLJsonResponseProcessorFactoryDelegate InitNewtonsoftJsonResponseProcessorFactoryDelegate()
         {
-            //TODO: Factor this out into Shared Helper as it's duplicated now two times....
-            var newtonsoftResponseProcessorType = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => a.GetName().Name?.Equals(GraphQLConstants.NewtonsoftAssemblyName, StringComparison.OrdinalIgnoreCase) ?? false)
-                .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t =>
-                    t.Namespace != null
-                    && t.Namespace.Equals(GraphQLConstants.NewtonsoftNamespace, StringComparison.OrdinalIgnoreCase)
-                    && t.Name.Equals(GraphQLConstants.NewtonsoftJsonResponseProcessorClassName, StringComparison.OrdinalIgnoreCase)
-                );
+            var newtonsoftResponseProcessorType = AppDomain.CurrentDomain.FindType(
+                GraphQLConstants.NewtonsoftJsonResponseProcessorClassName,
+                assemblyName: GraphQLConstants.NewtonsoftAssemblyName,
+                namespaceName: GraphQLConstants.NewtonsoftNamespace
+            );
 
             if (newtonsoftResponseProcessorType == null)
                 return null;

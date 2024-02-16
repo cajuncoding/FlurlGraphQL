@@ -1,10 +1,13 @@
-﻿using FlurlGraphQL.ValidationExtensions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL
 {
-    internal class FlurlGraphQLNewtonsoftJsonResponseProcessor : IFlurlGraphQLResponseProcessor
+    public class FlurlGraphQLNewtonsoftJsonResponseProcessor : IFlurlGraphQLResponseProcessor
     {
         public static IFlurlGraphQLResponseProcessor FromFlurlGraphQLResponse(IFlurlGraphQLResponse graphqlResponse)
         {
@@ -25,7 +28,6 @@ namespace FlurlGraphQL
         public IFlurlGraphQLJsonSerializer JsonSerializer { get; }
         #endregion
 
-
         public object Data { get; }
         public IReadOnlyList<GraphQLError> Errors { get; }
         public IReadOnlyDictionary<string, object> ContextBag { get; set; }
@@ -33,7 +35,7 @@ namespace FlurlGraphQL
         public IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) 
             where TResult : class
         {
-            var queryResultJson = (JObject)Data;
+            var queryResultJson = (JObject)this.Data;
 
             //BBernard
             //Extract the data results for the operation name specified, or first results as default (most common use case)...
@@ -58,7 +60,34 @@ namespace FlurlGraphQL
             return typedResults;
         }
 
+        public IGraphQLBatchQueryResults LoadBatchQueryResults()
+        {
+            //TODO: WIP...
+            throw new NotImplementedException();
+        }
+
+        public IGraphQLBatchQueryResults LoadGraphQLBatchQueryResults()
+        {
+            //BBernard
+            //Extract the Collection Data specified... or first data...
+            //NOTE: GraphQL supports multiple data responses per request so we need to access the correct query type result safely (via Null Coalesce)
+            var queryResultJson = (JObject)this.Data;
+
+            var operationResults = queryResultJson.Properties()
+                .Select(prop => new GraphQLQueryOperationResult(prop.Name, this))
+                .ToList();
+
+            return new GraphQLBatchQueryResults(operationResults);
+        }
+
         private string _errorContentSerialized;
-        public string GetErrorContent() => (_errorContentSerialized ??= JsonSerializer.SerializeToJson(this.Errors));
+
+        public string GetErrorContent()
+        {
+            if (_errorContentSerialized == null)
+                _errorContentSerialized = JsonSerializer.SerializeToJson(this.Errors);
+            
+            return _errorContentSerialized;
+        }
     }
 }

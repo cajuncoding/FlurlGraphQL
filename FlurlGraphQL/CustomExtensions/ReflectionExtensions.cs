@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Linq;
+using System.Reflection;
 
 namespace FlurlGraphQL.ReflectionExtensions
 {
@@ -66,5 +68,15 @@ namespace FlurlGraphQL.ReflectionExtensions
 
             return default;
         }
+
+        public static Type FindType(this AppDomain appDomain, string className, string assemblyName = null, string namespaceName = null)
+            => appDomain.GetAssemblies()
+                .Where(a => assemblyName == null || (a.GetName().Name?.Equals(assemblyName, StringComparison.OrdinalIgnoreCase) ?? false))
+                .SelectMany(a => a.GetTypes())
+                .FirstOrDefault(t =>
+                    t.Namespace != null
+                    && (namespaceName == null || t.Namespace.Equals(namespaceName, StringComparison.OrdinalIgnoreCase))
+                    && t.Name.Equals(className, StringComparison.OrdinalIgnoreCase)
+                );
     }
 }

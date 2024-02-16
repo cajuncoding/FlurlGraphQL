@@ -1,4 +1,6 @@
-﻿using FlurlGraphQL.ReflectionExtensions;
+﻿using System;
+using FlurlGraphQL.ReflectionExtensions;
+using FlurlGraphQL.TypeCacheHelpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

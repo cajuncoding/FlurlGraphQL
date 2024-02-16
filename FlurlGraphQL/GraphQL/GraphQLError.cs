@@ -1,4 +1,6 @@
-﻿namespace FlurlGraphQL
+﻿using System.Collections.Generic;
+
+namespace FlurlGraphQL
 {
     public class GraphQLError
     {

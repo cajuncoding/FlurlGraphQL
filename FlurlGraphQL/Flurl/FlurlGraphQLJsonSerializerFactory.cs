@@ -1,6 +1,8 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using Flurl.Http.Configuration;
 using FlurlGraphQL.NewtonsoftConstants;
+using FlurlGraphQL.ReflectionExtensions;
 
 namespace FlurlGraphQL.Flurl
 {
@@ -21,7 +23,7 @@ namespace FlurlGraphQL.Flurl
             switch (flurlJsonSerializer.GetType().Name)
             {
                 case GraphQLConstants.FlurlSystemTextJsonSerializerClassName: return CreateSystemTextJsonSerializer(flurlJsonSerializer);
-                case GraphQLConstants.FlurlNewtonsoftSerializerClassName:     return CreateNewtonsoftJsonSerializer(flurlJsonSerializer);
+                case GraphQLConstants.FlurlNewtonsoftJsonSerializerClassName:     return CreateNewtonsoftJsonSerializer(flurlJsonSerializer);
                 default: throw new InvalidOperationException($"The current Flurl Json Serializer of type [{flurlSerializerTypeName}] is not supported; a DefaultJsonSerializer or NewtonsoftJsonSerializer is expected.");
             }
         }
@@ -42,16 +44,12 @@ namespace FlurlGraphQL.Flurl
         /// <returns></returns>
         static FlurlGraphQLJsonSerializerFactoryDelegate InitNewtonsoftJsonSerializerFactoryDelegate()
         {
-            //TODO: Factor this out into Shared Helper as it's duplicated now two times....
-            var newtonsoftJsonSerializerType = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => a.GetName().Name?.Equals(GraphQLConstants.NewtonsoftAssemblyName, StringComparison.OrdinalIgnoreCase) ?? false)
-                .SelectMany(a => a.GetTypes())
-                .FirstOrDefault(t =>
-                    t.Namespace != null
-                    && t.Namespace.Equals(GraphQLConstants.NewtonsoftNamespace, StringComparison.OrdinalIgnoreCase)
-                    && t.Name.Equals(GraphQLConstants.NewtonsoftJsonSerializerClassName, StringComparison.OrdinalIgnoreCase)
-                );
-
+            var newtonsoftJsonSerializerType = AppDomain.CurrentDomain.FindType(
+                GraphQLConstants.NewtonsoftJsonSerializerClassName,
+                assemblyName: GraphQLConstants.NewtonsoftAssemblyName,
+                namespaceName: GraphQLConstants.NewtonsoftNamespace
+            );
+                
             if (newtonsoftJsonSerializerType == null)
                 return null;
 

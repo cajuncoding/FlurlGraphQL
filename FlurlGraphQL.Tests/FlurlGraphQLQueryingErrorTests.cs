@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using FlurlGraphQL;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FlurlGraphQL.Tests

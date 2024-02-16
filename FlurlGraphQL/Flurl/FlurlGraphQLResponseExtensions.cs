@@ -1,5 +1,4 @@
 ﻿using System;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
@@ -24,13 +23,7 @@ namespace FlurlGraphQL
         /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
         public static async Task<IGraphQLQueryResults<TResult>> ReceiveGraphQLQueryResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
             where TResult : class
-        {
-            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
-            {
-                var results = resultPayload.LoadTypedResults<TResult>(queryOperationName);
-                return results;
-            }).ConfigureAwait(false);
-        }
+            => await responseTask.ProcessResponsePayloadInternalAsync((responseProcessor, _) => responseProcessor.LoadTypedResults<TResult>(queryOperationName)).ConfigureAwait(false);
 
         /// <summary>
         /// Processes/parses the results of the GraphQL query execution into a simple set of results ready for processing.
@@ -57,15 +50,9 @@ namespace FlurlGraphQL
         /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
         public static async Task<TResult> ReceiveGraphQLMutationResult<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
             where TResult : class
-        {
-            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
-            {
-                var results = resultPayload.LoadTypedResults<TResult>(queryOperationName);
+            => await responseTask.ProcessResponsePayloadInternalAsync((responseProcessor, _)
                 //For Single Item Mutation Result, we process with the same logic but there will be only one item (vs many for a Query)...
-                var mutationResult = results.FirstOrDefault();
-                return mutationResult;
-            }).ConfigureAwait(false);
-        }
+                => responseProcessor.LoadTypedResults<TResult>(queryOperationName)?.FirstOrDefault()).ConfigureAwait(false);
 
         /// <summary>
         /// Processes/parses the results of the GraphQL mutation execution into the specified result payload. 
@@ -88,13 +75,7 @@ namespace FlurlGraphQL
         /// <param name="responseTask"></param>
         /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
         public static async Task<object> ReceiveGraphQLRawJsonResponse(this Task<IFlurlGraphQLResponse> responseTask)
-        {
-            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
-            {
-                var results = resultPayload.Data;
-                return results;
-            }).ConfigureAwait(false);
-        }
+            => await responseTask.ProcessResponsePayloadInternalAsync((responseProcessor, _) => responseProcessor.Data).ConfigureAwait(false);
 
         /// <summary>
         /// Processes/parses the results of the GraphQL query execution into a raw Json Result with all raw Json response Data available for processing.
@@ -324,22 +305,7 @@ namespace FlurlGraphQL
         /// <param name="responseTask"></param>
         /// <returns>Returns an IGraphQLBatchQueryResults container that allows retrieval and handling of each query by it's index or operation name.</returns>
         public static async Task<IGraphQLBatchQueryResults> ReceiveGraphQLBatchQueryResults(this Task<IFlurlGraphQLResponse> responseTask)
-        {
-            return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
-            {
-                //BBernard
-                //Extract the Collection Data specified... or first data...
-                //NOTE: GraphQL supports multiple data responses per request so we need to access the correct query type result safely (via Null Coalesce)
-                var queryResultJson = resultPayload.Data;
-
-                var operationResults = new List<GraphQLQueryOperationResult>();
-                foreach (var prop in queryResultJson.Properties())
-                    operationResults.Add(new GraphQLQueryOperationResult(prop.Name, prop.Value as JObject));
-
-                var batchResults = new GraphQLBatchQueryResults(operationResults);
-                return batchResults;
-            }).ConfigureAwait(false);
-        }
+            => await responseTask.ProcessResponsePayloadInternalAsync((responseProcessor, _) => responseProcessor.LoadBatchQueryResults()).ConfigureAwait(false);
 
         /// <summary>
         /// Processes/parses the results of multiple GraphQL queries, executed as a single request batch, into the typed results that can then be retrieved
