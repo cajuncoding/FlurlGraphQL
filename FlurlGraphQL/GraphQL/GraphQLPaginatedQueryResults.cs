@@ -14,7 +14,7 @@ namespace FlurlGraphQL
         where TResult : class
         where TPageInfo : class
     {
-        public GraphQLPaginatedQueryResults(IList<TResult> results, int? totalCount = null, TPageInfo cursorPageInfo = null)
+        public GraphQLPaginatedQueryResults(IReadOnlyList<TResult> results, int? totalCount = null, TPageInfo cursorPageInfo = null)
             : base(results)
         {
             //NOTE: The TotalCount and PageInfo are both optional and may be null

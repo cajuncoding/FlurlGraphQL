@@ -32,8 +32,7 @@ namespace FlurlGraphQL
 
         public TResult DeserializeGraphQLJsonResults<TResult>()
         {
-            //TODO: Correctly initialize any Converters needed for De-serialization...
-
+            //TODO: WIP...
             throw new NotImplementedException();
         }
     }
