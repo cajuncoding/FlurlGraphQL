@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public static class GraphQLConnectionArgs
     {

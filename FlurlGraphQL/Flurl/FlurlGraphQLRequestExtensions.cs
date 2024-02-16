@@ -1,18 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 using Flurl;
 using Flurl.Http;
 using Flurl.Util;
-using Newtonsoft.Json;
+using FlurlGraphQL.ValidationExtensions;
 using NullValueHandling = Flurl.NullValueHandling;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public static class ContextItemKeys
     {
+        public const string FlurlGraphQLJsonSerializer = nameof(FlurlGraphQLJsonSerializer);
         public const string NewtonsoftJsonSerializerSettings = nameof(NewtonsoftJsonSerializerSettings);
+        public const string SystemTextJsonSerializerSettings = nameof(SystemTextJsonSerializerSettings);
         public const string PersistedQueryPayloadFieldName = nameof(PersistedQueryPayloadFieldName);
     }
 
@@ -218,20 +217,21 @@ namespace FlurlGraphQL.Querying
 
         #endregion
 
-        #region Configuration Extension - NewtonsoftJson Serializer Settings (ONLY Available after an IFlurlRequest is initialized)...
-
+        #region Configuration Extensions - System.Text.Json Serializer Settings (ONLY Available after an IFlurlRequest is initialized)...
 
         /// <summary>
         /// Initialize the query body for a GraphQL query request.
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="jsonSerializerSettings"></param>
+        /// <param name="jsonSerializerOptions"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
-        public static IFlurlGraphQLRequest SetGraphQLNewtonsoftJsonSerializerSettings(this IFlurlRequest request, JsonSerializerSettings jsonSerializerSettings)
+        public static IFlurlGraphQLRequest SetGraphQLSystemTextJsonSerializerSettings(this IFlurlRequest request, JsonSerializerOptions jsonSerializerOptions)
         {
-            jsonSerializerSettings.AssertArgIsNotNull(nameof(jsonSerializerSettings));
+            jsonSerializerOptions.AssertArgIsNotNull(nameof(jsonSerializerOptions));
+            
             var graphqlRequest = (FlurlGraphQLRequest)request.ToGraphQLRequest();
-            graphqlRequest.SetContextItem(ContextItemKeys.NewtonsoftJsonSerializerSettings, jsonSerializerSettings);
+            graphqlRequest.SetContextItem(ContextItemKeys.SystemTextJsonSerializerSettings, jsonSerializerOptions);
+            
             return graphqlRequest;
         }
 
@@ -244,11 +244,12 @@ namespace FlurlGraphQL.Querying
         public static IFlurlGraphQLRequest SetPersistedQueryPayloadFieldName(this IFlurlRequest request, string fieldName)
         {
             fieldName.AssertArgIsNotNullOrBlank(nameof(fieldName));
+            
             var graphqlRequest = (FlurlGraphQLRequest)request.ToGraphQLRequest();
             graphqlRequest.SetContextItem(ContextItemKeys.PersistedQueryPayloadFieldName, fieldName);
+            
             return graphqlRequest;
         }
-
 
         #endregion
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace FlurlGraphQL.Querying.Tests.Models
+namespace FlurlGraphQL.Tests.Models
 {
     // ReSharper disable once ClassNeverInstantiated.Local
     internal class StarWarsCharacter

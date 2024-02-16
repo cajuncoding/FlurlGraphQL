@@ -1,16 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Flurl;
+﻿using Flurl;
 using Flurl.Http;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public interface IFlurlGraphQLRequest : IFlurlRequest
     {
         GraphQLQueryType GraphQLQueryType { get; }
         string GraphQLQuery { get; }
         IReadOnlyDictionary<string, object> GraphQLVariables { get; }
+        IFlurlGraphQLJsonSerializer GraphQLJsonSerializer { get; }
         IFlurlGraphQLRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest SetGraphQLVariables(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest SetGraphQLVariables(IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove);

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public class GraphQLConnectionResults<TResult> : GraphQLPaginatedQueryResults<TResult, IGraphQLCursorPageInfo>, IGraphQLConnectionResults<TResult> 
         where TResult : class

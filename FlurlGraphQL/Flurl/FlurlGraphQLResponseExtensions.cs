@@ -2,10 +2,13 @@
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Xml.Linq;
+using System.Text.Json;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public static partial class FlurlGraphQLResponseExtensions
     {
@@ -77,13 +80,14 @@ namespace FlurlGraphQL.Querying
         public static Task<TResult> ReceiveGraphQLMutationResult<TResult>(this IFlurlGraphQLResponse response, string queryOperationName = null)
             where TResult : class => Task.FromResult(response).ReceiveGraphQLMutationResult<TResult>(queryOperationName);
 
-
         /// <summary>
         /// Processes/parses the results of the GraphQL query execution into a raw Json Result with all raw Json response Data available for processing.
+        /// The result of this method may be a 'JsonObject' if using System.Text.Json serialization with Flurl or a 'JObject' if using Newtonsoft Json Serialization.
+        /// There are additional convenience methods available to handle the casting for you via ReceiveGraphQLRawJsonResponseJsonNode() or ReceiveGraphQLRawJsonResponseJObject() respectively.
         /// </summary>
         /// <param name="responseTask"></param>
         /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
-        public static async Task<JObject> ReceiveGraphQLRawJsonResponse(this Task<IFlurlGraphQLResponse> responseTask)
+        public static async Task<object> ReceiveGraphQLRawJsonResponse(this Task<IFlurlGraphQLResponse> responseTask)
         {
             return await responseTask.ProcessResponsePayloadInternalAsync((resultPayload, _) =>
             {
@@ -97,8 +101,24 @@ namespace FlurlGraphQL.Querying
         /// </summary>
         /// <param name="response"></param>
         /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
-        public static Task<JObject> ReceiveGraphQLRawJsonResponse(this IFlurlGraphQLResponse response)
+        public static Task<object> ReceiveGraphQLRawJsonResponse(this IFlurlGraphQLResponse response)
             => Task.FromResult(response).ReceiveGraphQLRawJsonResponse();
+
+        /// <summary>
+        /// Processes/parses the results of the GraphQL query execution into a raw JsonElement (System.Text.Json) Result with all raw Json response Data available for processing.
+        /// </summary>
+        /// <param name="responseTask"></param>
+        /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
+        public static async Task<JsonNode> ReceiveGraphQLRawJsonResponseJsonNode(this Task<IFlurlGraphQLResponse> responseTask)
+            => (JsonNode)(await responseTask.ReceiveGraphQLRawJsonResponse().ConfigureAwait(false));
+
+        /// <summary>
+        /// Processes/parses the results of the GraphQL query execution into a raw JsonElement (System.Text.Json) Result with all raw Json response Data available for processing.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
+        public static Task<JsonNode> ReceiveGraphQLRawJsonResponseJsonNode(this IFlurlGraphQLResponse response)
+            => Task.FromResult(response).ReceiveGraphQLRawJsonResponseJsonNode();
 
         /// <summary>
         /// Processes/parses the results of the GraphQL query execution into the typed results along with associated cursor paging details as defined in the GraphQL Spec for Connections.

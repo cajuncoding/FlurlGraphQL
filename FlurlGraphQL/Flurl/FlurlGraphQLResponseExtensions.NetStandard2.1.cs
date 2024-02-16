@@ -6,7 +6,7 @@ using System.Threading;
 
 #if NETSTANDARD2_1_OR_GREATER
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     public static partial class FlurlGraphQLResponseExtensions
     {

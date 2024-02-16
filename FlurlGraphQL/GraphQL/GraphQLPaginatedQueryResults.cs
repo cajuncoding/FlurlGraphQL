@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     /// <summary>
     /// BBernard

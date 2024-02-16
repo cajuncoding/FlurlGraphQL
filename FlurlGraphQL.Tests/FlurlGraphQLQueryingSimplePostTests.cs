@@ -1,10 +1,14 @@
+using System;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using FlurlGraphQL.Querying.Tests.Models;
+using FlurlGraphQL.SystemTextJsonExtensions;
+using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLQueryingSimplePostTests : BaseFlurlGraphQLTest
@@ -107,7 +111,7 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestSinglePostQueryRawJsonResponseAsync()
+        public async Task TestSinglePostQueryRawJsonResponseSystemTextJsonAsync()
         {
             //INTENTIONALLY Place the Nested Paginated selection as LAST item to validate functionality!
             var json = await GraphQLApiEndpoint
@@ -127,14 +131,43 @@ namespace FlurlGraphQL.Querying.Tests
                 ")
                 .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
                 .PostGraphQLQueryAsync()
-                .ReceiveGraphQLRawJsonResponse()
+                .ReceiveGraphQLRawJsonResponseJsonNode()
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(json);
-            Assert.AreEqual(2, (json["charactersById"] as JArray)?.Count);
 
-            var jsonText = json.ToString(Formatting.Indented);
-            TestContext.WriteLine(jsonText);
+            Assert.AreEqual(2, json["charactersById"]!.AsArray().Count);
+            TestContext.WriteLine(json.ToJsonStringIndented());
+        }
+
+        [TestMethod]
+        public async Task TestSinglePostQueryRawJsonResponseNewtonsoftJsonAsync()
+        {
+            //INTENTIONALLY Place the Nested Paginated selection as LAST item to validate functionality!
+            var json = await GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query ($ids: [Int!], $friendsCount: Int!) {
+	                    charactersById(ids: $ids) {
+		                    personalIdentifier
+		                    name
+		                    friends(first: $friendsCount) {
+			                    nodes {
+				                    personalIdentifier
+				                    name
+			                    }
+		                    }
+	                    }
+                    }
+                ")
+                .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLRawJsonResponseJObject()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(json);
+
+            Assert.AreEqual(2, (json["charactersById"] as JArray)?.Count);
+            TestContext.WriteLine(json.ToString(Formatting.Indented));
         }
 
 

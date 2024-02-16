@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FlurlGraphQL.Querying
+namespace FlurlGraphQL
 {
     /// <summary>
     /// Interface that can be used to implement deserialization of GraphQL Connection Results defined as Edges
