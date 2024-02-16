@@ -1,6 +1,9 @@
-﻿using System.Net;
+﻿using System;
+using System.Linq;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using FlurlGraphQL.Flurl;
-using FlurlGraphQL;
 
 namespace FlurlGraphQL
 {

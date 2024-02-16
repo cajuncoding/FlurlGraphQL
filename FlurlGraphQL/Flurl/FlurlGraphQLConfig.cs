@@ -1,4 +1,5 @@
-﻿using FlurlGraphQL.ValidationExtensions;
+﻿using System;
+using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
 {

@@ -1,4 +1,5 @@
-﻿using Flurl.Util;
+﻿using System.Collections.Generic;
+using Flurl.Util;
 using Flurl;
 
 namespace FlurlGraphQL

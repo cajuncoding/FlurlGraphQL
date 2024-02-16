@@ -1,4 +1,7 @@
-﻿using Flurl;
+﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Flurl;
 using Flurl.Http;
 
 namespace FlurlGraphQL

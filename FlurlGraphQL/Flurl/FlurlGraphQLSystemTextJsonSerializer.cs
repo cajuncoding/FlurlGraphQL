@@ -1,6 +1,6 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using Flurl.Http.Configuration;
-using FlurlGraphQL;
 using FlurlGraphQL.ReflectionExtensions;
 
 

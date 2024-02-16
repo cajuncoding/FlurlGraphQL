@@ -3,7 +3,7 @@
     internal static class GraphQLConstants
     {
         public const string FlurlSystemTextJsonSerializerClassName = "DefaultJsonSerializer";
-        public const string FlurlNewtonsoftSerializerClassName = "NewtonsoftJsonSerializer";
+        public const string FlurlNewtonsoftJsonSerializerClassName = "NewtonsoftJsonSerializer";
 
         public const string NewtonsoftAssemblyName = "FlurlGraphQL.Newtonsoft";
         public const string NewtonsoftNamespace = "FlurlGraphQL";

@@ -1,32 +1,32 @@
-﻿using FlurlGraphQL.ValidationExtensions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
 {
     /// <summary>
     /// Internal class for handling the processing of Operation Results within GraphQLBatchQueryResults
     /// </summary>
-    internal class GraphQLQueryOperationResult<TJson>
+    public class GraphQLQueryOperationResult
     {
-        public GraphQLQueryOperationResult(string operationName, TJson resultJson)
+        public GraphQLQueryOperationResult(string operationName, IFlurlGraphQLResponseProcessor responseProcessor)
         {
             OperationName = operationName.AssertArgIsNotNullOrBlank(nameof(operationName));
-            ResultJson = resultJson.AssertArgIsNotNull(nameof(resultJson));
+            _graphQLResponseProcessor = responseProcessor.AssertArgIsNotNull(nameof(responseProcessor));
         }
 
-        public string OperationName { get; }
-        public TJson ResultJson { get; }
+        private readonly IFlurlGraphQLResponseProcessor _graphQLResponseProcessor;
+        private object _cachedParsedResults;
 
-        private object _cachedParsedResults = null;
+        public string OperationName { get; }
 
         public IGraphQLQueryResults<TResult> GetParsedResults<TResult>() where TResult : class
         {
-            if (ResultJson == null)
-                return default;
-
             if (_cachedParsedResults is IGraphQLQueryResults<TResult> typedResult)
                 return typedResult;
 
-            var parsedResult = ResultJson.ParseJsonToGraphQLResultsInternal<TResult>();
+            var parsedResult = _graphQLResponseProcessor.LoadTypedResults<TResult>(this.OperationName);
             _cachedParsedResults = parsedResult;
             
             return parsedResult;
@@ -43,7 +43,7 @@ namespace FlurlGraphQL
 
         public int Count => _queryOperationResults.Count;
 
-        internal GraphQLBatchQueryResults(IReadOnlyList<GraphQLQueryOperationResult> queryOperationResults)
+        public GraphQLBatchQueryResults(IReadOnlyList<GraphQLQueryOperationResult> queryOperationResults)
         {
             _queryOperationResults = queryOperationResults ?? new List<GraphQLQueryOperationResult>().AsReadOnly();
             
@@ -68,8 +68,7 @@ namespace FlurlGraphQL
             if(index < 0 || index > (_queryOperationResults.Count - 1))
                 throw new ArgumentOutOfRangeException(nameof(index));
 
-            var parsedResults = _queryOperationResults[index]?.GetParsedResults<TResult>();
-            return parsedResults;
+            return _queryOperationResults[index]?.GetParsedResults<TResult>();
         }
 
         /// <summary>
@@ -81,15 +80,9 @@ namespace FlurlGraphQL
         /// <param name="operationName"></param>
         /// <returns></returns>
         public IGraphQLQueryResults<TResult> GetResults<TResult>(string operationName) where TResult : class
-        {
-            operationName.AssertArgIsNotNullOrBlank(nameof(operationName));
-            
-            var parsedResults = _queryOperationResultLookup[operationName]
+            => _queryOperationResultLookup[operationName.AssertArgIsNotNullOrBlank(nameof(operationName))]
                 .FirstOrDefault()
                 ?.GetParsedResults<TResult>();
-
-            return parsedResults;
-        }
 
         /// <summary>
         /// Gets the results for the batch query by its ordinal index (first query is 0), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
@@ -113,8 +106,6 @@ namespace FlurlGraphQL
         public IGraphQLConnectionResults<TResult> GetConnectionResults<TResult>(string operationName) where TResult : class
             => GetResults<TResult>(operationName).ToGraphQLConnectionResultsInternal();
 
-
-
         /// <summary>
         /// Gets the results for the batch query by its ordinal index (first query is 0), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
         /// This assumes that the query used Offset Pagination on a GraphQL CollectionSegment operation compatible with the HotChocolate GraphQL specification for offset paging.
@@ -123,12 +114,9 @@ namespace FlurlGraphQL
         /// <param name="index"></param>
         /// <returns></returns>
         public IGraphQLCollectionSegmentResults<TResult> GetCollectionSegmentResults<TResult>(int index) where TResult : class
-        {
-            if (GetConnectionResults<TResult>(index) is GraphQLConnectionResults<TResult> connectionResults)
-                return connectionResults.ToCollectionSegmentResultsInternal();
-
-            return null;
-        }
+        => GetConnectionResults<TResult>(index) is GraphQLConnectionResults<TResult> connectionResults
+                ? connectionResults.ToCollectionSegmentResultsInternal()
+                : null;
 
         /// <summary>
         /// Gets the results for the batch query by its operationName (case insensitive), along with any Pagination Details and/or Total Count that may have been optionally included in the Query.
@@ -139,7 +127,5 @@ namespace FlurlGraphQL
         /// <returns></returns>
         public IGraphQLCollectionSegmentResults<TResult> GetCollectionSegmentResults<TResult>(string operationName) where TResult : class
             => GetConnectionResults<TResult>(operationName).ToCollectionSegmentResultsInternal();
-
-
     }
 }

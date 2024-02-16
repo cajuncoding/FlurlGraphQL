@@ -1,4 +1,6 @@
-﻿using FlurlGraphQL.ValidationExtensions;
+﻿using System;
+using System.Collections.Generic;
+using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
 {
@@ -27,6 +29,12 @@ namespace FlurlGraphQL
         public IReadOnlyList<GraphQLError> Errors { get; }
         public IReadOnlyDictionary<string, object> ContextBag { get; }
         public IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class
+        {
+            //TODO: WIP...
+            throw new NotImplementedException();
+        }
+
+        public IGraphQLBatchQueryResults LoadBatchQueryResults()
         {
             //TODO: WIP...
             throw new NotImplementedException();
