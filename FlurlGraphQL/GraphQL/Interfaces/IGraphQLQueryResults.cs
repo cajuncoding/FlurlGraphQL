@@ -13,9 +13,6 @@ namespace FlurlGraphQL
     //Provide Convenience Method for accessing Internal methods of the interface implementation...
     public static class IGraphQLQueryResultsExtensions
     {
-        internal static IList<TResult> GetResultsInternal<TResult>(this IGraphQLQueryResults<TResult> results) where TResult : class
-            => (results as GraphQLQueryResults<TResult>)?.GetResultsInternal() ?? new List<TResult>();
-
         internal static IGraphQLConnectionResults<TResult> ToGraphQLConnectionResultsInternal<TResult>(this IGraphQLQueryResults<TResult> results) where TResult : class
         {
             if (results == null)
@@ -23,7 +20,8 @@ namespace FlurlGraphQL
 
             return results is IGraphQLConnectionResults<TResult> connectionResults
                 ? connectionResults
-                : new GraphQLConnectionResults<TResult>(results.GetResultsInternal());
+                //If all we have are results then we can't provide TotalCount so it's null (e.g. because it wasn't requested/available)...
+                : new GraphQLConnectionResults<TResult>(results);
         }
 
         internal static IGraphQLCollectionSegmentResults<TResult> ToCollectionSegmentResultsInternal<TResult>(this IGraphQLConnectionResults<TResult> connectionResults)
@@ -34,8 +32,9 @@ namespace FlurlGraphQL
 
             var pageInfo = connectionResults.PageInfo;
 
+            //Always convert the Connection results (which can be re-used effectively) to Collection Segment results...
             return new GraphQLCollectionSegmentResults<TResult>(
-                connectionResults.GetResultsInternal(),
+                connectionResults,
                 connectionResults.TotalCount,
                 new GraphQLOffsetPageInfo(hasNextPage: pageInfo?.HasNextPage, hasPreviousPage: pageInfo?.HasPreviousPage)
             );

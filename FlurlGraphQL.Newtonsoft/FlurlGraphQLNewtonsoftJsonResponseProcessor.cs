@@ -50,27 +50,15 @@ namespace FlurlGraphQL
 
             var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(jsonSerializerSettings);
 
+            //Ensure that the Results we return are initialized 
             if (typedResults is GraphQLQueryResults<TResult> graphqlResults)
-            {
-                #pragma warning disable CS0618
-                graphqlResults.SetErrorsInternal(Errors);
-                #pragma warning restore CS0618
-            }
+                typedResults = new GraphQLQueryResults<TResult>(graphqlResults, Errors);
 
             return typedResults;
         }
 
         public IGraphQLBatchQueryResults LoadBatchQueryResults()
         {
-            //TODO: WIP...
-            throw new NotImplementedException();
-        }
-
-        public IGraphQLBatchQueryResults LoadGraphQLBatchQueryResults()
-        {
-            //BBernard
-            //Extract the Collection Data specified... or first data...
-            //NOTE: GraphQL supports multiple data responses per request so we need to access the correct query type result safely (via Null Coalesce)
             var queryResultJson = (JObject)this.Data;
 
             var operationResults = queryResultJson.Properties()
