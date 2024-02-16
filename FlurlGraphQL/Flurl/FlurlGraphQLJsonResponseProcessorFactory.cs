@@ -5,16 +5,13 @@ using FlurlGraphQL.ReflectionExtensions;
 
 namespace FlurlGraphQL.Flurl
 {
-    internal static class FlurlGraphQLJsonResponseProcessorFactory
+    public static class FlurlGraphQLJsonResponseProcessorFactory
     {
 
         private delegate IFlurlGraphQLResponseProcessor FlurlGraphQLJsonResponseProcessorFactoryDelegate(IFlurlGraphQLResponse graphqlResponse);
-        private static readonly FlurlGraphQLJsonResponseProcessorFactoryDelegate _createNewtonsoftJsonProcessorFromFlurlResponse;
 
-        static FlurlGraphQLJsonResponseProcessorFactory()
-        {
-            _createNewtonsoftJsonProcessorFromFlurlResponse = InitNewtonsoftJsonResponseProcessorFactoryDelegate();
-        }
+        private static readonly Lazy<FlurlGraphQLJsonResponseProcessorFactoryDelegate> _createNewtonsoftJsonProcessorFromFlurlResponse = new Lazy<FlurlGraphQLJsonResponseProcessorFactoryDelegate>(InitNewtonsoftJsonResponseProcessorFactoryDelegate);
+
 
         public static IFlurlGraphQLResponseProcessor FromGraphQLFlurlResponse(IFlurlGraphQLResponse graphqlResponse)
         {
@@ -34,7 +31,7 @@ namespace FlurlGraphQL.Flurl
         //NOTE: WE will throw a runtime exception if not available because that means that something is mis-configured and not initialized
         //      to support the use of Newtonsoft Json.
         private static IFlurlGraphQLResponseProcessor CreateNewtonsoftJsonResponseProcessor(IFlurlGraphQLResponse graphqlResponse)
-            => _createNewtonsoftJsonProcessorFromFlurlResponse?.Invoke(graphqlResponse);
+            => _createNewtonsoftJsonProcessorFromFlurlResponse.Value?.Invoke(graphqlResponse);
 
         /// <summary>
         /// Search, find, and compile a Delegate for fast creation of Newtonsoft Json Serializer if the FlurlGraphQL.Newtonsoft library is available to use.

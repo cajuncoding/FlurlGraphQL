@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using Flurl.Http.Configuration;
 using FlurlGraphQL.NewtonsoftConstants;
@@ -6,15 +7,10 @@ using FlurlGraphQL.ReflectionExtensions;
 
 namespace FlurlGraphQL.Flurl
 {
-    internal static class FlurlGraphQLJsonSerializerFactory
+    public static class FlurlGraphQLJsonSerializerFactory
     {
         private delegate IFlurlGraphQLJsonSerializer FlurlGraphQLJsonSerializerFactoryDelegate(ISerializer flurlSerializer);
-        private static readonly FlurlGraphQLJsonSerializerFactoryDelegate _createNewtonsoftJsonSerializerFromFlurlSerializer;
-
-        static FlurlGraphQLJsonSerializerFactory()
-        {
-            _createNewtonsoftJsonSerializerFromFlurlSerializer = InitNewtonsoftJsonSerializerFactoryDelegate();
-        }
+        private static readonly Lazy<FlurlGraphQLJsonSerializerFactoryDelegate> _createNewtonsoftJsonSerializerFromFlurlSerializer = new Lazy<FlurlGraphQLJsonSerializerFactoryDelegate>(InitNewtonsoftJsonSerializerFactoryDelegate);
 
         public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlJsonSerializer)
         {
@@ -23,7 +19,7 @@ namespace FlurlGraphQL.Flurl
             switch (flurlJsonSerializer.GetType().Name)
             {
                 case GraphQLConstants.FlurlSystemTextJsonSerializerClassName: return CreateSystemTextJsonSerializer(flurlJsonSerializer);
-                case GraphQLConstants.FlurlNewtonsoftJsonSerializerClassName:     return CreateNewtonsoftJsonSerializer(flurlJsonSerializer);
+                case GraphQLConstants.FlurlNewtonsoftJsonSerializerClassName: return CreateNewtonsoftJsonSerializer(flurlJsonSerializer);
                 default: throw new InvalidOperationException($"The current Flurl Json Serializer of type [{flurlSerializerTypeName}] is not supported; a DefaultJsonSerializer or NewtonsoftJsonSerializer is expected.");
             }
         }
@@ -36,7 +32,7 @@ namespace FlurlGraphQL.Flurl
         //NOTE: WE will throw a runtime exception if not available because that means that something is mis-configured and not initialized
         //      to support the use of Newtonsoft Json.
         private static IFlurlGraphQLJsonSerializer CreateNewtonsoftJsonSerializer(ISerializer flurlJsonSerializer)
-            => _createNewtonsoftJsonSerializerFromFlurlSerializer?.Invoke(flurlJsonSerializer);
+            => _createNewtonsoftJsonSerializerFromFlurlSerializer.Value?.Invoke(flurlJsonSerializer);
 
         /// <summary>
         /// Search, find, and compile a Delegate for fast creation of Newtonsoft Json Serializer if the FlurlGraphQL.Newtonsoft library is available to use.

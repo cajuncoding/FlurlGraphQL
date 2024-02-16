@@ -4,8 +4,6 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Xml.Linq;
-using System.Text.Json;
 
 namespace FlurlGraphQL
 {

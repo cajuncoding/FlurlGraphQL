@@ -363,7 +363,7 @@ namespace FlurlGraphQL.Tests
         }
 
 #endif
-
+            
 #if NET461
 
         [TestMethod]
