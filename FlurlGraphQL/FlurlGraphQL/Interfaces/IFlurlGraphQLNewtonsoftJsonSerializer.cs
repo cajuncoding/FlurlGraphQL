@@ -1,5 +1,5 @@
 ﻿namespace FlurlGraphQL
 {
-    public interface IFlurlGraphQLNewtonsoftJsonSerializer : IFlurlGraphQLJsonSerializer
+    internal interface IFlurlGraphQLNewtonsoftJsonSerializer : IFlurlGraphQLJsonSerializer
     { }
 }

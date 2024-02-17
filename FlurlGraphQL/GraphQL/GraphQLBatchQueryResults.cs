@@ -10,7 +10,7 @@ namespace FlurlGraphQL
     /// </summary>
     public class GraphQLQueryOperationResult
     {
-        public GraphQLQueryOperationResult(string operationName, IFlurlGraphQLResponseProcessor responseProcessor)
+        internal GraphQLQueryOperationResult(string operationName, IFlurlGraphQLResponseProcessor responseProcessor)
         {
             OperationName = operationName.AssertArgIsNotNullOrBlank(nameof(operationName));
             _graphQLResponseProcessor = responseProcessor.AssertArgIsNotNull(nameof(responseProcessor));

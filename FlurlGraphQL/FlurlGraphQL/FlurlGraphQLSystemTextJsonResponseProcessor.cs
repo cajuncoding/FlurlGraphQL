@@ -4,7 +4,7 @@ using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
 {
-    public class FlurlGraphQLSystemTextJsonResponseProcessor : IFlurlGraphQLResponseProcessor
+    internal class FlurlGraphQLSystemTextJsonResponseProcessor : IFlurlGraphQLResponseProcessor
     {
         public static IFlurlGraphQLResponseProcessor FromFlurlGraphQLResponse(IFlurlGraphQLResponse graphqlResponse)
         {

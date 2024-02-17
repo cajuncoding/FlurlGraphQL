@@ -8,7 +8,7 @@ namespace FlurlGraphQL
 {
     public class FlurlGraphQLSystemTextJsonSerializer : IFlurlGraphQLSystemTextJsonSerializer
     {
-        public static IFlurlGraphQLSystemTextJsonSerializer FromFlurlSerializer(ISerializer flurlSerializer)
+        public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlSerializer)
         {
             // NOTE: Due to the abstractions of the core Flurl library we cannot access the Json Serializer Options directly
             //         and therefore must use dynamic instantiation via Reflection (leveraging brute force to access internal Options/Settings)

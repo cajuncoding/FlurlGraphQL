@@ -6,21 +6,21 @@ using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL
 {
-    public class GraphQLPageResultsToICollectionConverter : JsonConverter
+    public class NewtonsoftJsonGraphQLPageResultsToICollectionConverter : JsonConverter
     {
-        private Type SkipTypeToPreventInfiniteRecursion = null;
+        private Type _skipTypeToPreventInfiniteRecursion = null;
 
-        public GraphQLPageResultsToICollectionConverter()
+        public NewtonsoftJsonGraphQLPageResultsToICollectionConverter()
         {
         }
 
         public override bool CanConvert(Type objectType)
         {
-            bool canConvert = objectType != SkipTypeToPreventInfiniteRecursion && IsTypeSupportedForConversion(objectType);
+            bool canConvert = objectType != _skipTypeToPreventInfiniteRecursion && IsTypeSupportedForConversion(objectType);
 
             //Clear our RecursionSkip if Not Converting this!
             if (!canConvert)
-                SkipTypeToPreventInfiniteRecursion = null;
+                _skipTypeToPreventInfiniteRecursion = null;
 
             return canConvert;
         }
@@ -86,7 +86,7 @@ namespace FlurlGraphQL
                 //NOTE: This algorithm is based on the assumption that the JsonTokenReaders are always reading in one direction (synchronously)
                 //      and that this Converter is only accessed by one Serializer at a time (Not Thread-safe) so the Converter should never be
                 //      added to the Global or Default settings of a Serializer... ONLY added just prior to specific de-serialization executions!
-                SkipTypeToPreventInfiniteRecursion = objectType;
+                _skipTypeToPreventInfiniteRecursion = objectType;
                 entityResults = json.ToObject(objectType, jsonSerializer);
             }
 

@@ -1,6 +1,6 @@
 ﻿namespace FlurlGraphQL.NewtonsoftConstants
 {
-    internal static class GraphQLConstants
+    internal static class FlurlGraphQLReflectionConstants
     {
         public const string FlurlSystemTextJsonSerializerClassName = "DefaultJsonSerializer";
         public const string FlurlNewtonsoftJsonSerializerClassName = "NewtonsoftJsonSerializer";

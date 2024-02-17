@@ -2,14 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
-using FlurlGraphQL.Flurl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 
 namespace FlurlGraphQL.Tests
 {

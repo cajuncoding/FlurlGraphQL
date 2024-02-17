@@ -7,7 +7,7 @@ namespace FlurlGraphQL
 {
     public class FlurlGraphQLNewtonsoftJsonSerializer : IFlurlGraphQLNewtonsoftJsonSerializer
     {
-        public static IFlurlGraphQLNewtonsoftJsonSerializer FromFlurlSerializer(ISerializer flurlSerializer)
+        public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlSerializer)
         {
             // NOTE: Due to the abstractions of the core Flurl library we cannot access the Json Serializer Settings directly
             //         and therefore must use dynamic instantiation via Reflection (leveraging brute force to access internal Options/Settings)
