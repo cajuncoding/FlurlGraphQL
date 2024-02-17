@@ -19,7 +19,7 @@ namespace FlurlGraphQL.Tests
                         }
                     ")
                     .PostGraphQLQueryAsync()
-                    .ReceiveGraphQLRawJsonResponse()
+                    .ReceiveGraphQLRawSystemTextJsonResponse()
                     .ConfigureAwait(false);
             }).ConfigureAwait(false);
 
@@ -50,7 +50,7 @@ namespace FlurlGraphQL.Tests
                     ")
                     .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }})
                     .PostGraphQLQueryAsync()
-                    .ReceiveGraphQLRawJsonResponse()
+                    .ReceiveGraphQLRawSystemTextJsonResponse()
                     .ConfigureAwait(false);
             }).ConfigureAwait(false);
 
@@ -81,7 +81,7 @@ namespace FlurlGraphQL.Tests
                     ")
                     .SetGraphQLVariables(new { ids = new[] { 1000, 2001 } })
                     .PostGraphQLQueryAsync()
-                    .ReceiveGraphQLRawJsonResponse()
+                    .ReceiveGraphQLRawSystemTextJsonResponse()
                     .ConfigureAwait(false);
             }).ConfigureAwait(false);
 

@@ -39,6 +39,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>FlurlGraphQL.Newtonsoft</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Include="..\README.md" Link="README.md" />
 	</ItemGroup>
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -346,7 +345,7 @@ namespace FlurlGraphQL
             return json;
         }
 
-        protected async Task<FlurlGraphQLResponse> ExecuteRequestWithExceptionHandling(Func<Task<FlurlGraphQLResponse>> sendRequestAsyncFunc)
+        protected async Task<IFlurlGraphQLResponse> ExecuteRequestWithExceptionHandling(Func<Task<IFlurlGraphQLResponse>> sendRequestAsyncFunc)
         {
             sendRequestAsyncFunc.AssertArgIsNotNull(nameof(sendRequestAsyncFunc));
 
