@@ -12,12 +12,10 @@ namespace FlurlGraphQL
             throw new NotImplementedException();
         }
 
-        public FlurlGraphQLSystemTextJsonResponseProcessor(object data, List<GraphQLError> errors, IReadOnlyDictionary<string, object> contextBag, IFlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
+        public FlurlGraphQLSystemTextJsonResponseProcessor(object data, List<GraphQLError> errors, IFlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
         {
             this.Data = data;
             this.Errors = errors?.AsReadOnly();
-            //We MUST to pass along the ContextBag (internal) which may contain configuration details for processing the payload results...
-            this.ContextBag = contextBag;
             this.JsonSerializer = systemTextJsonSerializer.AssertArgIsNotNull(nameof(systemTextJsonSerializer));
         }
 
@@ -27,7 +25,7 @@ namespace FlurlGraphQL
 
         public object Data { get; }
         public IReadOnlyList<GraphQLError> Errors { get; }
-        public IReadOnlyDictionary<string, object> ContextBag { get; }
+
         public IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class
         {
             //TODO: WIP...

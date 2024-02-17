@@ -8,8 +8,15 @@ namespace FlurlGraphQL
 {
     internal static class FlurlGraphQLJsonSerializerFactory
     {
-        private delegate IFlurlGraphQLJsonSerializer FlurlGraphQLJsonSerializerFactoryDelegate(ISerializer flurlSerializer);
-        private static readonly Lazy<FlurlGraphQLJsonSerializerFactoryDelegate> _createNewtonsoftJsonSerializerFromFlurlSerializer = new Lazy<FlurlGraphQLJsonSerializerFactoryDelegate>(InitNewtonsoftJsonSerializerFactoryDelegate);
+        private delegate IFlurlGraphQLJsonSerializer JsonSerializerFactoryDelegate(ISerializer flurlSerializer);
+        
+        private static readonly Lazy<JsonSerializerFactoryDelegate> _createNewtonsoftJsonSerializerFromFlurlSerializer = new Lazy<JsonSerializerFactoryDelegate>(() =>
+            AppDomain.CurrentDomain.FindType(
+                ReflectionConstants.NewtonsoftJsonSerializerClassName,
+                assemblyName: ReflectionConstants.NewtonsoftAssemblyName,
+                namespaceName: ReflectionConstants.NewtonsoftNamespace
+            ).CreateDelegateForMethod<JsonSerializerFactoryDelegate>(ReflectionConstants.NewtonsoftJsonSerializerFactoryMethodName)
+        );
 
         public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlJsonSerializer)
         {
@@ -17,8 +24,8 @@ namespace FlurlGraphQL
 
             switch (flurlJsonSerializer.GetType().Name)
             {
-                case FlurlGraphQLReflectionConstants.FlurlSystemTextJsonSerializerClassName: return CreateSystemTextJsonSerializer(flurlJsonSerializer);
-                case FlurlGraphQLReflectionConstants.FlurlNewtonsoftJsonSerializerClassName: return CreateNewtonsoftJsonSerializer(flurlJsonSerializer);
+                case ReflectionConstants.FlurlSystemTextJsonSerializerClassName: return CreateSystemTextJsonSerializer(flurlJsonSerializer);
+                case ReflectionConstants.FlurlNewtonsoftJsonSerializerClassName: return CreateNewtonsoftJsonSerializer(flurlJsonSerializer);
                 default: throw new InvalidOperationException($"The current Flurl Json Serializer of type [{flurlSerializerTypeName}] is not supported; a DefaultJsonSerializer or NewtonsoftJsonSerializer is expected.");
             }
         }
@@ -32,28 +39,5 @@ namespace FlurlGraphQL
         //      to support the use of Newtonsoft Json.
         private static IFlurlGraphQLJsonSerializer CreateNewtonsoftJsonSerializer(ISerializer flurlJsonSerializer)
             => _createNewtonsoftJsonSerializerFromFlurlSerializer.Value?.Invoke(flurlJsonSerializer);
-
-        /// <summary>
-        /// Search, find, and compile a Delegate for fast creation of Newtonsoft Json Serializer if the FlurlGraphQL.Newtonsoft library is available to use.
-        /// </summary>
-        /// <returns></returns>
-        static FlurlGraphQLJsonSerializerFactoryDelegate InitNewtonsoftJsonSerializerFactoryDelegate()
-        {
-            var newtonsoftJsonSerializerType = AppDomain.CurrentDomain.FindType(
-                FlurlGraphQLReflectionConstants.NewtonsoftJsonSerializerClassName,
-                assemblyName: FlurlGraphQLReflectionConstants.NewtonsoftAssemblyName,
-                namespaceName: FlurlGraphQLReflectionConstants.NewtonsoftNamespace
-            );
-                
-            if (newtonsoftJsonSerializerType == null)
-                return null;
-
-            var factoryMethodInfo = newtonsoftJsonSerializerType.GetMethod(FlurlGraphQLReflectionConstants.NewtonsoftJsonSerializerFactoryMethodName, BindingFlags.Static | BindingFlags.Public);
-
-            return factoryMethodInfo != null
-                ? Delegate.CreateDelegate(typeof(FlurlGraphQLJsonSerializerFactoryDelegate), null, factoryMethodInfo) as FlurlGraphQLJsonSerializerFactoryDelegate
-                : null;
-        }
-
     }
 }

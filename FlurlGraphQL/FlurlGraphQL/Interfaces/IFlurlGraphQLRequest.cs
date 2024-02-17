@@ -12,14 +12,11 @@ namespace FlurlGraphQL
         string GraphQLQuery { get; }
         IReadOnlyDictionary<string, object> GraphQLVariables { get; }
         IFlurlGraphQLJsonSerializer GraphQLJsonSerializer { get; }
+        string PersistedQueryPayloadFieldName { get; }
+
         IFlurlGraphQLRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest SetGraphQLVariables(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest SetGraphQLVariables(IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove);
-
-        IReadOnlyDictionary<string, object> ContextBag { get; }
-        IFlurlGraphQLRequest SetContextItem(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove);
-        IFlurlGraphQLRequest SetContextItems(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove);
-        IFlurlGraphQLRequest SetContextItems(IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove);
 
         object GetGraphQLVariable(string name);
         IFlurlGraphQLRequest ClearGraphQLVariables();

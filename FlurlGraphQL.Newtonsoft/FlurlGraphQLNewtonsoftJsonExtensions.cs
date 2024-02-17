@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
+using Flurl.Http.Newtonsoft;
 using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.TypeCacheHelpers;
 using FlurlGraphQL.ValidationExtensions;
@@ -12,20 +14,40 @@ namespace FlurlGraphQL
 {
     public static class FlurlGraphQLNewtonsoftJsonExtensions
     {
+        #region Add Dynamic support that is only available with Newtonsoft Json...
+
+        public static Task<dynamic> GetJsonAsync(this IFlurlGraphQLResponse graphqlResponse)
+            => graphqlResponse.AsFlurlGraphQLResponse()?.BaseFlurlResponse?.GetJsonAsync();
+
+        public static Task<IList<dynamic>> GetJsonListAsync(this IFlurlGraphQLResponse graphqlResponse)
+            => graphqlResponse.AsFlurlGraphQLResponse()?.BaseFlurlResponse?.GetJsonListAsync();
+
+        private static FlurlGraphQLResponse AsFlurlGraphQLResponse(this IFlurlGraphQLResponse graphqlResponse)
+            => (graphqlResponse as FlurlGraphQLResponse) ?? throw new ArgumentException($"The GraphQL Response is not of the expected type [{nameof(FlurlGraphQLResponse)}].", nameof(graphqlResponse));
+
+        #endregion
+
         #region Configuration Extension - NewtonsoftJson Serializer Settings (ONLY Available after an IFlurlRequest is initialized)...
 
         /// <summary>
-        /// Initialize the query body for a GraphQL query request.
+        /// Initialize a custom Json Serializer using System.Text.Json, but only for this GraphQL request; isolated from the base FlurlRequest and any other GraphQL Requests.
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="jsonSerializerSettings"></param>
+        /// <param name="newtonsoftJsonSettings"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
-        public static IFlurlGraphQLRequest SetGraphQLNewtonsoftJsonSerializerSettings(this IFlurlRequest request, JsonSerializerSettings jsonSerializerSettings)
-        {
-            jsonSerializerSettings.AssertArgIsNotNull(nameof(jsonSerializerSettings));
+        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJsonSerializerSettings(this IFlurlRequest request, JsonSerializerSettings newtonsoftJsonSettings)
+            => request.ToGraphQLRequest().UseGraphQLNewtonsoftJsonSerializerSettings(newtonsoftJsonSettings);
 
-            var graphqlRequest = (FlurlGraphQLRequest)request.ToGraphQLRequest();
-            graphqlRequest.SetContextItem(ContextItemKeys.NewtonsoftJsonSerializerSettings, jsonSerializerSettings);
+        /// <summary>
+        /// Initialize a custom Json Serializer using System.Text.Json, but only for this GraphQL request; isolated from the base FlurlRequest and any other GraphQL Requests.
+        /// </summary>
+        /// <param name="graphqlRequest"></param>
+        /// <param name="newtonsoftJsonSettings"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJsonSerializerSettings(this IFlurlGraphQLRequest graphqlRequest, JsonSerializerSettings newtonsoftJsonSettings)
+        {
+            if (graphqlRequest is FlurlGraphQLRequest flurlGraphQLRequest)
+                flurlGraphQLRequest.GraphQLJsonSerializer = new FlurlGraphQLNewtonsoftJsonSerializer(newtonsoftJsonSettings.AssertArgIsNotNull(nameof(newtonsoftJsonSettings)));
 
             return graphqlRequest;
         }

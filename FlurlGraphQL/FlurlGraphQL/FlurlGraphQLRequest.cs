@@ -31,13 +31,16 @@ namespace FlurlGraphQL
         {
             BaseFlurlRequest = baseRequest.AssertArgIsNotNull(nameof(baseRequest));
             GraphQLJsonSerializer = FlurlGraphQLJsonSerializerFactory.FromFlurlSerializer(baseRequest.Settings.JsonSerializer);
+            PersistedQueryPayloadFieldName = FlurlGraphQLConfig.DefaultConfig.PersistedQueryPayloadFieldName;
         }
 
         public GraphQLQueryType GraphQLQueryType { get; protected set; }
 
         public bool IsMutationQuery { get; protected set; }
 
-        public IFlurlGraphQLJsonSerializer GraphQLJsonSerializer { get; protected set; }
+        public IFlurlGraphQLJsonSerializer GraphQLJsonSerializer { get; internal set; }
+
+        public string PersistedQueryPayloadFieldName { get; internal set; }
 
         #region GraphQL Variables
 
@@ -83,30 +86,6 @@ namespace FlurlGraphQL
         public IFlurlGraphQLRequest ClearGraphQLVariables()
         {
             GraphQLVariablesInternal.Clear();
-            return this;
-        }
-
-        #endregion
-
-        #region ContextBag Helpers
-
-        protected Dictionary<string, object> ContextBagInternal { get; } = new Dictionary<string, object>();
-        public IReadOnlyDictionary<string, object> ContextBag => new ReadOnlyDictionary<string, object>(ContextBagInternal);
-
-        public IFlurlGraphQLRequest SetContextItem(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove)
-        {
-            if (name != null)
-                ContextBagInternal.SetObjectBagItem(name, value, nullValueHandling);
-            return this;
-        }
-
-        public IFlurlGraphQLRequest SetContextItems(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
-            => SetContextItems(variables.ToKeyValuePairs(), nullValueHandling);
-
-        public IFlurlGraphQLRequest SetContextItems(IEnumerable<(string Key, object Value)> variables, NullValueHandling nullValueHandling = NullValueHandling.Remove)
-        {
-            if (variables != null)
-                ContextBagInternal.SetObjectBagItems(variables, nullValueHandling);
             return this;
         }
 
@@ -185,9 +164,8 @@ namespace FlurlGraphQL
                 //    throw new ArgumentOutOfRangeException(nameof(GraphQLQueryType), "The GraphQL Query Type is undefined or invalid.");
             }
 
-            clone
-                .SetGraphQLVariables(this.GraphQLVariablesInternal)
-                .SetContextItems(this.ContextBagInternal);
+            clone.SetGraphQLVariables(this.GraphQLVariablesInternal);
+            ((FlurlGraphQLRequest)clone).GraphQLJsonSerializer = this.GraphQLJsonSerializer;
 
             return clone;
         }
@@ -256,7 +234,7 @@ namespace FlurlGraphQL
                     graphqlPayload.Add("query", this.GraphQLQuery);
                     break;
                 case GraphQLQueryType.PersistedQuery:
-                    graphqlPayload.Add(GetPersistedQueryPayloadFieldName(), this.GraphQLQuery);
+                    graphqlPayload.Add(PersistedQueryPayloadFieldName, this.GraphQLQuery);
                     break;
                 default: 
                     throw new ArgumentOutOfRangeException(nameof(this.GraphQLQueryType), $"GraphQL payload for Query Type [{this.GraphQLQueryType}] cannot be initialized.");
@@ -305,7 +283,7 @@ namespace FlurlGraphQL
                         this.SetQueryParam("query", this.GraphQLQuery); 
                         break;
                     case GraphQLQueryType.PersistedQuery: 
-                        this.SetQueryParam(GetPersistedQueryPayloadFieldName(), this.GraphQLQuery); 
+                        this.SetQueryParam(PersistedQueryPayloadFieldName, this.GraphQLQuery); 
                         break;
                     default: 
                         throw new ArgumentOutOfRangeException(nameof(graphqlQueryType), $"GraphQL Query Type [{graphqlQueryType}] cannot be initialized.");
@@ -327,19 +305,8 @@ namespace FlurlGraphQL
             }).ConfigureAwait(false);
         }
 
-        protected string GetPersistedQueryPayloadFieldName()
-        {
-            return ContextBagInternal.TryGetValue(ContextItemKeys.PersistedQueryPayloadFieldName, out var fieldName)
-                ? fieldName.ToString()
-                : FlurlGraphQLConfig.DefaultConfig.PersistedQueryPayloadFieldName ?? FlurlGraphQLConfig.DefaultPersistedQueryFieldName;
-        }
-
         protected string SerializeToJsonWithGraphQLSerializer(object obj)
         {
-            //TODO: Implement legacy compatible support to Override serialization via Serializer from the ContextBag...
-            //var jsonSerializerSettings = ContextBagInternal.TryGetValue(ContextItemKeys.NewtonsoftJsonSerializerSettings, out var serializerSettings) ?? false
-            //    ? serializerSettings as JsonSerializerSettings
-            //    : null;
             var json = GraphQLJsonSerializer.SerializeToJson(obj);
             return json;
         }

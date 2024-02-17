@@ -16,22 +16,19 @@ namespace FlurlGraphQL
             throw new NotImplementedException();
         }
 
-        public FlurlGraphQLNewtonsoftJsonResponseProcessor(object data, List<GraphQLError> errors, IReadOnlyDictionary<string, object> contextBag, IFlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
+        public FlurlGraphQLNewtonsoftJsonResponseProcessor(object data, List<GraphQLError> errors, IFlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
         {
             this.Data = data;
             this.Errors = errors?.AsReadOnly();
-            //We MUST to pass along the ContextBag (internal) which may contain configuration details for processing the payload results...
-            this.ContextBag = contextBag;
-            this.JsonSerializer = newtonsoftJsonSerializer.AssertArgIsNotNull(nameof(newtonsoftJsonSerializer));
+            this.JsonSerializer = (newtonsoftJsonSerializer as FlurlGraphQLNewtonsoftJsonSerializer).AssertArgIsNotNull(nameof(newtonsoftJsonSerializer));
         }
 
         #region Non-interface Properties
-        public IFlurlGraphQLJsonSerializer JsonSerializer { get; }
+        public FlurlGraphQLNewtonsoftJsonSerializer JsonSerializer { get; }
         #endregion
 
         public object Data { get; }
         public IReadOnlyList<GraphQLError> Errors { get; }
-        public IReadOnlyDictionary<string, object> ContextBag { get; set; }
 
         public IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) 
             where TResult : class
@@ -45,11 +42,7 @@ namespace FlurlGraphQL
                 ? queryResultJson.FirstField()
                 : queryResultJson.Field(queryOperationName);
 
-            var jsonSerializerSettings = ContextBag?.TryGetValue(ContextItemKeys.NewtonsoftJsonSerializerSettings, out var serializerSettings) ?? false
-                ? serializerSettings as JsonSerializerSettings
-                : null;
-
-            var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(jsonSerializerSettings);
+            var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(JsonSerializer.JsonSerializerSettings);
 
             //Ensure that the Results we return are initialized 
             if (typedResults is GraphQLQueryResults<TResult> graphqlResults)
