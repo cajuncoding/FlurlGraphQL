@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace FlurlGraphQL.ReflectionExtensions
 {
-    public static class ReflectionExtensions
+    internal static class ReflectionExtensions
     {
         /// <summary>
         /// BBernard

@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL
 {
-    public static partial class FlurlGraphQLResponseExtensionsForNewtonsoftJson
+    public static class FlurlGraphQLResponseExtensionsForNewtonsoftJson
     {
         /// <summary>
         /// Processes/parses the results of the GraphQL query execution into a raw Json Result with all raw Json response Data available for processing as a JObject (using Newtonsoft.Json).

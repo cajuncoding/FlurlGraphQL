@@ -2,7 +2,7 @@
 
 namespace FlurlGraphQL
 {
-    public interface IFlurlGraphQLResponseProcessor
+    internal interface IFlurlGraphQLResponseProcessor
     {
         object Data { get; }
         IReadOnlyList<GraphQLError> Errors { get; }

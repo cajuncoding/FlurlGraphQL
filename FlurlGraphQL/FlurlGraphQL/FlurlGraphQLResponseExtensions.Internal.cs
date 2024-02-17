@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FlurlGraphQL.Flurl;
 
 namespace FlurlGraphQL
 {
@@ -40,43 +39,6 @@ namespace FlurlGraphQL
 
                 return payloadHandlerFunc.Invoke(responseProcessor, graphqlResponse);
             }
-        }
-
-        internal static (bool HasNextPage, string EndCursor) AssertCursorPageIsValidForEnumeration(IGraphQLCursorPageInfo pageInfo, IFlurlGraphQLResponseProcessor graphqlResponseProcessor, FlurlGraphQLResponse flurlGraphQLResponse, string priorEndCursor)
-        {
-            if (pageInfo == null)
-                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
-                    "Unable to enumerate all pages because the pageInfo node is missing. Check that the query is correct and that it correctly returns pageInfo.hasNextPage & pageInfo.endCursor values for Cursor based paging.");
-
-            bool? hasNextPageFlag = pageInfo.HasNextPage;
-            string endCursor = pageInfo.EndCursor;
-
-            if (hasNextPageFlag == null || endCursor == null)
-                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
-                    "Unable to enumerate all pages because the pageInfo.hasNextPage and/or the pageInfo.endCursor values are not available in the GraphQL query response.");
-            else if (endCursor == priorEndCursor)
-                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
-                    "Unable to enumerate all pages because the pageInfo.endCursor is returning the same value. Check that the query is correct and that it correctly implements the (after:$after) variable.");
-
-            return (hasNextPageFlag.Value, endCursor);
-        }
-
-        internal static bool AssertOffsetPageIsValidForEnumeration(IGraphQLOffsetPageInfo pageInfo, IFlurlGraphQLResponseProcessor graphqlResponseProcessor, FlurlGraphQLResponse flurlGraphQLResponse, int skipVariable)
-        {
-            if (skipVariable <= 0)
-                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
-                    "Unable to enumerate all pages because the skip variable is missing. Check that the query is correct and that it correctly implements the (skip: $skip) variable for Offset based paging.");
-
-            if (pageInfo == null)
-                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
-                    "Unable to enumerate all pages because the pageInfo node is missing. Check that the query is correct and that it correctly returns pageInfo.hasNextPage value for Offset based paging.");
-
-            bool? hasNextPageFlag = pageInfo?.HasNextPage;
-            if (hasNextPageFlag == null)
-                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
-                    "Unable to enumerate all pages because the pageInfo.hasNextPage value is not available in the GraphQL query response.");
-
-            return hasNextPageFlag.Value;
         }
 
         internal static FlurlGraphQLException NewGraphQLException(IFlurlGraphQLResponseProcessor graphqlResponseProcessor, FlurlGraphQLResponse flurlGraphQLResponse, string message)
@@ -167,6 +129,51 @@ namespace FlurlGraphQL
 
             //Update our tracking endCursor to the new one we received for the next iteration...
             return (pageResult, iterationResponseTask);
+        }
+
+        internal static (bool HasNextPage, string EndCursor) AssertCursorPageIsValidForEnumeration(
+            IGraphQLCursorPageInfo pageInfo, 
+            IFlurlGraphQLResponseProcessor graphqlResponseProcessor, 
+            FlurlGraphQLResponse flurlGraphQLResponse, 
+            string priorEndCursor
+        ) {
+            if (pageInfo == null)
+                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the pageInfo node is missing. Check that the query is correct and that it correctly returns pageInfo.hasNextPage & pageInfo.endCursor values for Cursor based paging.");
+
+            bool? hasNextPageFlag = pageInfo.HasNextPage;
+            string endCursor = pageInfo.EndCursor;
+
+            if (hasNextPageFlag == null || endCursor == null)
+                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the pageInfo.hasNextPage and/or the pageInfo.endCursor values are not available in the GraphQL query response.");
+            else if (endCursor == priorEndCursor)
+                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the pageInfo.endCursor is returning the same value. Check that the query is correct and that it correctly implements the (after:$after) variable.");
+
+            return (hasNextPageFlag.Value, endCursor);
+        }
+
+        internal static bool AssertOffsetPageIsValidForEnumeration(
+            IGraphQLOffsetPageInfo pageInfo, 
+            IFlurlGraphQLResponseProcessor graphqlResponseProcessor, 
+            FlurlGraphQLResponse flurlGraphQLResponse, 
+            int skipVariable
+        ) {
+            if (skipVariable <= 0)
+                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the skip variable is missing. Check that the query is correct and that it correctly implements the (skip: $skip) variable for Offset based paging.");
+
+            if (pageInfo == null)
+                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the pageInfo node is missing. Check that the query is correct and that it correctly returns pageInfo.hasNextPage value for Offset based paging.");
+
+            bool? hasNextPageFlag = pageInfo?.HasNextPage;
+            if (hasNextPageFlag == null)
+                throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
+                    "Unable to enumerate all pages because the pageInfo.hasNextPage value is not available in the GraphQL query response.");
+
+            return hasNextPageFlag.Value;
         }
     }
 }

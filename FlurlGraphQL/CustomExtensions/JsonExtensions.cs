@@ -2,7 +2,7 @@
 
 namespace FlurlGraphQL
 {
-    internal static class JsonExtensions
+    public static class JsonExtensions
     {
         public static bool IsDuckTypedJson(this string jsonText)
         {

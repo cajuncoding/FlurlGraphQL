@@ -83,25 +83,5 @@ namespace FlurlGraphQL
                     return null;
             }
         }
-
-        ///// <summary>
-        ///// Creates a new reader for the specified jObject by copying the settings
-        ///// from an existing reader.
-        ///// Inspired by StackOverflow: https://stackoverflow.com/a/21632292/7293142
-        ///// </summary>
-        ///// <param name="newJsonReader"></param>
-        ///// <param name="originalJsonReader">The reader whose settings should be copied.</param>
-        ///// <returns>The new disposable reader.</returns>
-        //public static JsonReader CopyReaderSettings(this JsonReader newJsonReader, JsonReader originalJsonReader)
-        //{
-        //    newJsonReader.Culture = originalJsonReader.Culture;
-        //    newJsonReader.DateFormatString = originalJsonReader.DateFormatString;
-        //    newJsonReader.DateParseHandling = originalJsonReader.DateParseHandling;
-        //    newJsonReader.DateTimeZoneHandling = originalJsonReader.DateTimeZoneHandling;
-        //    newJsonReader.FloatParseHandling = originalJsonReader.FloatParseHandling;
-        //    newJsonReader.MaxDepth = originalJsonReader.MaxDepth;
-        //    newJsonReader.SupportMultipleContent = originalJsonReader.SupportMultipleContent;
-        //    return newJsonReader;
-        //}
     }
 }

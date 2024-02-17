@@ -3,9 +3,9 @@ using System.Reflection;
 using FlurlGraphQL.NewtonsoftConstants;
 using FlurlGraphQL.ReflectionExtensions;
 
-namespace FlurlGraphQL.Flurl
+namespace FlurlGraphQL
 {
-    public static class FlurlGraphQLJsonResponseProcessorFactory
+    internal static class FlurlGraphQLJsonResponseProcessorFactory
     {
 
         private delegate IFlurlGraphQLResponseProcessor FlurlGraphQLJsonResponseProcessorFactoryDelegate(IFlurlGraphQLResponse graphqlResponse);
@@ -40,15 +40,15 @@ namespace FlurlGraphQL.Flurl
         static FlurlGraphQLJsonResponseProcessorFactoryDelegate InitNewtonsoftJsonResponseProcessorFactoryDelegate()
         {
             var newtonsoftResponseProcessorType = AppDomain.CurrentDomain.FindType(
-                GraphQLConstants.NewtonsoftJsonResponseProcessorClassName,
-                assemblyName: GraphQLConstants.NewtonsoftAssemblyName,
-                namespaceName: GraphQLConstants.NewtonsoftNamespace
+                FlurlGraphQLReflectionConstants.NewtonsoftJsonResponseProcessorClassName,
+                assemblyName: FlurlGraphQLReflectionConstants.NewtonsoftAssemblyName,
+                namespaceName: FlurlGraphQLReflectionConstants.NewtonsoftNamespace
             );
 
             if (newtonsoftResponseProcessorType == null)
                 return null;
 
-            var factoryMethodInfo = newtonsoftResponseProcessorType.GetMethod(GraphQLConstants.NewtonsoftJsonResponseProcessorFactoryMethodName, BindingFlags.Static | BindingFlags.Public);
+            var factoryMethodInfo = newtonsoftResponseProcessorType.GetMethod(FlurlGraphQLReflectionConstants.NewtonsoftJsonResponseProcessorFactoryMethodName, BindingFlags.Static | BindingFlags.Public);
 
             return factoryMethodInfo != null
                 ? Delegate.CreateDelegate(typeof(FlurlGraphQLJsonResponseProcessorFactoryDelegate), null, factoryMethodInfo) as FlurlGraphQLJsonResponseProcessorFactoryDelegate

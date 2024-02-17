@@ -43,7 +43,7 @@ namespace FlurlGraphQL
             //Ensure that all json parsing uses a Serializer with the GraphQL Contract Resolver...
             //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
             var jsonSerializer = JsonSerializer.CreateDefault(jsonSerializerSettings);
-            jsonSerializer.Converters.Add(new GraphQLPageResultsToICollectionConverter());
+            jsonSerializer.Converters.Add(new NewtonsoftJsonGraphQLPageResultsToICollectionConverter());
 
             return ParseJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(json, jsonSerializer);
         }

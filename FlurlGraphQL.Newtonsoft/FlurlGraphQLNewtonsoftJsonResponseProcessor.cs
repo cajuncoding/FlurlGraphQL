@@ -7,7 +7,8 @@ using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL
 {
-    public class FlurlGraphQLNewtonsoftJsonResponseProcessor : IFlurlGraphQLResponseProcessor
+    //NOTE: This is DYNAMICALLY Invoked and used at Runtime by the FlurlGraphQL.FlurlGraphQLJsonResponseProcessorFactory() class in the main FlurlGraphQL project library.
+    internal class FlurlGraphQLNewtonsoftJsonResponseProcessor : IFlurlGraphQLResponseProcessor
     {
         public static IFlurlGraphQLResponseProcessor FromFlurlGraphQLResponse(IFlurlGraphQLResponse graphqlResponse)
         {

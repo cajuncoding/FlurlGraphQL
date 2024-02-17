@@ -10,7 +10,7 @@ namespace FlurlGraphQL
     {
         private string _errorMessage = null;
 
-        public FlurlGraphQLException(
+        internal FlurlGraphQLException(
             string message, 
             string graphqlQuery,
             IFlurlGraphQLResponseProcessor graphqlResponseProcessor, 

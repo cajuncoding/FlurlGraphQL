@@ -39,12 +39,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-			<_Parameter1>FlurlGraphQL.Newtonsoft</_Parameter1>
-		</AssemblyAttribute>
+		<!-- NOTE: See Directory.Builds.targets for dynamic MSBuild Xml script as provied by the great Blog article at: https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm-->
+		<!-- Dynamically Adds: [assembly: InternalsVisibleTo("FlurlGraphQL.Newtonsoft")] -->
+		<InternalsVisibleTo Include="FlurlGraphQL.Newtonsoft" />
+		
+		<!-- [assembly: InternalsVisibleTo("FlurlGraphQL.Tests")] -->
+		<InternalsVisibleTo Include="FlurlGraphQL.Tests" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Include="..\Directory.Build.targets" Link="Directory.Build.targets" />
 	  <None Include="..\README.md" Link="README.md" />
 	</ItemGroup>
 
