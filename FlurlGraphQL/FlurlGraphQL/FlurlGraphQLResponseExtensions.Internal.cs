@@ -9,6 +9,39 @@ namespace FlurlGraphQL
 {
     public static partial class FlurlGraphQLResponseExtensions
     {
+        //NOTE: THIS Extension is Cloned/Duplicated between teh base FlurlGraphQL and FlurlGraphQL.Newtonsoft libraries as a minimal footprint 
+        //      so that the internal extension method is not visible publicly... keeping this as Internal as Possible...
+        internal static async Task<TGraphQLResult> ProcessResponsePayloadInternalAsync<TGraphQLResult>(
+            this Task<IFlurlGraphQLResponse> responseTask,
+            Func<IFlurlGraphQLResponseProcessor, FlurlGraphQLResponse, TGraphQLResult> payloadHandlerFunc
+        )
+        {
+            var graphqlResponse = (FlurlGraphQLResponse)await responseTask.ConfigureAwait(false);
+            var results = await graphqlResponse.ProcessResponsePayloadInternalAsync(payloadHandlerFunc).ConfigureAwait(false);
+            return results;
+        }
+
+        internal static async Task<TGraphQLResult> ProcessResponsePayloadInternalAsync<TGraphQLResult>(
+            this IFlurlGraphQLResponse response,
+            Func<IFlurlGraphQLResponseProcessor, FlurlGraphQLResponse, TGraphQLResult> payloadHandlerFunc
+        )
+        {
+            using (var graphqlResponse = response as FlurlGraphQLResponse)
+            {
+                if (graphqlResponse == null) return default;
+
+                var responseProcessor = FlurlGraphQLJsonResponseProcessorFactory.FromGraphQLFlurlResponse(graphqlResponse);
+
+                if (responseProcessor.Errors?.Any() ?? false)
+                {
+                    var responseContent = await graphqlResponse.GetStringAsync().ConfigureAwait(false);
+                    throw new FlurlGraphQLException(responseProcessor.Errors, graphqlResponse.GraphQLQuery, responseContent, (HttpStatusCode)graphqlResponse.StatusCode);
+                }
+
+                return payloadHandlerFunc.Invoke(responseProcessor, graphqlResponse);
+            }
+        }
+
         internal static (bool HasNextPage, string EndCursor) AssertCursorPageIsValidForEnumeration(IGraphQLCursorPageInfo pageInfo, IFlurlGraphQLResponseProcessor graphqlResponseProcessor, FlurlGraphQLResponse flurlGraphQLResponse, string priorEndCursor)
         {
             if (pageInfo == null)
@@ -134,37 +167,6 @@ namespace FlurlGraphQL
 
             //Update our tracking endCursor to the new one we received for the next iteration...
             return (pageResult, iterationResponseTask);
-        }
-
-        internal static async Task<TGraphQLResult> ProcessResponsePayloadInternalAsync<TGraphQLResult>(
-            this Task<IFlurlGraphQLResponse> responseTask,
-            Func<IFlurlGraphQLResponseProcessor, FlurlGraphQLResponse, TGraphQLResult> payloadHandlerFunc
-        )
-        {
-            var graphqlResponse = await responseTask.ConfigureAwait(false);
-            var results = await graphqlResponse.ProcessResponsePayloadInternalAsync(payloadHandlerFunc).ConfigureAwait(false);
-            return results;
-        }
-
-        internal static async Task<TGraphQLResult> ProcessResponsePayloadInternalAsync<TGraphQLResult>(
-            this IFlurlGraphQLResponse response,
-            Func<IFlurlGraphQLResponseProcessor, FlurlGraphQLResponse, TGraphQLResult> payloadHandlerFunc
-        )
-        {
-            using (var graphqlResponse = response as FlurlGraphQLResponse)
-            {
-                if (graphqlResponse == null) return default;
-
-                var responseProcessor = FlurlGraphQLJsonResponseProcessorFactory.FromGraphQLFlurlResponse(graphqlResponse);
-
-                if (responseProcessor.Errors?.Any() ?? false)
-                {
-                    var responseContent = await graphqlResponse.GetStringAsync().ConfigureAwait(false);
-                    throw new FlurlGraphQLException(responseProcessor.Errors, graphqlResponse.GraphQLQuery, responseContent, (HttpStatusCode)graphqlResponse.StatusCode);
-                }
-
-                return payloadHandlerFunc.Invoke(responseProcessor, graphqlResponse);
-            }
         }
     }
 }

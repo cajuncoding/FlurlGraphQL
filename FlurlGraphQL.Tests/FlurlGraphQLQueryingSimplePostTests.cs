@@ -131,7 +131,7 @@ namespace FlurlGraphQL.Tests
                 ")
                 .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
                 .PostGraphQLQueryAsync()
-                .ReceiveGraphQLRawJsonResponseJsonNode()
+                .ReceiveGraphQLRawSystemTextJsonResponse()
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(json);
@@ -161,7 +161,7 @@ namespace FlurlGraphQL.Tests
                 ")
                 .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
                 .PostGraphQLQueryAsync()
-                .ReceiveGraphQLRawJsonResponseJObject()
+                .ReceiveGraphQLRawNewtonsoftJsonResponse()
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(json);

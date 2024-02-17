@@ -32,26 +32,6 @@ namespace FlurlGraphQL
 
         #endregion
 
-        #region FlurlGraphQLResponse Extensions for Newtonsoft Json...
-
-        /// <summary>
-        /// Processes/parses the results of the GraphQL query execution into a raw JObject (Newtonsoft.Json) Result with all raw Json response Data available for processing.
-        /// </summary>
-        /// <param name="responseTask"></param>
-        /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
-        public static async Task<JObject> ReceiveGraphQLRawJsonResponseJObject(this Task<IFlurlGraphQLResponse> responseTask)
-            => (await responseTask.ReceiveGraphQLRawJsonResponse().ConfigureAwait(false)) as JObject;
-
-        /// <summary>
-        /// Processes/parses the results of the GraphQL query execution into a raw JObject (Newtonsoft.Json) Result with all raw Json response Data available for processing.
-        /// </summary>
-        /// <param name="response"></param>
-        /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
-        public static Task<JObject> ReceiveGraphQLRawJsonResponse(this IFlurlGraphQLResponse response)
-            => Task.FromResult(response).ReceiveGraphQLRawJsonResponseJObject();
-
-        #endregion
-
         #region Json Parsing Extensions
 
         internal static IGraphQLQueryResults<TEntityResult> ParseJsonToGraphQLResultsInternal<TEntityResult>(this JToken json, JsonSerializerSettings jsonSerializerSettings = null)

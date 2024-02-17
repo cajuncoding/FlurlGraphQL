@@ -1,13 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Flurl.Util;
+using FlurlGraphQL.Flurl;
 using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
 {
+    //This class is sub-typed for specific implementations, to provide specialized behavior and logic:
+    // - FlurlGraphQLSystemTextJsonResponse
+    // - FlurlGraphQLNewtonsoftJsonResponse
     public class FlurlGraphQLResponse : IFlurlGraphQLResponse
     {
         public FlurlGraphQLResponse(IFlurlResponse response, FlurlGraphQLRequest originalGraphQLRequest)
