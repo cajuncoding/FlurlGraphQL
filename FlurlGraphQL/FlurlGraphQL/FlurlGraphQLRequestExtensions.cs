@@ -224,33 +224,47 @@ namespace FlurlGraphQL
         #region Configuration Extensions - System.Text.Json Serializer Settings (ONLY Available after an IFlurlRequest is initialized)...
 
         /// <summary>
-        /// Initialize the query body for a GraphQL query request.
+        /// Initialize a custom Json Serializer using System.Text.Json, but only for this GraphQL request; isolated from the base FlurlRequest and any other GraphQL Requests.
         /// </summary>
         /// <param name="request"></param>
-        /// <param name="jsonSerializerOptions"></param>
+        /// <param name="systemTextJsonOptions"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
-        public static IFlurlGraphQLRequest SetGraphQLSystemTextJsonSerializerSettings(this IFlurlRequest request, JsonSerializerOptions jsonSerializerOptions)
+        public static IFlurlGraphQLRequest UseGraphQLSystemTextJsonSerializerOptions(this IFlurlRequest request, JsonSerializerOptions systemTextJsonOptions)
+            => request.ToGraphQLRequest().UseGraphQLSystemTextJsonSerializerOptions(systemTextJsonOptions);
+
+        /// <summary>
+        /// Initialize a custom Json Serializer using System.Text.Json, but only for this GraphQL request; isolated from the base FlurlRequest and any other GraphQL Requests.
+        /// </summary>
+        /// <param name="graphqlRequest"></param>
+        /// <param name="systemTextJsonOptions"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest UseGraphQLSystemTextJsonSerializerOptions(this IFlurlGraphQLRequest graphqlRequest, JsonSerializerOptions systemTextJsonOptions)
         {
-            jsonSerializerOptions.AssertArgIsNotNull(nameof(jsonSerializerOptions));
-            
-            var graphqlRequest = (FlurlGraphQLRequest)request.ToGraphQLRequest();
-            graphqlRequest.SetContextItem(ContextItemKeys.SystemTextJsonSerializerSettings, jsonSerializerOptions);
-            
+            if (graphqlRequest is FlurlGraphQLRequest flurlGraphQLRequest)
+                flurlGraphQLRequest.GraphQLJsonSerializer = new FlurlGraphQLSystemTextJsonSerializer(systemTextJsonOptions.AssertArgIsNotNull(nameof(systemTextJsonOptions)));
+
             return graphqlRequest;
         }
 
         /// <summary>
-        /// Initialize the query body for a GraphQL query request.
+        /// Set the Persisted Query Payload Field name for only this GraphQL request.
         /// </summary>
         /// <param name="request"></param>
         /// <param name="fieldName"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
         public static IFlurlGraphQLRequest SetPersistedQueryPayloadFieldName(this IFlurlRequest request, string fieldName)
+            => request.ToGraphQLRequest().SetPersistedQueryPayloadFieldName(fieldName);
+
+        /// <summary>
+        /// Set the Persisted Query Payload Field name for only this GraphQL request.
+        /// </summary>
+        /// <param name="graphqlRequest"></param>
+        /// <param name="fieldName"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest SetPersistedQueryPayloadFieldName(this IFlurlGraphQLRequest graphqlRequest, string fieldName)
         {
-            fieldName.AssertArgIsNotNullOrBlank(nameof(fieldName));
-            
-            var graphqlRequest = (FlurlGraphQLRequest)request.ToGraphQLRequest();
-            graphqlRequest.SetContextItem(ContextItemKeys.PersistedQueryPayloadFieldName, fieldName);
+            if(graphqlRequest is FlurlGraphQLRequest flurlGraphQLRequest)
+                flurlGraphQLRequest.PersistedQueryPayloadFieldName = fieldName.AssertArgIsNotNullOrBlank(nameof(fieldName));
             
             return graphqlRequest;
         }

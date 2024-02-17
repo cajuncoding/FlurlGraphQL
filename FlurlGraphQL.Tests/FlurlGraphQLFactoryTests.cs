@@ -15,7 +15,7 @@ namespace FlurlGraphQL.Tests
         public void TestFlurlGraphQLJsonSerializerFactoryPerformance()
         {
 
-            int maxRuns = 1000;
+            int maxRuns = 10000;
             var timer = new Stopwatch();
             List<long> timeEntries = new List<long>();
 

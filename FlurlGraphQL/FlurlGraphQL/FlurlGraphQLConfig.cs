@@ -14,13 +14,17 @@ namespace FlurlGraphQL
 
         public string PersistedQueryPayloadFieldName { get; set; }
 
-        public static IFlurlGraphQLConfig DefaultConfig { get; private set; }
+        public static IFlurlGraphQLConfig DefaultConfig { get; private set; } = new FlurlGraphQLConfig();
 
         private FlurlGraphQLConfig()
         {
             PersistedQueryPayloadFieldName = DefaultPersistedQueryFieldName;
-            ResetDefaults();
         }
+
+        private FlurlGraphQLConfig Clone() => new FlurlGraphQLConfig()
+        {
+            PersistedQueryPayloadFieldName = this.PersistedQueryPayloadFieldName
+        };
 
         /// <summary>
         /// Configure the Default values for Sql Bulk Helpers and Materialized Data Helpers.
@@ -28,8 +32,13 @@ namespace FlurlGraphQL
         /// <param name="configAction"></param>
         public static void ConfigureDefaults(Action<FlurlGraphQLConfig> configAction)
         {
-            configAction.AssertArgIsNotNull(nameof(configAction));
-            configAction.Invoke((FlurlGraphQLConfig)DefaultConfig);
+            var newConfig = ((FlurlGraphQLConfig)DefaultConfig).Clone();
+            
+            configAction
+                .AssertArgIsNotNull(nameof(configAction))
+                .Invoke(newConfig);
+            
+            DefaultConfig = newConfig;
         }
 
         /// <summary>

@@ -58,7 +58,7 @@ namespace FlurlGraphQL.Tests
                     .SetPersistedQueryPayloadFieldName(RELAY_PERSISTED_QUERY_KEY)
                     .SetGraphQLVariables(new { first = 2, friendsCount = 1 });
 
-                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.ContextBag[ContextItemKeys.PersistedQueryPayloadFieldName]);
+                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.PersistedQueryPayloadFieldName);
 
                 var results = await request.PostGraphQLQueryAsync()
                     .ReceiveGraphQLQueryResults<StarWarsCharacter>()
@@ -78,7 +78,7 @@ namespace FlurlGraphQL.Tests
         public async Task TestPersistedPostFailsForInvalidGloballyConfiguredFieldNameAsync()
         {
             FlurlGraphQLException graphqlException = null;
-            //Use Relay Spec default field name (invalid for HotChocolate...
+            //Use Relay Spec default field name (invalid for HotChocolate)...
             //More info see: https://chillicream.com/docs/hotchocolate/v13/performance/persisted-queries#client-expectations
             const string RELAY_PERSISTED_QUERY_KEY = "doc_id";
 
@@ -93,7 +93,7 @@ namespace FlurlGraphQL.Tests
                     .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
                     .SetGraphQLVariables(new { first = 2, friendsCount = 1 });
 
-                Assert.IsFalse(request.ContextBag.ContainsKey(ContextItemKeys.PersistedQueryPayloadFieldName));
+                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.PersistedQueryPayloadFieldName);
 
                 var results = await request.PostGraphQLQueryAsync()
                     .ReceiveGraphQLQueryResults<StarWarsCharacter>()

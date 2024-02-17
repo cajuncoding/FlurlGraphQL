@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FlurlGraphQL.NewtonsoftConstants;
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -78,5 +79,16 @@ namespace FlurlGraphQL.ReflectionExtensions
                     && (namespaceName == null || t.Namespace.Equals(namespaceName, StringComparison.OrdinalIgnoreCase))
                     && t.Name.Equals(className, StringComparison.OrdinalIgnoreCase)
                 );
+
+        private const BindingFlags DefaultInstanceOrStaticOrPublicOrPrivate = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
+        public static TDelegate CreateDelegateForMethod<TDelegate>(this Type type, string methodName, BindingFlags bindingFlags = DefaultInstanceOrStaticOrPublicOrPrivate, object objectToBindTo = null)
+            where TDelegate : Delegate
+        {
+            var methodInfo = type?.GetMethod(methodName, bindingFlags);
+            return methodInfo != null
+                ? Delegate.CreateDelegate(typeof(TDelegate), objectToBindTo, methodInfo) as TDelegate
+                : null;
+        }
     }
 }

@@ -1,11 +1,9 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
-using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 

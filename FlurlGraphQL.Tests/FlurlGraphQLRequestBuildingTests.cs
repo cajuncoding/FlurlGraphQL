@@ -67,20 +67,21 @@ namespace FlurlGraphQL.Tests
                       }
                     }
                 ")
-                //.SetGraphQLVariable("first", 2)
-                .SetGraphQLVariables(new { first = 2 })
-                .SetGraphQLNewtonsoftJsonSerializerSettings(new JsonSerializerSettings()
+                .UseGraphQLNewtonsoftJsonSerializerSettings(new JsonSerializerSettings()
                 {
                     NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
                     Formatting = Formatting.Indented
                 })
+                //.SetGraphQLVariable("first", 2)
+                .SetGraphQLVariables(new { first = 2 })
                 .PostGraphQLQueryAsync()
                 .ConfigureAwait(false);
 
             Assert.IsTrue(response.GraphQLRequest is FlurlGraphQLRequest);
             var request = response.GraphQLRequest as FlurlGraphQLRequest;
-            Assert.IsTrue(request.ContextBag.ContainsKey(ContextItemKeys.NewtonsoftJsonSerializerSettings));
-            var jsonSerializerSettings = (JsonSerializerSettings)request.ContextBag[ContextItemKeys.NewtonsoftJsonSerializerSettings];
+            Assert.IsTrue(request.GraphQLJsonSerializer is FlurlGraphQLNewtonsoftJsonSerializer);
+            
+            var jsonSerializerSettings = ((FlurlGraphQLNewtonsoftJsonSerializer)request.GraphQLJsonSerializer).JsonSerializerSettings;
             Assert.AreEqual(Newtonsoft.Json.NullValueHandling.Ignore, jsonSerializerSettings.NullValueHandling);
             Assert.AreEqual(Formatting.Indented, jsonSerializerSettings.Formatting);
 

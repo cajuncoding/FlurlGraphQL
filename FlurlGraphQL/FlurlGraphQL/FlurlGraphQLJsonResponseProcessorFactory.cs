@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using FlurlGraphQL.NewtonsoftConstants;
 using FlurlGraphQL.ReflectionExtensions;
 
@@ -8,10 +7,15 @@ namespace FlurlGraphQL
     internal static class FlurlGraphQLJsonResponseProcessorFactory
     {
 
-        private delegate IFlurlGraphQLResponseProcessor FlurlGraphQLJsonResponseProcessorFactoryDelegate(IFlurlGraphQLResponse graphqlResponse);
+        private delegate IFlurlGraphQLResponseProcessor JsonResponseProcessorFactoryDelegate(IFlurlGraphQLResponse graphqlResponse);
 
-        private static readonly Lazy<FlurlGraphQLJsonResponseProcessorFactoryDelegate> _createNewtonsoftJsonProcessorFromFlurlResponse = new Lazy<FlurlGraphQLJsonResponseProcessorFactoryDelegate>(InitNewtonsoftJsonResponseProcessorFactoryDelegate);
-
+        private static readonly Lazy<JsonResponseProcessorFactoryDelegate> _createNewtonsoftJsonProcessorFromFlurlResponse = new Lazy<JsonResponseProcessorFactoryDelegate>(() =>
+            AppDomain.CurrentDomain.FindType(
+                ReflectionConstants.NewtonsoftJsonResponseProcessorClassName,
+                assemblyName: ReflectionConstants.NewtonsoftAssemblyName,
+                namespaceName: ReflectionConstants.NewtonsoftNamespace
+            ).CreateDelegateForMethod<JsonResponseProcessorFactoryDelegate>(ReflectionConstants.NewtonsoftJsonResponseProcessorFactoryMethodName)
+        );
 
         public static IFlurlGraphQLResponseProcessor FromGraphQLFlurlResponse(IFlurlGraphQLResponse graphqlResponse)
         {
@@ -32,28 +36,5 @@ namespace FlurlGraphQL
         //      to support the use of Newtonsoft Json.
         private static IFlurlGraphQLResponseProcessor CreateNewtonsoftJsonResponseProcessor(IFlurlGraphQLResponse graphqlResponse)
             => _createNewtonsoftJsonProcessorFromFlurlResponse.Value?.Invoke(graphqlResponse);
-
-        /// <summary>
-        /// Search, find, and compile a Delegate for fast creation of Newtonsoft Json Serializer if the FlurlGraphQL.Newtonsoft library is available to use.
-        /// </summary>
-        /// <returns></returns>
-        static FlurlGraphQLJsonResponseProcessorFactoryDelegate InitNewtonsoftJsonResponseProcessorFactoryDelegate()
-        {
-            var newtonsoftResponseProcessorType = AppDomain.CurrentDomain.FindType(
-                FlurlGraphQLReflectionConstants.NewtonsoftJsonResponseProcessorClassName,
-                assemblyName: FlurlGraphQLReflectionConstants.NewtonsoftAssemblyName,
-                namespaceName: FlurlGraphQLReflectionConstants.NewtonsoftNamespace
-            );
-
-            if (newtonsoftResponseProcessorType == null)
-                return null;
-
-            var factoryMethodInfo = newtonsoftResponseProcessorType.GetMethod(FlurlGraphQLReflectionConstants.NewtonsoftJsonResponseProcessorFactoryMethodName, BindingFlags.Static | BindingFlags.Public);
-
-            return factoryMethodInfo != null
-                ? Delegate.CreateDelegate(typeof(FlurlGraphQLJsonResponseProcessorFactoryDelegate), null, factoryMethodInfo) as FlurlGraphQLJsonResponseProcessorFactoryDelegate
-                : null;
-        }
-
     }
 }
