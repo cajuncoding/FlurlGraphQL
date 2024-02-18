@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
 {
@@ -29,12 +31,16 @@ namespace FlurlGraphQL
             {
                 if (graphqlResponse == null) return default;
 
-                var responseProcessor = FlurlGraphQLJsonResponseProcessorFactory.FromGraphQLFlurlResponse(graphqlResponse);
+                var responseProcessor = graphqlResponse.GraphQLJsonSerializer.CreateGraphQLResponseProcessor(graphqlResponse);
+                    
+                if(responseProcessor == null)
+                    throw new InvalidOperationException($"The Json Serializer of type [{graphqlResponse.GraphQLJsonSerializer.GetType().Name}] returned a null [{nameof(IFlurlGraphQLResponseProcessor)}] instance.");
 
-                if (responseProcessor.Errors?.Any() ?? false)
+                var graphqlErrors = responseProcessor.GetGraphQLErrors();
+                if (graphqlErrors?.Any() ?? false)
                 {
                     var responseContent = await graphqlResponse.GetStringAsync().ConfigureAwait(false);
-                    throw new FlurlGraphQLException(responseProcessor.Errors, graphqlResponse.GraphQLQuery, responseContent, (HttpStatusCode)graphqlResponse.StatusCode);
+                    throw new FlurlGraphQLException(graphqlErrors, graphqlResponse.GraphQLQuery, responseContent, (HttpStatusCode)graphqlResponse.StatusCode);
                 }
 
                 return payloadHandlerFunc.Invoke(responseProcessor, graphqlResponse);

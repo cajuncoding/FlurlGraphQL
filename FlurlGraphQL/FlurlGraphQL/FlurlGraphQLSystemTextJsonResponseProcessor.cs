@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Nodes;
 using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
 {
-    internal class FlurlGraphQLSystemTextJsonResponseProcessor : IFlurlGraphQLResponseProcessor
+    public class FlurlGraphQLSystemTextJsonResponseProcessor : IFlurlGraphQLResponseProcessor
     {
         public static IFlurlGraphQLResponseProcessor FromFlurlGraphQLResponse(IFlurlGraphQLResponse graphqlResponse)
         {
@@ -12,9 +13,9 @@ namespace FlurlGraphQL
             throw new NotImplementedException();
         }
 
-        public FlurlGraphQLSystemTextJsonResponseProcessor(object data, List<GraphQLError> errors, IFlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
+        public FlurlGraphQLSystemTextJsonResponseProcessor(JsonNode rawDataJsonNode, List<GraphQLError> errors, IFlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
         {
-            this.Data = data;
+            this.RawDataJsonNode = rawDataJsonNode;
             this.Errors = errors?.AsReadOnly();
             this.JsonSerializer = systemTextJsonSerializer.AssertArgIsNotNull(nameof(systemTextJsonSerializer));
         }
@@ -23,22 +24,32 @@ namespace FlurlGraphQL
         public IFlurlGraphQLJsonSerializer JsonSerializer { get; }
         #endregion
 
-        public object Data { get; }
-        public IReadOnlyList<GraphQLError> Errors { get; }
+        protected JsonNode RawDataJsonNode { get; }
+        protected IReadOnlyList<GraphQLError> Errors { get; }
 
-        public IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class
+        public TJson GetRawJsonData<TJson>()
+            => this.RawDataJsonNode is TJson rawDataJson
+                ? rawDataJson
+                : throw new ArgumentOutOfRangeException(
+                    nameof(TJson), 
+                    $"Invalid type [{typeof(TJson).Name}] was specified; expected type <{nameof(JsonNode)}> as the supported type for Raw Json using System.Text.Json Serialization."
+                );
+
+        public virtual IReadOnlyList<GraphQLError> GetGraphQLErrors() => this.Errors;
+
+        public virtual IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class
         {
             //TODO: WIP...
             throw new NotImplementedException();
         }
 
-        public IGraphQLBatchQueryResults LoadBatchQueryResults()
+        public virtual IGraphQLBatchQueryResults LoadBatchQueryResults()
         {
             //TODO: WIP...
             throw new NotImplementedException();
         }
 
-        public string GetErrorContent()
+        public virtual string GetErrorContent()
         {
             //TODO: WIP...
             throw new NotImplementedException();

@@ -2,10 +2,11 @@
 
 namespace FlurlGraphQL
 {
-    internal interface IFlurlGraphQLResponseProcessor
+    public interface IFlurlGraphQLResponseProcessor
     {
-        object Data { get; }
-        IReadOnlyList<GraphQLError> Errors { get; }
+        TJson GetRawJsonData<TJson>();
+
+        IReadOnlyList<GraphQLError> GetGraphQLErrors();
 
         IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class;
 

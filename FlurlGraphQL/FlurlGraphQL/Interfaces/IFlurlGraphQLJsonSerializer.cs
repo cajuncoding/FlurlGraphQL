@@ -7,6 +7,7 @@
     {
         string SerializeToJson(object obj);
         TResult DeserializeGraphQLJsonResults<TResult>();
+        IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(IFlurlGraphQLResponse graphqlResponse);
     }
 
 }

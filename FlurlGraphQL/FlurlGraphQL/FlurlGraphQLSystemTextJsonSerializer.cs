@@ -3,7 +3,6 @@ using System.Text.Json;
 using Flurl.Http.Configuration;
 using FlurlGraphQL.ReflectionExtensions;
 
-
 namespace FlurlGraphQL
 {
     public class FlurlGraphQLSystemTextJsonSerializer : IFlurlGraphQLSystemTextJsonSerializer
@@ -37,5 +36,15 @@ namespace FlurlGraphQL
 
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Create the correct IFlurlGraphQLResponseProcessor based on this Json Serializer and the provided GraphQL Response.
+        /// NOTE: This helps avoid/eliminate any additional Reflection hits to dynamically invoke Newtonsoft Json Serializers.
+        /// </summary>
+        /// <param name="graphqlResponse"></param>
+        /// <returns></returns>
+        public virtual IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(IFlurlGraphQLResponse graphqlResponse)
+            => FlurlGraphQLSystemTextJsonResponseProcessor.FromFlurlGraphQLResponse(graphqlResponse);
+
     }
 }

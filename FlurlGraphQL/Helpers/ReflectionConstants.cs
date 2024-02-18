@@ -9,7 +9,5 @@
         public const string NewtonsoftNamespace = "FlurlGraphQL";
         public const string NewtonsoftJsonSerializerClassName = "FlurlGraphQLNewtonsoftJsonSerializer";
         public const string NewtonsoftJsonSerializerFactoryMethodName = "FromFlurlSerializer";
-        public const string NewtonsoftJsonResponseProcessorClassName = "FlurlGraphQLNewtonsoftJsonResponseProcessor";
-        public const string NewtonsoftJsonResponseProcessorFactoryMethodName = "FromFlurlGraphQLResponse";
     }
 }

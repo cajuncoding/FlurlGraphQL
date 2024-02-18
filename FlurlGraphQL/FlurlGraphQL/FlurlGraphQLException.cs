@@ -17,7 +17,7 @@ namespace FlurlGraphQL
             HttpStatusCode httpStatusCode = HttpStatusCode.BadRequest, 
             Exception innerException = null
         ) : base(message, innerException)
-            => InitInternal(message, graphqlQuery, graphqlResponseProcessor?.Errors, graphqlResponseProcessor?.GetErrorContent(), httpStatusCode, innerException);
+            => InitInternal(message, graphqlQuery, graphqlResponseProcessor?.GetGraphQLErrors(), graphqlResponseProcessor?.GetErrorContent(), httpStatusCode, innerException);
 
         public FlurlGraphQLException(
             IReadOnlyList<GraphQLError> graphqlErrors, 
