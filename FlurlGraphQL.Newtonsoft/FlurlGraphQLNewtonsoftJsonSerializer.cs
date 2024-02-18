@@ -7,6 +7,7 @@ namespace FlurlGraphQL
 {
     public class FlurlGraphQLNewtonsoftJsonSerializer : IFlurlGraphQLNewtonsoftJsonSerializer
     {
+        //NOTE: This is DYNAMICALLY Invoked and used at Runtime by the FlurlGraphQLJsonSerializerFactory class.
         public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlSerializer)
         {
             // NOTE: Due to the abstractions of the core Flurl library we cannot access the Json Serializer Settings directly
@@ -28,12 +29,21 @@ namespace FlurlGraphQL
             JsonSerializerSettings = jsonSerializerSettings;
         }
 
-        public string SerializeToJson(object obj) => JsonConvert.SerializeObject(obj, JsonSerializerSettings);
+        public virtual string SerializeToJson(object obj) => JsonConvert.SerializeObject(obj, JsonSerializerSettings);
 
-        public TResult DeserializeGraphQLJsonResults<TResult>()
+        public virtual TResult DeserializeGraphQLJsonResults<TResult>()
         {
             //TODO: WIP...
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Create the correct IFlurlGraphQLResponseProcessor based on this Json Serializer and the provided GraphQL Response.
+        /// NOTE: This helps avoid/eliminate any additional Reflection hits to dynamically invoke Newtonsoft Json Serializers.
+        /// </summary>
+        /// <param name="graphqlResponse"></param>
+        /// <returns></returns>
+        public virtual IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(IFlurlGraphQLResponse graphqlResponse)
+            => FlurlGraphQLNewtonsoftJsonResponseProcessor.FromFlurlGraphQLResponse(graphqlResponse);
     }
 }
