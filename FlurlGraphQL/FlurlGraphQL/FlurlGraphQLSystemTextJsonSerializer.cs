@@ -13,18 +13,10 @@ namespace FlurlGraphQL
 
         public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlSerializer)
         {
-            //if (!(flurlSerializer is DefaultJsonSerializer flurlSystemTextJsonSerializer))
-            //    throw new ArgumentException($"The type [{flurlSerializer.GetType().Name}] is invalid and cannot be used to initialize the System.Text.Json GraphQL Serializer; a valid instance of [{nameof(DefaultJsonSerializer)}] is expected.");
-
             // NOTE: Due to the abstractions of the core Flurl library we cannot access the Json Serializer Options directly
             //         and therefore must use dynamic instantiation via Reflection (leveraging brute force to access internal Options/Settings)
             //         depending on if the System.Text.Json Serializer is used or if the Newtonsoft Json Serializer is being used.
             var currentJsonOptions = flurlSerializer.BruteForceGetFieldValue<JsonSerializerOptions>("_options");
-
-            //if (_optionsFieldDelegate == null)
-            //    _optionsFieldDelegate = flurlSystemTextJsonSerializer.GetType().CreateGetFieldDelegate<DefaultJsonSerializer, JsonSerializerOptions>("_options");
-
-            //var currentJsonOptions = _optionsFieldDelegate.Invoke(flurlSystemTextJsonSerializer);
 
             var graphqlJsonOptions = currentJsonOptions != null
                 ? new JsonSerializerOptions(currentJsonOptions) //Clone existing Options if available!
