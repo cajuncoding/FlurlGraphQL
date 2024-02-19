@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
 {
@@ -31,7 +29,7 @@ namespace FlurlGraphQL
             {
                 if (graphqlResponse == null) return default;
 
-                var responseProcessor = graphqlResponse.GraphQLJsonSerializer.CreateGraphQLResponseProcessor(graphqlResponse);
+                var responseProcessor = await graphqlResponse.GraphQLJsonSerializer.CreateGraphQLResponseProcessorAsync(graphqlResponse).ConfigureAwait(false);
                     
                 if(responseProcessor == null)
                     throw new InvalidOperationException($"The Json Serializer of type [{graphqlResponse.GraphQLJsonSerializer.GetType().Name}] returned a null [{nameof(IFlurlGraphQLResponseProcessor)}] instance.");

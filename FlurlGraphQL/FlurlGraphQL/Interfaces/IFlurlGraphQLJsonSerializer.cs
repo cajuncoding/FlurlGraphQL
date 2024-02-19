@@ -1,4 +1,5 @@
 ﻿using Flurl.Http.Configuration;
+using System.Threading.Tasks;
 
 namespace FlurlGraphQL
 {
@@ -15,7 +16,7 @@ namespace FlurlGraphQL
     /// </summary>
     public interface IFlurlGraphQLJsonSerializer : ISerializer
     {
-        IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(IFlurlGraphQLResponse graphqlResponse);
+        Task<IFlurlGraphQLResponseProcessor> CreateGraphQLResponseProcessorAsync(IFlurlGraphQLResponse graphqlResponse);
     }
 
 }
