@@ -8,17 +8,11 @@ namespace FlurlGraphQL
 {
     public class FlurlGraphQLNewtonsoftJsonResponseProcessor : IFlurlGraphQLResponseProcessor
     {
-        public static IFlurlGraphQLResponseProcessor FromFlurlGraphQLResponse(IFlurlGraphQLResponse graphqlResponse)
-        {
-            //TODO: WIP...
-            throw new NotImplementedException();
-        }
-
-        public FlurlGraphQLNewtonsoftJsonResponseProcessor(JObject rawDataJObject, List<GraphQLError> errors, IFlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
+        public FlurlGraphQLNewtonsoftJsonResponseProcessor(JObject rawDataJObject, List<GraphQLError> errors, FlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
         {
             this.RawDataJObject = rawDataJObject;
             this.Errors = errors?.AsReadOnly();
-            this.JsonSerializer = (newtonsoftJsonSerializer as FlurlGraphQLNewtonsoftJsonSerializer).AssertArgIsNotNull(nameof(newtonsoftJsonSerializer));
+            this.JsonSerializer = newtonsoftJsonSerializer.AssertArgIsNotNull(nameof(newtonsoftJsonSerializer));
         }
 
         #region Non-interface Properties

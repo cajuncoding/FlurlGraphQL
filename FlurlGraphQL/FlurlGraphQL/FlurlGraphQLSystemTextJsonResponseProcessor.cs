@@ -7,13 +7,7 @@ namespace FlurlGraphQL
 {
     public class FlurlGraphQLSystemTextJsonResponseProcessor : IFlurlGraphQLResponseProcessor
     {
-        public static IFlurlGraphQLResponseProcessor FromFlurlGraphQLResponse(IFlurlGraphQLResponse graphqlResponse)
-        {
-            //TODO: WIP...
-            throw new NotImplementedException();
-        }
-
-        public FlurlGraphQLSystemTextJsonResponseProcessor(JsonNode rawDataJsonNode, List<GraphQLError> errors, IFlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
+        public FlurlGraphQLSystemTextJsonResponseProcessor(JsonNode rawDataJsonNode, List<GraphQLError> errors, FlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
         {
             this.RawDataJsonNode = rawDataJsonNode;
             this.Errors = errors?.AsReadOnly();

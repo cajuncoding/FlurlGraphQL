@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Flurl.Http.Configuration;
 using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.ValidationExtensions;
@@ -9,8 +13,6 @@ namespace FlurlGraphQL
 {
     public class FlurlGraphQLSystemTextJsonSerializer : IFlurlGraphQLSystemTextJsonSerializer
     {
-        //private static Func<DefaultJsonSerializer, JsonSerializerOptions> _optionsFieldDelegate;
-
         public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlSerializer)
         {
             // NOTE: Due to the abstractions of the core Flurl library we cannot access the Json Serializer Options directly
@@ -25,6 +27,14 @@ namespace FlurlGraphQL
             return new FlurlGraphQLSystemTextJsonSerializer(graphqlJsonOptions);
         }
 
+        #region Base Flurl ISerializer implementation...
+
+        public string Serialize(object obj) => FlurlSystemTextJsonSerializer.Serialize(obj);
+        public T Deserialize<T>(string s) => FlurlSystemTextJsonSerializer.Deserialize<T>(s);
+        public T Deserialize<T>(Stream stream) => FlurlSystemTextJsonSerializer.Deserialize<T>(stream);
+
+        #endregion
+        
         protected DefaultJsonSerializer FlurlSystemTextJsonSerializer { get; }
 
         public JsonSerializerOptions JsonSerializerOptions { get; protected set; }
@@ -43,16 +53,25 @@ namespace FlurlGraphQL
         /// </summary>
         /// <param name="graphqlResponse"></param>
         /// <returns></returns>
-        public virtual IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(IFlurlGraphQLResponse graphqlResponse)
-            => FlurlGraphQLSystemTextJsonResponseProcessor.FromFlurlGraphQLResponse(graphqlResponse);
+        public virtual async Task<IFlurlGraphQLResponseProcessor> CreateGraphQLResponseProcessorAsync(IFlurlGraphQLResponse graphqlResponse)
+        {
+            //NOTE: We use the core Flurl GetJsonAsync<>() method here to get our initial results so that we benefit from it's built in performance, simplicity, stream handling, etc.!
+            var graphqlResult = await graphqlResponse.GetJsonAsync<SystemTextJsonGraphQLResult>().ConfigureAwait(false);
 
-        #region Base Flurl ISerializer implementation...
+            return new FlurlGraphQLSystemTextJsonResponseProcessor(
+                graphqlResult.Data,
+                graphqlResult.Errors,
+                graphqlResponse.GraphQLJsonSerializer as FlurlGraphQLSystemTextJsonSerializer
+            );
+        }
+        // ReSharper disable once ClassNeverInstantiated.Local
+        protected class SystemTextJsonGraphQLResult
+        {
+            [JsonPropertyName("data")]
+            public JsonNode Data { get; set; }
 
-        public string Serialize(object obj) => FlurlSystemTextJsonSerializer.Serialize(obj);
-        public T Deserialize<T>(string s) => FlurlSystemTextJsonSerializer.Deserialize<T>(s);
-        public T Deserialize<T>(Stream stream) => FlurlSystemTextJsonSerializer.Deserialize<T>(stream);
-
-        #endregion
-
+            [JsonPropertyName("errors")]
+            public List<GraphQLError> Errors { get; set; }
+        }
     }
 }
