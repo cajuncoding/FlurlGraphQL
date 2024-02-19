@@ -59,9 +59,7 @@ namespace FlurlGraphQL
 
         public virtual IGraphQLBatchQueryResults LoadBatchQueryResults()
         {
-            var queryResultJson = (JObject)this.RawDataJObject;
-
-            var operationResults = queryResultJson.Properties()
+            var operationResults = this.RawDataJObject.Properties()
                 .Select(prop => new GraphQLQueryOperationResult(prop.Name, this))
                 .ToList();
 
@@ -73,7 +71,7 @@ namespace FlurlGraphQL
         public virtual string GetErrorContent()
         {
             if (_errorContentSerialized == null)
-                _errorContentSerialized = JsonSerializer.SerializeToJson(this.Errors);
+                _errorContentSerialized = JsonSerializer.Serialize(this.Errors);
             
             return _errorContentSerialized;
         }

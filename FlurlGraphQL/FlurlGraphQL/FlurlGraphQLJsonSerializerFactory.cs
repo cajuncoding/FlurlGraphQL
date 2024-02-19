@@ -8,8 +8,8 @@ namespace FlurlGraphQL
     internal static class FlurlGraphQLJsonSerializerFactory
     {
         private delegate IFlurlGraphQLJsonSerializer JsonSerializerFactoryDelegate(ISerializer flurlSerializer);
-        
-        private static readonly Lazy<JsonSerializerFactoryDelegate> _createNewtonsoftJsonSerializerFromFlurlSerializer = new Lazy<JsonSerializerFactoryDelegate>(() =>
+
+        private static Lazy<JsonSerializerFactoryDelegate> CreateNewtonsoftJsonSerializerFromFlurlSerializerLazy { get; } = new Lazy<JsonSerializerFactoryDelegate>(() =>
             AppDomain.CurrentDomain.FindType(
                 ReflectionConstants.NewtonsoftJsonSerializerClassName,
                 assemblyName: ReflectionConstants.NewtonsoftAssemblyName,
@@ -19,8 +19,13 @@ namespace FlurlGraphQL
 
         public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlJsonSerializer)
         {
-            var flurlSerializerTypeName = flurlJsonSerializer.GetType().Name;
+            //If we have a valid IFlurlGraphQLJsonSerializer then we are good otherwise we will try to reverse engineer the Flurl Serializer to create one...
+            if (flurlJsonSerializer is IFlurlGraphQLJsonSerializer flurlGraphQLSerializer)
+                return flurlGraphQLSerializer;
 
+            //Attempt to brute force detect what kind of core Flurl Serializer is in use and reach under the hood to get the Settings/Options and 
+            //  instantiate a valid IFlurlGraphQLJsonSerializer matching the Json parsing being used (e.g. System.Text.Json vs Newtonsoft.Json)...
+            var flurlSerializerTypeName = flurlJsonSerializer.GetType().Name;
             switch (flurlJsonSerializer.GetType().Name)
             {
                 case ReflectionConstants.FlurlSystemTextJsonSerializerClassName: return CreateSystemTextJsonSerializer(flurlJsonSerializer);
@@ -37,6 +42,6 @@ namespace FlurlGraphQL
         //NOTE: WE will throw a runtime exception if not available because that means that something is mis-configured and not initialized
         //      to support the use of Newtonsoft Json.
         private static IFlurlGraphQLJsonSerializer CreateNewtonsoftJsonSerializer(ISerializer flurlJsonSerializer)
-            => _createNewtonsoftJsonSerializerFromFlurlSerializer.Value?.Invoke(flurlJsonSerializer);
+            => CreateNewtonsoftJsonSerializerFromFlurlSerializerLazy.Value?.Invoke(flurlJsonSerializer);
     }
 }
