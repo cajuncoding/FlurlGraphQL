@@ -1,12 +1,20 @@
-﻿namespace FlurlGraphQL
+﻿using Flurl.Http.Configuration;
+
+namespace FlurlGraphQL
 {
-    //This class is sub-typed for specific implementations, to provide specialized behavior and logic:
-    // - IFlurlGraphQLSystemTextJsonSerializer
-    // - IFlurlGraphQLNewtonsoftJsonSerializer
-    public interface IFlurlGraphQLJsonSerializer
+    /// <summary>
+    /// Serializer Interface for GraphQL. This interface is unique from the base Flurl ISerializer because we must
+    ///     customize the Serializer to support the complex Json processing for GraphQL responses which then 
+    ///     allows FlurlGraphQL to greatly simplify and flatten the Json responses into simplified data models.
+    ///  This is done by adding support to create an IFlurlGraphQLResponseProcessor which encapsulates all processing
+    ///     of the Json into Typed models with various capabilities.
+    /// 
+    /// This class is sub-typed further for specific implementations that are provided for the specialized behavior and logic needed for FlurlGraphQL:
+    ///  - IFlurlGraphQLSystemTextJsonSerializer
+    ///  - IFlurlGraphQLNewtonsoftJsonSerializer
+    /// </summary>
+    public interface IFlurlGraphQLJsonSerializer : ISerializer
     {
-        string SerializeToJson(object obj);
-        TResult DeserializeGraphQLJsonResults<TResult>();
         IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(IFlurlGraphQLResponse graphqlResponse);
     }
 

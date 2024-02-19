@@ -1,6 +1,8 @@
 ﻿using FlurlGraphQL.NewtonsoftConstants;
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace FlurlGraphQL.ReflectionExtensions
@@ -47,6 +49,28 @@ namespace FlurlGraphQL.ReflectionExtensions
 
         /// <summary>
         /// BBernard
+        /// Convenience method for getting a private/protected Field Info for an object instance with brute force reflection...
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        //public static FieldInfo CreateFieldGetterDelegate(this object obj, string name)
+        //    => obj?.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+
+        /// <summary>
+        /// BBernard
+        /// Convenience method for getting a private/protected Field Info for an object instance with brute force reflection...
+        /// </summary>
+        public static Func<TClass, TField> CreateGetFieldDelegate<TClass, TField>(this Type type, string fieldName)
+        {
+            var typeExpr = Expression.Parameter(type);
+            var fieldExpr = Expression.Field(typeExpr, fieldName);
+            return Expression.Lambda<Func<TClass, TField>>(fieldExpr, typeExpr).Compile();
+        }
+
+        /// <summary>
+        /// BBernard
         /// Convenience method for getting a private/protected Property Value of an object instance with brute force reflection...
         /// NOTE: This is not the highest performance mechanism for doing this because Reflection is always used and the MethodInfo is not cached!
         ///         Therefore care should be taken to avoid using it in a tight loop.
@@ -55,17 +79,11 @@ namespace FlurlGraphQL.ReflectionExtensions
         /// <param name="obj"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static T BruteForceGet<T>(this object obj, string name)
+        public static T BruteForceGetFieldValue<T>(this object obj, string name)
         {
-            BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
-            Type type = obj.GetType();
-            FieldInfo field = type.GetField(name, flags);
+            FieldInfo field = obj?.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
             if (field != null)
                 return (T)field.GetValue(obj);
-
-            PropertyInfo property = type.GetProperty(name, flags);
-            if (property != null)
-                return (T)property.GetValue(obj, null);
 
             return default;
         }

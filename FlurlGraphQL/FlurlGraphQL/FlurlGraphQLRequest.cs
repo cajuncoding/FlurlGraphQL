@@ -307,7 +307,7 @@ namespace FlurlGraphQL
 
         protected string SerializeToJsonWithGraphQLSerializer(object obj)
         {
-            var json = GraphQLJsonSerializer.SerializeToJson(obj);
+            var json = GraphQLJsonSerializer.Serialize(obj);
             return json;
         }
 
