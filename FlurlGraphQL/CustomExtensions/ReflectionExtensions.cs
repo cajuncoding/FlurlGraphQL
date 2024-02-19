@@ -47,27 +47,17 @@ namespace FlurlGraphQL.ReflectionExtensions
         public static bool InheritsFrom(this Type type, Type baseType)
             => baseType.IsAssignableFrom(type);
 
-        /// <summary>
-        /// BBernard
-        /// Convenience method for getting a private/protected Field Info for an object instance with brute force reflection...
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="obj"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        //public static FieldInfo CreateFieldGetterDelegate(this object obj, string name)
-        //    => obj?.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
-
-        /// <summary>
-        /// BBernard
-        /// Convenience method for getting a private/protected Field Info for an object instance with brute force reflection...
-        /// </summary>
-        public static Func<TClass, TField> CreateGetFieldDelegate<TClass, TField>(this Type type, string fieldName)
-        {
-            var typeExpr = Expression.Parameter(type);
-            var fieldExpr = Expression.Field(typeExpr, fieldName);
-            return Expression.Lambda<Func<TClass, TField>>(fieldExpr, typeExpr).Compile();
-        }
+        ///// <summary>
+        ///// BBernard
+        ///// Convenience method for getting a private/protected Field Info for an object instance with brute force reflection...
+        ///// NOTE: Adapted from the Stack Overflow post: https://stackoverflow.com/a/16136854/7293142
+        ///// </summary>
+        //public static Func<TClass, TField> CreateGetFieldDelegate<TClass, TField>(this Type type, string fieldName)
+        //{
+        //    var typeExpr = Expression.Parameter(type);
+        //    var fieldExpr = Expression.Field(typeExpr, fieldName);
+        //    return Expression.Lambda<Func<TClass, TField>>(fieldExpr, typeExpr).Compile();
+        //}
 
         /// <summary>
         /// BBernard
