@@ -128,7 +128,6 @@ namespace FlurlGraphQL
                     case JArray arrayResults:
                         entityResults = arrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
                         break;
-                    // ReSharper disable once MergeIntoPattern
                     case JObject jsonObj when jsonObj.First is JArray firstArrayResults:
                         entityResults = firstArrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
                         break;
@@ -164,7 +163,7 @@ namespace FlurlGraphQL
                     var node = edge.Field(GraphQLFields.Node) as JObject;
 
                     //If not already defined, we map the Edges Cursor value to the Node so that the model is simplified
-                    //  and any consumer can just as a "Cursor" property to their model to get the node's cursor.
+                    //  and any consumer can just add a "Cursor" property to their model to get the node's cursor.
                     if (node != null && node.Field(GraphQLFields.Cursor) == null)
                         node.Add(GraphQLFields.Cursor, edge.Field(GraphQLFields.Cursor));
 

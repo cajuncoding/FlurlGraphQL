@@ -33,18 +33,18 @@ namespace FlurlGraphQL
 
         public virtual IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class
         {
-            var queryResultJson = (JObject)this.RawDataJObject;
+            var rawDataJson = (JObject)this.RawDataJObject;
 
             //BBernard
             //Extract the data results for the operation name specified, or first results as default (most common use case)...
             //NOTE: GraphQL supports multiple data responses per request so we need to access the correct query type result safely (via Null Coalesce)
             var querySingleResultJson = string.IsNullOrWhiteSpace(queryOperationName)
-                ? queryResultJson.FirstField()
-                : queryResultJson.Field(queryOperationName);
+                ? rawDataJson.FirstField()
+                : rawDataJson.Field(queryOperationName);
 
             var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(JsonSerializer.JsonSerializerSettings);
 
-            //Ensure that the Results we return are initialized 
+            //Ensure that the Results we return are initialized along with any potential Errors... 
             if (typedResults is GraphQLQueryResults<TResult> graphqlResults)
                 typedResults = new GraphQLQueryResults<TResult>(graphqlResults, Errors);
 
