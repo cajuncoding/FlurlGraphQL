@@ -57,31 +57,31 @@ namespace FlurlGraphQL
             }
         }
 
-        /// <summary>
-        /// BBernard
-        /// Safely retrieves the specified field as a JProperty from the Json (JObject/JProperty) with case-insensitive matching; 
-        ///     a JProperty allows easy setting of the value and other manipulation of the token/node. In addition, this method
-        ///     enables working with dynamic Json, and field/property investigations much easier.
-        /// NOTE: This is Exception safe, any property that does not exist will return null and can be efficiently
-        ///     used along with null-coalesce (?.) as well as type checking (e.g. 'is SomeType typedVar').
-        /// </summary>
-        /// <param name="json"></param>
-        /// <param name="fieldName"></param>
-        /// <returns></returns>
-        public static JProperty Prop(this JToken json, string fieldName)
-        {
-            switch (json)
-            {
-                case JObject jObject:
-                    return jObject?.Property(fieldName, StringComparison.OrdinalIgnoreCase);
+        ///// <summary>
+        ///// BBernard
+        ///// Safely retrieves the specified field as a JProperty from the Json (JObject/JProperty) with case-insensitive matching; 
+        /////     a JProperty allows easy setting of the value and other manipulation of the token/node. In addition, this method
+        /////     enables working with dynamic Json, and field/property investigations much easier.
+        ///// NOTE: This is Exception safe, any property that does not exist will return null and can be efficiently
+        /////     used along with null-coalesce (?.) as well as type checking (e.g. 'is SomeType typedVar').
+        ///// </summary>
+        ///// <param name="json"></param>
+        ///// <param name="fieldName"></param>
+        ///// <returns></returns>
+        //public static JProperty Prop(this JToken json, string fieldName)
+        //{
+        //    switch (json)
+        //    {
+        //        case JObject jObject:
+        //            return jObject?.Property(fieldName, StringComparison.OrdinalIgnoreCase);
 
-                case JProperty jProp:
-                    //Extract the JObject value and process if matched...
-                    return (jProp.Value as JObject)?.Prop(fieldName);
+        //        case JProperty jProp:
+        //            //Extract the JObject value and process if matched...
+        //            return (jProp.Value as JObject)?.Prop(fieldName);
 
-                default:
-                    return null;
-            }
-        }
+        //        default:
+        //            return null;
+        //    }
+        //}
     }
 }

@@ -53,7 +53,7 @@ namespace FlurlGraphQL
                 //All GraphQL wrapper types implement the base GraphQLQueryResultsType so we check it first to know if it's a complex or simplified Data Model...
                 if (objectType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType))
                 {
-                    entityResults = ConvertToGraphQLWrapperType(objectType, json, jsonSerializer);
+                    entityResults = json.ToObject(objectType, jsonSerializer);
                 }
                 else if (json.Field(GraphQLFields.Nodes) is JArray nodesJson)
                 {
@@ -74,7 +74,7 @@ namespace FlurlGraphQL
             //We fallback to original Json handling here if not already processed...
             if (entityResults == null)
             {
-                //At this point the results have not been handled above therefore we attempt to fallback to default Newtonsoft Json behaviour,
+                //At this point the results have not been handled above therefore we attempt to fallback to default Newtonsoft Json behavior,
                 //      however due to the design of JsonConverters this results in an Infinite Recursive loop. So we must
                 //      track our state and flag the current objectType as the specific Type to skip when it's next encountered
                 //      which should always be the next call to CanConvert() which will then return false, and reset this Skip flag to Null!
@@ -91,22 +91,6 @@ namespace FlurlGraphQL
             }
 
             return entityResults;
-        }
-
-        protected virtual object ConvertToGraphQLWrapperType(Type objectType, JToken json, JsonSerializer jsonSerializer)
-        {
-            return json.ToObject(objectType, jsonSerializer);
-            //TODO: Finish implementation by Dynamically invoking Generic Parse method, etc.... implement Performance Caching here...
-
-            ////If it's a complex model we then parse it and return the correct type...
-            //if (objectType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLConnectionResultsType))
-            //{
-            //    json.ParseJsonToGraphQLResultsWithJsonSerializerInternal<>()
-            //}
-            //else if (objectType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLCollectionSegmentResultsType))
-            //{
-
-            //}
         }
     }
 
