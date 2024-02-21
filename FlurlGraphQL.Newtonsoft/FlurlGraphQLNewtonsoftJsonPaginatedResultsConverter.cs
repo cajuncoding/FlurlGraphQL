@@ -6,11 +6,11 @@ using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL
 {
-    public class NewtonsoftJsonGraphQLPageResultsToICollectionConverter : JsonConverter
+    public class FlurlGraphQLNewtonsoftJsonPaginatedResultsConverter : JsonConverter
     {
         private Type _skipTypeToPreventInfiniteRecursion = null;
 
-        public NewtonsoftJsonGraphQLPageResultsToICollectionConverter()
+        public FlurlGraphQLNewtonsoftJsonPaginatedResultsConverter()
         {
         }
 
@@ -34,15 +34,15 @@ namespace FlurlGraphQL
 
         public override bool CanWrite => false;
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer jsonSerializer)
-            => throw new NotImplementedException();
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer jsonSerializer) => throw new NotImplementedException();
 
         public override bool CanRead => true;
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer jsonSerializer)
+        public override object ReadJson(JsonReader reader, Type targetType, object existingValue, JsonSerializer jsonSerializer)
         {
             object entityResults = null;
 
+            //Since we must interrogate the Json it is significantly easier to deserialize into a dynamic JsonNode first...
             var json = JToken.ReadFrom(reader);
 
             //All Paginated result sets, that can be flattened, are a Json Object with nested nodes/items/edges properties that are
@@ -51,23 +51,23 @@ namespace FlurlGraphQL
             if (json.Type == JTokenType.Object)
             {
                 //All GraphQL wrapper types implement the base GraphQLQueryResultsType so we check it first to know if it's a complex or simplified Data Model...
-                if (objectType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType))
+                if (targetType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType))
                 {
-                    entityResults = json.ToObject(objectType, jsonSerializer);
+                    entityResults = json.ToObject(targetType, jsonSerializer);
                 }
                 else if (json.Field(GraphQLFields.Nodes) is JArray nodesJson)
                 {
-                    entityResults = nodesJson.ToObject(objectType, jsonSerializer);
+                    entityResults = nodesJson.ToObject(targetType, jsonSerializer);
                 }
                 else if (json.Field(GraphQLFields.Items) is JArray itemsJson)
                 {
-                    entityResults = itemsJson.ToObject(objectType, jsonSerializer);
+                    entityResults = itemsJson.ToObject(targetType, jsonSerializer);
                 }
                 else if (json.Field(GraphQLFields.Edges) is JArray edgesJson)
                 {
                     entityResults = edgesJson
                         .FlattenGraphQLEdgesJsonToArrayOfNodes()
-                        .ToObject(objectType, jsonSerializer);
+                        .ToObject(targetType, jsonSerializer);
                 }
             }
 
@@ -86,8 +86,8 @@ namespace FlurlGraphQL
                 //NOTE: This algorithm is based on the assumption that the JsonTokenReaders are always reading in one direction (synchronously)
                 //      and that this Converter is only accessed by one Serializer at a time (Not Thread-safe) so the Converter should never be
                 //      added to the Global or Default settings of a Serializer... ONLY added just prior to specific de-serialization executions!
-                _skipTypeToPreventInfiniteRecursion = objectType;
-                entityResults = json.ToObject(objectType, jsonSerializer);
+                _skipTypeToPreventInfiniteRecursion = targetType;
+                entityResults = json.ToObject(targetType, jsonSerializer);
             }
 
             return entityResults;
