@@ -1,8 +1,5 @@
-﻿using FlurlGraphQL.NewtonsoftConstants;
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace FlurlGraphQL.ReflectionExtensions
@@ -12,7 +9,7 @@ namespace FlurlGraphQL.ReflectionExtensions
         /// <summary>
         /// BBernard
         /// A wonderful little utility for robust Generic Type comparisons 
-        /// Taken from GraphQL Extensions Open Source library here:
+        /// Taken from GraphQL ResolverExtensions Open Source library here:
         /// https://github.com/cajuncoding/GraphQL.RepoDB/blob/main/GraphQL.ResolverProcessingExtensions/DotNetCustomExtensions/TypeCustomExtensions.cs
         /// Also For more info see: https://stackoverflow.com/a/37184228/7293142
         ///  </summary>
