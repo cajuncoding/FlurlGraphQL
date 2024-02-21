@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using FlurlGraphQL.ReflectionExtensions;
+using FlurlGraphQL.SystemTextJsonExtensions;
 using FlurlGraphQL.TypeCacheHelpers;
 
 namespace FlurlGraphQL
@@ -130,7 +131,7 @@ namespace FlurlGraphQL
 
                     return node;
                 })
-                .Where(n => n != null && !n.IsNullOrUndefinedJsonKind())
+                .Where(n => n != null && !n.IsNullOrUndefinedJson())
                 .Cast<JsonNode>()
                 .ToArray();
 
@@ -138,10 +139,9 @@ namespace FlurlGraphQL
             return edgeNodesJson;
         }
 
-        public static bool IsNullOrUndefinedJsonKind(this JsonNode jsonNode)
+        public static bool IsNullOrUndefinedJson(this JsonNode jsonNode)
         {
-            //TODO: Validate Null processing when JsonElement value fails???
-            var jsonValueKind = jsonNode?.GetValue<JsonElement>().ValueKind ?? JsonValueKind.True;
+            var jsonValueKind = jsonNode.GetValueKind();
             return jsonValueKind == JsonValueKind.Null || jsonValueKind == JsonValueKind.Undefined;
         }
 

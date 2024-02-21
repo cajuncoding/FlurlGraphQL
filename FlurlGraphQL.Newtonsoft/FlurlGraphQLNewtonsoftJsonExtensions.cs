@@ -164,7 +164,7 @@ namespace FlurlGraphQL
 
                     //If not already defined, we map the Edges Cursor value to the Node so that the model is simplified
                     //  and any consumer can just add a "Cursor" property to their model to get the node's cursor.
-                    if (node != null && node.Field(GraphQLFields.Cursor) == null)
+                    if (!node.IsNullOrUndefinedJson() && node.Field(GraphQLFields.Cursor) == null)
                         node.Add(GraphQLFields.Cursor, edge.Field(GraphQLFields.Cursor));
 
                     return node;
@@ -174,6 +174,9 @@ namespace FlurlGraphQL
             var edgeNodesJson = new JArray(edgeNodesEnumerable);
             return edgeNodesJson;
         }
+
+        public static bool IsNullOrUndefinedJson(this JToken jsonToken)
+            => jsonToken == null || jsonToken.Type == JTokenType.Null || jsonToken.Type == JTokenType.Undefined;
 
         #endregion
     }
