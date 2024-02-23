@@ -24,11 +24,20 @@
 
 	<ItemGroup>
 	  <PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.1" />
+	  <PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\FlurlGraphQL\FlurlGraphQL.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- [assembly: InternalsVisibleTo("FlurlGraphQL.Tests")] -->
+		<InternalsVisibleTo Include="FlurlGraphQL.Tests" />
 	</ItemGroup>
 
 </Project>

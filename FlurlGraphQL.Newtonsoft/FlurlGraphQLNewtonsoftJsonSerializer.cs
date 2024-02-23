@@ -63,14 +63,14 @@ namespace FlurlGraphQL
                 graphqlResponse.GraphQLJsonSerializer as FlurlGraphQLNewtonsoftJsonSerializer
             );
         }
+    }
 
-        protected class NewtonsoftGraphQLResult
-        {
-            [JsonProperty("data")]
-            public JObject Data { get; set; }
+    internal class NewtonsoftGraphQLResult
+    {
+        [JsonProperty("data")]
+        public JObject Data { get; set; }
 
-            [JsonProperty("errors")]
-            public List<GraphQLError> Errors { get; set; }
-        }
+        [JsonProperty("errors")]
+        public List<GraphQLError> Errors { get; set; }
     }
 }

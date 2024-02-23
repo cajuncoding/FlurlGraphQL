@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json.Linq;
 
@@ -44,9 +46,9 @@ namespace FlurlGraphQL
 
             var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(JsonSerializer.JsonSerializerSettings);
 
-            //Ensure that the Results we return are initialized along with any potential Errors... 
-            if (typedResults is GraphQLQueryResults<TResult> graphqlResults)
-                typedResults = new GraphQLQueryResults<TResult>(graphqlResults, Errors);
+            //Ensure that the Results we return are initialized along with any potential Errors (that have already been parsed/captured)... 
+            if (this.Errors != null && typedResults is GraphQLQueryResults<TResult> graphqlResults)
+                graphqlResults.Errors = this.Errors;
 
             return typedResults;
         }

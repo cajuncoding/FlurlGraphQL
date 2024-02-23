@@ -20,7 +20,7 @@ namespace FlurlGraphQL
             Errors = errors;
         }
 
-        public IReadOnlyList<GraphQLError> Errors { get; protected set; }
+        public IReadOnlyList<GraphQLError> Errors { get; protected internal set; }
 
         public bool HasAnyResults() => Results.Count > 0;
 
