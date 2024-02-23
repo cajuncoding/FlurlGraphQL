@@ -59,9 +59,9 @@ namespace FlurlGraphQL
     {
         public override TCollection Read(ref Utf8JsonReader reader, Type targetType, JsonSerializerOptions jsonSerializerOptions)
         {
-            //TODO: Determine if we should Throw Exception or just return when non-object is detected...
-            if (reader.TokenType != JsonTokenType.StartObject)
-                throw new JsonException();
+            //TODO: Cleanup if this is should not be included...
+            //if (reader.TokenType != JsonTokenType.StartArray)
+            //    throw new JsonException("Current Json reader is not pointing at JsonArray data; only implementations of ICollection with JsonArray data are supported.");
 
             object entityResults = null;
 
@@ -76,7 +76,7 @@ namespace FlurlGraphQL
                 //All GraphQL wrapper types implement the base GraphQLQueryResultsType so we check it first to know if it's a complex or simplified Data Model...
                 if (targetType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType))
                 {
-                    entityResults = JsonSerializer.Deserialize(ref reader, targetType, jsonSerializerOptions);
+                    entityResults = json.Deserialize(targetType,  jsonSerializerOptions);
                 }
                 else if (json?[GraphQLFields.Nodes] is JsonArray nodesJson)
                 {

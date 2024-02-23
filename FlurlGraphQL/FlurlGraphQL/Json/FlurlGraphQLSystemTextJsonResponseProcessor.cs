@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Nodes;
-using System.Xml.Linq;
 using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
@@ -40,15 +40,14 @@ namespace FlurlGraphQL
             //Extract the data results for the operation name specified, or first results as default (most common use case)...
             //NOTE: GraphQL supports multiple data responses per request so we need to access the correct query type result safely (via Null Coalesce)
             var querySingleResultJson = string.IsNullOrWhiteSpace(queryOperationName)
-                //TODO: Validate Index or Linq FirstOrDefault() access into JsonObject...
-                ? rawDataJson[0]
+                ? (JsonNode)rawDataJson.AsObject().FirstOrDefault().Value
                 : rawDataJson[queryOperationName];
 
             var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(JsonSerializer.JsonSerializerOptions);
 
-            //Ensure that the Results we return are initialized along with any potential Errors... 
-            if (typedResults is GraphQLQueryResults<TResult> graphqlResults)
-                typedResults = new GraphQLQueryResults<TResult>(graphqlResults, Errors);
+            //Ensure that the Results we return are initialized along with any potential Errors (that have already been parsed/captured)... 
+            if (this.Errors != null && typedResults is GraphQLQueryResults<TResult> graphqlResults)
+                graphqlResults.Errors = this.Errors;
 
             return typedResults;
         }

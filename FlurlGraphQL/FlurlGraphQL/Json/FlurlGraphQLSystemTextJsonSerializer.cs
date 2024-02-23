@@ -64,14 +64,15 @@ namespace FlurlGraphQL
                 graphqlResponse.GraphQLJsonSerializer as FlurlGraphQLSystemTextJsonSerializer
             );
         }
-        // ReSharper disable once ClassNeverInstantiated.Local
-        protected class SystemTextJsonGraphQLResult
-        {
-            [JsonPropertyName("data")]
-            public JsonNode Data { get; set; }
+    }
 
-            [JsonPropertyName("errors")]
-            public List<GraphQLError> Errors { get; set; }
-        }
+    // ReSharper disable once ClassNeverInstantiated.Local
+    internal class SystemTextJsonGraphQLResult
+    {
+        [JsonPropertyName("data")]
+        public JsonNode Data { get; set; }
+
+        [JsonPropertyName("errors")]
+        public List<GraphQLError> Errors { get; set; }
     }
 }

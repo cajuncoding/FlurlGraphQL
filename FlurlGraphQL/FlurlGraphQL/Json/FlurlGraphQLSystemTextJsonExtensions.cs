@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.SystemTextJsonExtensions;
 using FlurlGraphQL.TypeCacheHelpers;
@@ -24,9 +25,11 @@ namespace FlurlGraphQL
             var sanitizedJsonSerializerOptions = jsonSerializerOptions == null 
                 ? new JsonSerializerOptions() 
                 : new JsonSerializerOptions(jsonSerializerOptions);
-            
-            //TODO: Implement Field Handler...
-            //jsonSerializer.Converters.Add(new NewtonsoftJsonGraphQLPageResultsToICollectionConverter());
+
+            //Must ALWAYS enable Case-insensitive Field Matching since GraphQL Json (and Json in general) use CamelCase and nearly always mismatch C# Naming Pascal Case standards...
+            //NOTE: WE are operating on a copy of the original Json Settings so this does NOT mutate the core/original settings from Flurl or those specified for the GraphQL request, etc.
+            sanitizedJsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            sanitizedJsonSerializerOptions.Converters.Add(new FlurlGraphQLSystemTextJsonPaginatedResultsConverterFactory());
 
             return ParseJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(json, sanitizedJsonSerializerOptions);
         }
@@ -40,7 +43,7 @@ namespace FlurlGraphQL
             //Dynamically parse the data from the results...
             //NOTE: We process PageInfo as Cursor Paging as the Default (because it's strongly encouraged by GraphQL.org
             //          & Offset Paging model is a subset of Cursor Paging (less flexible).
-            var pageInfo = json[GraphQLFields.PageInfo]?.Deserialize<GraphQLCursorPageInfo>();
+            var pageInfo = json[GraphQLFields.PageInfo]?.Deserialize<GraphQLCursorPageInfo>(jsonSerializerOptions);
             var totalCount = (int?)json[GraphQLFields.TotalCount];
 
             PaginationType? paginationType = null;
@@ -122,17 +125,19 @@ namespace FlurlGraphQL
                 .OfType<JsonObject>()
                 .Select(edge =>
                 {
-                    var node = edge[GraphQLFields.Node] as JsonObject;
+                    //NOW we must MOVE / Re-locate all Nodes into our output JsonArray which means we have to remove them from the Parent
+                    //  to avoid "Node already has a Parent" exceptions...
+                    var node = edge[GraphQLFields.Node];
+                    edge.Remove(GraphQLFields.Node);
 
                     //If not already defined, we map the Edges Cursor value to the Node so that the model is simplified
                     //  and any consumer can just add a "Cursor" property to their model to get the node's cursor.
-                    if (node != null && node[GraphQLFields.Cursor] == null)
-                        node.Add(GraphQLFields.Cursor, edge[GraphQLFields.Cursor]);
+                    if (node != null && node[GraphQLFields.Cursor] == null && edge[GraphQLFields.Cursor] is JsonValue cursorJsonValue)
+                        node.AsObject().Add(GraphQLFields.Cursor, cursorJsonValue.ToString());
 
                     return node;
                 })
                 .Where(n => n != null && !n.IsNullOrUndefinedJson())
-                .Cast<JsonNode>()
                 .ToArray();
 
             var edgeNodesJson = new JsonArray(edgeNodesArray.ToArray());
