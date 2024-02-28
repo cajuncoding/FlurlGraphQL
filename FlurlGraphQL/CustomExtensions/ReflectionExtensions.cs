@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using FlurlGraphQL.CustomExtensions;
 
 namespace FlurlGraphQL.ReflectionExtensions
 {
@@ -9,7 +11,7 @@ namespace FlurlGraphQL.ReflectionExtensions
         /// <summary>
         /// BBernard
         /// A wonderful little utility for robust Generic Type comparisons 
-        /// Taken from GraphQL ResolverExtensions Open Source library here:
+        /// Adapted from GraphQL ResolverExtensions Open Source library here:
         /// https://github.com/cajuncoding/GraphQL.RepoDB/blob/main/GraphQL.ResolverProcessingExtensions/DotNetCustomExtensions/TypeCustomExtensions.cs
         /// Also For more info see: https://stackoverflow.com/a/37184228/7293142
         ///  </summary>
@@ -17,26 +19,10 @@ namespace FlurlGraphQL.ReflectionExtensions
         /// <param name="parentType"></param>
         /// <returns></returns>
         public static bool IsDerivedFromGenericParent(this Type type, Type parentType)
-        {
-            if (!parentType.IsGenericType)
-            {
-                throw new ArgumentException("type must be generic", nameof(parentType));
-            }
-            else if (type == null || type == typeof(object))
-            {
-                return false;
-            }
-            else if ((type.IsGenericType && type.GetGenericTypeDefinition() == parentType)
-                     || type.BaseType.IsDerivedFromGenericParent(parentType)
-                     //Recursively search for Interfaces...
-                     || type.GetInterfaces().Any(t => t.IsDerivedFromGenericParent(parentType))
-            )
-            {
-                return true;
-            }
-
-            return false;
-        }
+        => (type != null && type.IsGenericType && type.GetGenericTypeDefinition() == parentType)
+           || type.BaseType.IsDerivedFromGenericParent(parentType)
+           //Recursively search for Interfaces...
+           || type.GetInterfaces().Any(t => t.IsDerivedFromGenericParent(parentType));
 
         public static bool InheritsFrom<TInterface>(this Type type)
             => typeof(TInterface).IsAssignableFrom(type);
@@ -75,6 +61,25 @@ namespace FlurlGraphQL.ReflectionExtensions
             return default;
         }
 
+        /// <summary>
+        /// BBernard
+        /// Convenience method for getting a private/protected Property Value of an object instance with brute force reflection...
+        /// NOTE: This is not the highest performance mechanism for doing this because Reflection is always used and the MethodInfo is not cached!
+        ///         Therefore care should be taken to avoid using it in a tight loop.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static T BruteForceGetPropertyValue<T>(this object obj, string name)
+        {
+            PropertyInfo prop = obj?.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.IgnoreCase);
+            if (prop != null)
+                return (T)prop.GetValue(obj);
+
+            return default;
+        }
+
         public static Type FindType(this AppDomain appDomain, string className, string assemblyName = null, string namespaceName = null)
             => appDomain.GetAssemblies()
                 .Where(a => assemblyName == null || (a.GetName().Name?.Equals(assemblyName, StringComparison.OrdinalIgnoreCase) ?? false))
@@ -95,5 +100,50 @@ namespace FlurlGraphQL.ReflectionExtensions
                 ? Delegate.CreateDelegate(typeof(TDelegate), objectToBindTo, methodInfo) as TDelegate
                 : null;
         }
+    }
+
+    internal static class FindAttributeReflectionExtensions
+    {
+        public static IEnumerable<Attribute> FindAttributes(this Type type, params string[] attributeNames)
+        {
+            if (type == null)
+                return null;
+
+            var attributes = type.GetCustomAttributes(true).OfType<Attribute>();
+            return FindAttributes(attributes, attributeNames);
+        }
+
+        public static IEnumerable<Attribute> FindAttributes(this PropertyInfo propInfo, params string[] attributeNames)
+        {
+            if (propInfo == null)
+                return null;
+
+            var attributes = propInfo.GetCustomAttributes(true).OfType<Attribute>();
+            return FindAttributes(attributes, attributeNames);
+        }
+
+        public static IEnumerable<Attribute> FindAttributes(this IEnumerable<Attribute> attributes, params string[] attributeNamesToFind)
+        {
+
+            if (attributeNamesToFind.IsNullOrEmpty())
+                throw new ArgumentNullException(nameof(attributeNamesToFind));
+
+            var results = new List<Attribute>();
+            var attributesArray = attributes as Attribute[] ?? attributes.AsArray();
+
+            foreach (var findName in attributeNamesToFind)
+            {
+                var findAttrName = findName.EndsWith(nameof(Attribute), StringComparison.OrdinalIgnoreCase)
+                    ? findName
+                    : string.Concat(findName, nameof(Attribute));
+
+                var foundAttr = attributesArray.FirstOrDefault(attr => attr.GetType().Name.Equals(findAttrName, StringComparison.OrdinalIgnoreCase));
+                if (foundAttr != null)
+                    results.Add(foundAttr);
+            }
+
+            return results;
+        }
+
     }
 }

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Flurl.Http.Configuration;
@@ -12,6 +14,45 @@ namespace FlurlGraphQL.Tests
     public class FlurlGraphQLParsingTests : BaseFlurlGraphQLTest
     {
         #region Sample Json Strings
+
+        private string NestedJsonStructureFlattened { get; } = @"
+            [
+                {
+                    ""cursor"": ""MQ=="",
+                    ""friends"": [
+                        {
+                            ""cursor"": ""MQ=="",
+                            ""height"": 1.72,
+                            ""name"": ""C-3PO"",
+                            ""personalIdentifier"": 2000
+                        },
+                        {
+                            ""cursor"": ""Mg=="",
+                            ""height"": 1.72,
+                            ""name"": ""Han Solo"",
+                            ""personalIdentifier"": 1002
+                        }
+                    ],
+                    ""height"": 1.72,
+                    ""name"": ""Luke Skywalker"",
+                    ""personalIdentifier"": 1000
+                },
+                {
+                    ""cursor"": ""Mg=="",
+                    ""friends"": [
+                        {
+                            ""cursor"": ""MQ=="",
+                            ""height"": 1.72,
+                            ""name"": ""Wilhuff Tarkin"",
+                            ""personalIdentifier"": 1004
+                        }
+                    ],
+                    ""height"": 1.72,
+                    ""name"": ""Darth Vader"",
+                    ""personalIdentifier"": 1001
+                }
+            ]
+        ";
 
         private string NestedPaginatedJsonText { get; } = @"
             {
@@ -80,6 +121,22 @@ namespace FlurlGraphQL.Tests
         ";
 
         #endregion
+
+        [TestMethod]
+        public void TestSimpleSystemTextJsonParsingOfFlattenedGraphQLResults()
+        {
+            var jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+            var characterResults = JsonSerializer.Deserialize<List<StarWarsCharacter>>(NestedJsonStructureFlattened, jsonOptions);
+
+            var graphqlConnectionResults = new GraphQLConnectionResults<StarWarsCharacter>(characterResults, 10, new GraphQLCursorPageInfo(
+                startCursor: characterResults.First().Cursor,
+                endCursor: characterResults.Last().Cursor,
+                hasNextPage: true,
+                hasPreviousPage: false
+            ));
+
+            AssertCursorPaginatedResultsAreValid(graphqlConnectionResults);
+        }
 
         [TestMethod]
         public void TestSystemTextJsonParsingOfNestedPaginatedGraphQLResults()

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Xml.Linq;
+using FlurlGraphQL.FlurlGraphQL.Json;
 using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.SystemTextJsonExtensions;
 using FlurlGraphQL.TypeCacheHelpers;
@@ -12,9 +12,17 @@ namespace FlurlGraphQL
 {
     public static class FlurlGraphQLSystemTextJsonExtensions
     {
+        public static bool IsNullOrUndefined(this JsonNode jsonNode)
+        {
+            var jsonValueKind = jsonNode?.GetValueKind() ?? JsonValueKind.Null;
+            return jsonValueKind == JsonValueKind.Null || jsonValueKind == JsonValueKind.Undefined;
+        }
+
+        public static bool IsNotNullOrUndefined(this JsonNode jsonNode) => !jsonNode.IsNullOrUndefined();
+
         #region Json Parsing Extensions
 
-        internal static IGraphQLQueryResults<TEntityResult> ParseJsonToGraphQLResultsInternal<TEntityResult>(this JsonNode json, JsonSerializerOptions jsonSerializerOptions = null)
+        internal static IGraphQLQueryResults<TEntityResult> ConvertJsonToGraphQLResultsInternal<TEntityResult>(this JsonNode json, JsonSerializerOptions jsonSerializerOptions = null)
             where TEntityResult : class
         {
             if (json == null)
@@ -28,13 +36,13 @@ namespace FlurlGraphQL
 
             //Must ALWAYS enable Case-insensitive Field Matching since GraphQL Json (and Json in general) use CamelCase and nearly always mismatch C# Naming Pascal Case standards...
             //NOTE: WE are operating on a copy of the original Json Settings so this does NOT mutate the core/original settings from Flurl or those specified for the GraphQL request, etc.
+            //TODO: Decide if we want to keep this enforced... as it's not necessary now that we Re-Write the Json before de-serializing to the Model...
             sanitizedJsonSerializerOptions.PropertyNameCaseInsensitive = true;
-            sanitizedJsonSerializerOptions.Converters.Add(new FlurlGraphQLSystemTextJsonPaginatedResultsConverterFactory());
 
-            return ParseJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(json, sanitizedJsonSerializerOptions);
+            return ConvertJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(json, sanitizedJsonSerializerOptions);
         }
 
-        internal static IGraphQLQueryResults<TEntityResult> ParseJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(this JsonNode json, JsonSerializerOptions jsonSerializerOptions)
+        internal static IGraphQLQueryResults<TEntityResult> ConvertJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(this JsonNode json, JsonSerializerOptions jsonSerializerOptions)
             where TEntityResult : class
         {
             if (json == null)
@@ -49,60 +57,22 @@ namespace FlurlGraphQL
             PaginationType? paginationType = null;
             List<TEntityResult> entityResults = null;
 
-            //Dynamically resolve the Results from:
-            // - the Nodes child of the Data Result (for nodes{} based Cursor Paginated queries)
-            // - the Items child of the Data Result (for items{} based Offset Paginated queries)
-            // - the Edges->Node child of the the Data Result (for Edges based queries that provide access to the Cursor)
-            // - finally use the (non-nested) array of results if not a Paginated result set of any kind above...
-            if (json[GraphQLFields.Nodes] is JsonArray nodesJson)
-            {
-                entityResults = nodesJson.Deserialize<List<TEntityResult>>(jsonSerializerOptions);
-                paginationType = PaginationType.Cursor;
-            }
-            else if (json[GraphQLFields.Items] is JsonArray itemsJson)
-            {
-                entityResults = itemsJson.Deserialize<List<TEntityResult>>(jsonSerializerOptions);
-                paginationType = PaginationType.Offset;
-            }
-            //Handle Edges case (which allow access to the Cursor)
-            else if (json[GraphQLFields.Edges] is JsonArray edgesJson)
-            {
-                paginationType = PaginationType.Cursor;
-                var entityType = typeof(TEntityResult);
+            //Get our Json Rewriter from our Factory (which provides Caching for Types already processed)!
+            var graphqlJsonRewriter = FlurlGraphQLSystemTextJsonRewriter.ForType<TEntityResult>();
 
-                //Handle case where GraphQLEdge<TNode> wrapper class is used to simplify retrieving the Edges!
-                if (entityType.IsDerivedFromGenericParent(GraphQLTypeCache.CachedIGraphQLEdgeGenericType))
-                {
-                    //If the current type is a Generic GraphQLEdge<TEntity> then we can directly deserialize to the Generic Type!
-                    //entityResults = edges.Select(edge => edge?.Deserialize<TEntityResult>(jsonSerializerOptions)).ToList();
-                    entityResults = edgesJson.Deserialize<List<TEntityResult>>(jsonSerializerOptions);
-                }
-                //Handle all other cases including when the Entity implements IGraphQLEdge (e.g. the entity has a Cursor Property)...
-                else
-                {
-                    entityResults = edgesJson
-                        .FlattenGraphQLEdgesJsonToArrayOfNodes()
-                        .Deserialize<List<TEntityResult>>(jsonSerializerOptions);
-                }
-            }
-            else
+            var rewriterResults = graphqlJsonRewriter.RewriteJsonAsNeededForEasyGraphQLModelMapping(json);
+            
+            paginationType = rewriterResults.PaginationType;
+
+            switch (rewriterResults.Json)
             {
-                switch (json)
-                {
-                    case JsonArray arrayResults:
-                        entityResults = arrayResults.Deserialize<List<TEntityResult>>(jsonSerializerOptions);
-                        break;
-                    //TODO: Test out FirstOrDefault()???
-                    case JsonObject jsonObj when jsonObj.Count > 0 && jsonObj[0] is JsonArray firstArrayResults:
-                        entityResults = firstArrayResults.Deserialize<List<TEntityResult>>(jsonSerializerOptions);
-                        break;
-                    //If only a single Object was returned then this is likely a Mutation so we return the single
-                    //  item as the first-and-only result of the set...
-                    case JsonObject jsonObj:
-                        var singleResult = jsonObj.Deserialize<TEntityResult>(jsonSerializerOptions);
-                        entityResults = new List<TEntityResult>() { singleResult };
-                        break;
-                }
+                case JsonArray arrayResults:
+                    entityResults = arrayResults.Deserialize<List<TEntityResult>>(jsonSerializerOptions);
+                    break;
+                case JsonObject objectResult:
+                    var singleEntityResult = objectResult.Deserialize<TEntityResult>(jsonSerializerOptions);
+                    entityResults = new List<TEntityResult>(capacity: 1) { singleEntityResult };
+                    break;
             }
 
             //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
@@ -117,37 +87,6 @@ namespace FlurlGraphQL
             //If not a paging result then we simply return the typed results...
             else
                 return new GraphQLQueryResults<TEntityResult>(entityResults);
-        }
-
-        internal static JsonArray FlattenGraphQLEdgesJsonToArrayOfNodes(this JsonArray edgesJson)
-        {
-            var edgeNodesArray = edgesJson
-                .OfType<JsonObject>()
-                .Select(edge =>
-                {
-                    //NOW we must MOVE / Re-locate all Nodes into our output JsonArray which means we have to remove them from the Parent
-                    //  to avoid "Node already has a Parent" exceptions...
-                    var node = edge[GraphQLFields.Node];
-                    edge.Remove(GraphQLFields.Node);
-
-                    //If not already defined, we map the Edges Cursor value to the Node so that the model is simplified
-                    //  and any consumer can just add a "Cursor" property to their model to get the node's cursor.
-                    if (node != null && node[GraphQLFields.Cursor] == null && edge[GraphQLFields.Cursor] is JsonValue cursorJsonValue)
-                        node.AsObject().Add(GraphQLFields.Cursor, cursorJsonValue.ToString());
-
-                    return node;
-                })
-                .Where(n => n != null && !n.IsNullOrUndefinedJson())
-                .ToArray();
-
-            var edgeNodesJson = new JsonArray(edgeNodesArray.ToArray());
-            return edgeNodesJson;
-        }
-
-        public static bool IsNullOrUndefinedJson(this JsonNode jsonNode)
-        {
-            var jsonValueKind = jsonNode.GetValueKind();
-            return jsonValueKind == JsonValueKind.Null || jsonValueKind == JsonValueKind.Undefined;
         }
 
         #endregion
