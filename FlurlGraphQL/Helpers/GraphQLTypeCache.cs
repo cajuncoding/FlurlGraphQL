@@ -9,6 +9,6 @@ namespace FlurlGraphQL.TypeCacheHelpers
         public static readonly Type IGraphQLQueryResultsType = typeof(IGraphQLQueryResults<>);
         public static readonly Type IGraphQLConnectionResultsType = typeof(IGraphQLConnectionResults<>);
         public static readonly Type IGraphQLCollectionSegmentResultsType = typeof(IGraphQLCollectionSegmentResults<>);
-        public static readonly Type CachedIGraphQLEdgeGenericType = typeof(IGraphQLEdge<>);
+        public static readonly Type IGraphQLEdgeEntityType = typeof(IGraphQLEdge<>);
     }
 }

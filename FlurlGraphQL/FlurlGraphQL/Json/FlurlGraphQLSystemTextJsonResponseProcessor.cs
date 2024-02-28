@@ -43,7 +43,7 @@ namespace FlurlGraphQL
                 ? (JsonNode)rawDataJson.AsObject().FirstOrDefault().Value
                 : rawDataJson[queryOperationName];
 
-            var typedResults = querySingleResultJson.ParseJsonToGraphQLResultsInternal<TResult>(JsonSerializer.JsonSerializerOptions);
+            var typedResults = querySingleResultJson.ConvertJsonToGraphQLResultsInternal<TResult>(JsonSerializer.JsonSerializerOptions);
 
             //Ensure that the Results we return are initialized along with any potential Errors (that have already been parsed/captured)... 
             if (this.Errors != null && typedResults is GraphQLQueryResults<TResult> graphqlResults)

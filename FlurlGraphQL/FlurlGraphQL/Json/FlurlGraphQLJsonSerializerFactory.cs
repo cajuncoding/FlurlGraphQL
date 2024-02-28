@@ -1,6 +1,6 @@
 ﻿using System;
 using Flurl.Http.Configuration;
-using FlurlGraphQL.NewtonsoftConstants;
+using FlurlGraphQL.ReflectionConstants;
 using FlurlGraphQL.ReflectionExtensions;
 
 namespace FlurlGraphQL
@@ -11,10 +11,10 @@ namespace FlurlGraphQL
 
         private static Lazy<JsonSerializerFactoryDelegate> CreateNewtonsoftJsonSerializerFromFlurlSerializerLazy { get; } = new Lazy<JsonSerializerFactoryDelegate>(() =>
             AppDomain.CurrentDomain.FindType(
-                ReflectionConstants.NewtonsoftJsonSerializerClassName,
-                assemblyName: ReflectionConstants.NewtonsoftAssemblyName,
-                namespaceName: ReflectionConstants.NewtonsoftNamespace
-            ).CreateDelegateForMethod<JsonSerializerFactoryDelegate>(ReflectionConstants.NewtonsoftJsonSerializerFactoryMethodName)
+                NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftJsonSerializerClassName,
+                assemblyName: NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftAssemblyName,
+                namespaceName: NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftNamespace
+            ).CreateDelegateForMethod<JsonSerializerFactoryDelegate>(NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftJsonSerializerFactoryMethodName)
         );
 
         public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlJsonSerializer)
@@ -28,8 +28,8 @@ namespace FlurlGraphQL
             var flurlSerializerTypeName = flurlJsonSerializer.GetType().Name;
             switch (flurlJsonSerializer.GetType().Name)
             {
-                case ReflectionConstants.FlurlSystemTextJsonSerializerClassName: return CreateSystemTextJsonSerializer(flurlJsonSerializer);
-                case ReflectionConstants.FlurlNewtonsoftJsonSerializerClassName: return CreateNewtonsoftJsonSerializer(flurlJsonSerializer);
+                case FlurlConstants.SystemTextJsonSerializerClassName: return CreateSystemTextJsonSerializer(flurlJsonSerializer);
+                case FlurlConstants.NewtonsoftJsonSerializerClassName: return CreateNewtonsoftJsonSerializer(flurlJsonSerializer);
                 default: throw new InvalidOperationException($"The current Flurl Json Serializer of type [{flurlSerializerTypeName}] is not supported; a DefaultJsonSerializer or NewtonsoftJsonSerializer is expected.");
             }
         }

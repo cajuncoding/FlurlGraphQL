@@ -107,7 +107,7 @@ namespace FlurlGraphQL
                 var entityType = typeof(TEntityResult);
 
                 //Handle case where GraphQLEdge<TNode> wrapper class is used to simplify retrieving the Edges!
-                if (entityType.IsDerivedFromGenericParent(GraphQLTypeCache.CachedIGraphQLEdgeGenericType))
+                if (entityType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLEdgeEntityType))
                 {
                     //If the current type is a Generic GraphQLEdge<TEntity> then we can directly deserialize to the Generic Type!
                     //entityResults = edges.Select(edge => edge?.ToObject<TEntityResult>(jsonSerializer)).ToList();
@@ -128,6 +128,7 @@ namespace FlurlGraphQL
                     case JArray arrayResults:
                         entityResults = arrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
                         break;
+                    //TODO: Determine what this use case is really here to support????
                     case JObject jsonObj when jsonObj.First is JArray firstArrayResults:
                         entityResults = firstArrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
                         break;
