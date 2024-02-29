@@ -59,7 +59,6 @@ namespace FlurlGraphQL
 
             //Get our Json Rewriter from our Factory (which provides Caching for Types already processed)!
             var graphqlJsonRewriter = FlurlGraphQLSystemTextJsonRewriter.ForType<TEntityResult>();
-
             var rewriterResults = graphqlJsonRewriter.RewriteJsonAsNeededForEasyGraphQLModelMapping(json);
             
             paginationType = rewriterResults.PaginationType;
