@@ -19,10 +19,12 @@ namespace FlurlGraphQL.ReflectionExtensions
         /// <param name="parentType"></param>
         /// <returns></returns>
         public static bool IsDerivedFromGenericParent(this Type type, Type parentType)
-        => (type != null && type.IsGenericType && type.GetGenericTypeDefinition() == parentType)
-           || type.BaseType.IsDerivedFromGenericParent(parentType)
-           //Recursively search for Interfaces...
-           || type.GetInterfaces().Any(t => t.IsDerivedFromGenericParent(parentType));
+        => type != null && (
+                (type.IsGenericType && type.GetGenericTypeDefinition() == parentType)
+                || type.BaseType.IsDerivedFromGenericParent(parentType)
+                //Recursively search for Interfaces...
+                || type.GetInterfaces().Any(t => t.IsDerivedFromGenericParent(parentType))
+           );
 
         public static bool InheritsFrom<TInterface>(this Type type)
             => typeof(TInterface).IsAssignableFrom(type);
