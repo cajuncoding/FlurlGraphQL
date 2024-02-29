@@ -38,13 +38,14 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
 
             TypeName = targetType.Name;
             EntityTypeName = (entityType ?? targetType).Name;
+            ImplementsIGraphQLQueryResults = entityType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType);
             AllChildProperties = BuildRewriterJsonPropInfosRecursivelyInternal(targetType);
             ChildPropertiesToRewrite = AllChildProperties.Where(p => p.ShouldBeFlattened).ToArray();
         }
 
         public string TypeName { get; }
-
         public string EntityTypeName { get; }
+        public bool ImplementsIGraphQLQueryResults { get; }
 
         public IList<FlurlGraphQLJsonRewriterPropInfo> AllChildProperties { get; }
         public IList<FlurlGraphQLJsonRewriterPropInfo> ChildPropertiesToRewrite { get; }
@@ -64,7 +65,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                 //Construct our Final Rewrite Prop Info and recursively process any Child Properties...
                 return new FlurlGraphQLJsonRewriterPropInfo(
                     propertyName: propInfo.Name,
-                    propertyMappedJsonName: GetMappedJsonPropertyName(propInfo.PropertyType),
+                    propertyMappedJsonName: GetMappedJsonPropertyName(propInfo),
                     implementsICollection: true, //Always True per the above Linq Query...
                     implementsIGraphQLQueryResults: propertyType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType),
                     implementsIGraphQLEdge: propertyType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLEdgeEntityType),
@@ -81,11 +82,11 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         /// This allows us to simplify the code for either Json mapping implementation in one place. And all reflection impacts are mitigated
         ///     by caching of the final built Type Info results...
         /// </summary>
-        /// <param name="entityType"></param>
+        /// <param name="propInfo"></param>
         /// <returns></returns>
-        protected static string GetMappedJsonPropertyName(Type entityType)
+        protected static string GetMappedJsonPropertyName(PropertyInfo propInfo)
         {
-            var mappingAttribute = entityType.FindAttributes(
+            var mappingAttribute = propInfo.FindAttributes(
                 SystemTextJsonConstants.JsonPropertyAttributeName,
                 NewtonsoftJsonConstants.JsonPropertyAttributeName
             ).FirstOrDefault();
@@ -97,7 +98,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                 case NewtonsoftJsonConstants.JsonPropertyAttributeName:
                     return mappingAttribute.BruteForceGetPropertyValue<string>(NewtonsoftJsonConstants.JsonPropertyAttributeNamePropertyName);
                 default:
-                    return entityType.Name;
+                    return propInfo.Name;
             }
         }
 
@@ -134,5 +135,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         public bool ShouldBeFlattened => ImplementsICollection && !ImplementsIGraphQLQueryResults;
         public IList<FlurlGraphQLJsonRewriterPropInfo> AllChildProperties { get; }
         public IList<FlurlGraphQLJsonRewriterPropInfo> ChildPropertiesToRewrite { get; }
+
+        public override string ToString() => $"Prop=[{PropertyName}]::JsonName[{PropertyMappedJsonName}]";
     }
 }
