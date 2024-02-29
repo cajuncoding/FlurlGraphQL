@@ -18,13 +18,13 @@
         public const string FlurlGraphQLNewtonsoftJsonSerializerClassName = "FlurlGraphQLNewtonsoftJsonSerializer";
         public const string FlurlGraphQLNewtonsoftJsonSerializerFactoryMethodName = "FromFlurlSerializer";
 
-        public const string JsonPropertyAttributeName = "JsonProperty";
+        public const string JsonPropertyAttributeClassName = "JsonPropertyAttribute";
         public const string JsonPropertyAttributeNamePropertyName = "PropertyName";
     }
 
     internal static class SystemTextJsonConstants
     {
-        public const string JsonPropertyAttributeName = "JsonPropertyName";
+        public const string JsonPropertyAttributeClassName = "JsonPropertyNameAttribute";
         public const string JsonPropertyAttributeNamePropertyName = "Name";
     }
 }

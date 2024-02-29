@@ -70,7 +70,7 @@ namespace FlurlGraphQL
     internal class SystemTextJsonGraphQLResult
     {
         [JsonPropertyName("data")]
-        public JsonNode Data { get; set; }
+        public JsonObject Data { get; set; }
 
         [JsonPropertyName("errors")]
         public List<GraphQLError> Errors { get; set; }

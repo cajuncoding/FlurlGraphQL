@@ -151,6 +151,33 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
+        public void TestSystemTextJsonParsingOfNestedPaginatedGraphQLResultsWithJsonPropertyNameMappings()
+        {
+            var systemTextJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedJsonText);
+
+            //NOTE: This will explicitly test/exercise (also for Debugging) the Internal Extension method and by extension also
+            //			the custom Json Converter [FlurlGraphQLNewtonsoftJsonPaginatedResultsConverter]!
+            var characterResults = systemTextJsonGraphQLProcessor.LoadTypedResults<StarWarsCharacterWithJsonMappings>().ToGraphQLConnectionResultsInternal();
+
+            Assert.AreEqual(2, characterResults.Count);
+            foreach (var result in characterResults)
+            {
+                Assert.IsNotNull(result);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(result.MyCursor));
+                TestContext.WriteLine($"Character [{result.MyPersonalIdentifier}] [{result.MyName}] [{result.MyHeight}]");
+
+                foreach (var friend in result.MyFriends)
+                {
+                    Assert.IsNotNull(friend);
+                    Assert.IsTrue(friend.MyPersonalIdentifier > 0);
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(friend.MyName));
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(friend.MyCursor));
+                    TestContext.WriteLine($"   Friend [{friend.MyPersonalIdentifier}] [{friend.MyName}] [{friend.MyHeight}]");
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestNewtonsoftJsonParsingOfNestedPaginatedGraphQLResults()
         {
             var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.NestedPaginatedJsonText);

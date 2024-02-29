@@ -26,10 +26,13 @@ namespace FlurlGraphQL
             if (_cachedParsedResults is IGraphQLQueryResults<TResult> typedResult)
                 return typedResult;
 
-            var parsedResult = _graphQLResponseProcessor.LoadTypedResults<TResult>(this.OperationName);
-            _cachedParsedResults = parsedResult;
-            
-            return parsedResult;
+            lock (_cachedParsedResults)
+            {
+                var parsedResult = _graphQLResponseProcessor.LoadTypedResults<TResult>(this.OperationName);
+                _cachedParsedResults = parsedResult;
+                
+                return parsedResult;
+            }
         }
     }
 

@@ -83,7 +83,7 @@ namespace FlurlGraphQL
             var totalCount = (int?)json.Field(GraphQLFields.TotalCount);
 
             PaginationType? paginationType = null;
-            List<TEntityResult> entityResults = null;
+            IReadOnlyList<TEntityResult> entityResults = null;
 
             //Dynamically resolve the Results from:
             // - the Nodes child of the Data Result (for nodes{} based Cursor Paginated queries)
@@ -92,12 +92,12 @@ namespace FlurlGraphQL
             // - finally use the (non-nested) array of results if not a Paginated result set of any kind above...
             if (json.Field(GraphQLFields.Nodes) is JArray nodesJson)
             {
-                entityResults = nodesJson.ToObject<List<TEntityResult>>(jsonSerializer);
+                entityResults = nodesJson.ToObject<TEntityResult[]>(jsonSerializer);
                 paginationType = PaginationType.Cursor;
             }
             else if (json.Field(GraphQLFields.Items) is JArray itemsJson)
             {
-                entityResults = itemsJson.ToObject<List<TEntityResult>>(jsonSerializer);
+                entityResults = itemsJson.ToObject<TEntityResult[]>(jsonSerializer);
                 paginationType = PaginationType.Offset;
             }
             //Handle Edges case (which allow access to the Cursor)
@@ -111,14 +111,14 @@ namespace FlurlGraphQL
                 {
                     //If the current type is a Generic GraphQLEdge<TEntity> then we can directly deserialize to the Generic Type!
                     //entityResults = edges.Select(edge => edge?.ToObject<TEntityResult>(jsonSerializer)).ToList();
-                    entityResults = edgesJson.ToObject<List<TEntityResult>>(jsonSerializer);
+                    entityResults = edgesJson.ToObject<TEntityResult[]>(jsonSerializer);
                 }
                 //Handle all other cases including when the Entity implements IGraphQLEdge (e.g. the entity has a Cursor Property)...
                 else
                 {
                     entityResults = edgesJson
                         .FlattenGraphQLEdgesJsonToArrayOfNodes()
-                        .ToObject<List<TEntityResult>>(jsonSerializer);
+                        .ToObject<TEntityResult[]>(jsonSerializer);
                 }
             }
             else
@@ -126,33 +126,36 @@ namespace FlurlGraphQL
                 switch (json)
                 {
                     case JArray arrayResults:
-                        entityResults = arrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
+                        entityResults = arrayResults.ToObject<TEntityResult[]>(jsonSerializer);
                         break;
                     //TODO: Determine what this use case is really here to support????
                     case JObject jsonObj when jsonObj.First is JArray firstArrayResults:
-                        entityResults = firstArrayResults.ToObject<List<TEntityResult>>(jsonSerializer);
+                        entityResults = firstArrayResults.ToObject<TEntityResult[]>(jsonSerializer);
                         break;
                     //If only a single Object was returned then this is likely a Mutation so we return the single
                     //  item as the first-and-only result of the set...
                     case JObject jsonObj:
                         var singleResult = jsonObj.ToObject<TEntityResult>(jsonSerializer);
-                        entityResults = new List<TEntityResult>() { singleResult };
+                        entityResults = new[] { singleResult };
                         break;
                 }
             }
 
-            //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
-            if (paginationType == PaginationType.Cursor)
-                return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
-            else if (paginationType == PaginationType.Offset)
-                return new GraphQLCollectionSegmentResults<TEntityResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
-            //If we have a Total Count then we also must return a Paging result because it's possible to request TotalCount by itself without any other PageInfo or Nodes...
-            //NOTE: WE must check this AFTER we process based on Cursor Type to make sure Cursor/Offset are both handled (if specified)...
-            else if (totalCount.HasValue)
-                return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
-            //If not a paging result then we simply return the typed results...
-            else
-                return new GraphQLQueryResults<TEntityResult>(entityResults);
+            switch (paginationType)
+            {
+                //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
+                case PaginationType.Cursor:
+                    return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
+                case PaginationType.Offset:
+                    return new GraphQLCollectionSegmentResults<TEntityResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
+                default:
+                {
+                    //If we have a Total Count then we also must return a Paging result because it's possible to request TotalCount by itself without any other PageInfo or Nodes...
+                    return totalCount.HasValue 
+                        ? new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo) 
+                        : new GraphQLQueryResults<TEntityResult>(entityResults);
+                }
+            }
         }
 
         internal static JArray FlattenGraphQLEdgesJsonToArrayOfNodes(this JArray edgesJson)
@@ -163,6 +166,7 @@ namespace FlurlGraphQL
                 {
                     var node = edge.Field(GraphQLFields.Node) as JObject;
 
+                    //TODO: ADD Support to migrate ALL Edge values to the Node (similar to how System.Text.Json) now provides!
                     //If not already defined, we map the Edges Cursor value to the Node so that the model is simplified
                     //  and any consumer can just add a "Cursor" property to their model to get the node's cursor.
                     if (!node.IsNullOrUndefinedJson() && node.Field(GraphQLFields.Cursor) == null)
