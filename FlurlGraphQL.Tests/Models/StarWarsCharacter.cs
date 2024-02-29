@@ -15,6 +15,16 @@ namespace FlurlGraphQL.Tests.Models
         public string Cursor { get; set; }
     }
 
+    internal class StarWarsCharacterWithJsonMappings
+    {
+        [JsonPropertyName("personalIdentifier")] public int MyPersonalIdentifier { get; set; }
+        [JsonPropertyName("name")] public string MyName { get; set; }
+        [JsonPropertyName("height")] public decimal MyHeight { get; set; }
+        [JsonPropertyName("friends")] public List<StarWarsCharacterWithJsonMappings> MyFriends { get; set; }
+        [JsonPropertyName("cursor")] public string MyCursor { get; set; }
+    }
+
+
     // ReSharper disable once ClassNeverInstantiated.Local
     internal class StarWarsCharacterWithNestedPagingResult
     {

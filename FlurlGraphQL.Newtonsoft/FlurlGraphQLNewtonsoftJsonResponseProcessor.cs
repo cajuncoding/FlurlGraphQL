@@ -23,6 +23,7 @@ namespace FlurlGraphQL
 
         protected JObject RawDataJObject { get; }
         protected IReadOnlyList<GraphQLError> Errors { get; }
+        protected string ErrorContentSerialized { get; set; }
 
         public TJson GetRawJsonData<TJson>() => this.RawDataJObject is TJson rawDataJson
             ? rawDataJson
@@ -62,14 +63,7 @@ namespace FlurlGraphQL
             return new GraphQLBatchQueryResults(operationResults);
         }
 
-        protected string _errorContentSerialized;
-
         public virtual string GetErrorContent()
-        {
-            if (_errorContentSerialized == null)
-                _errorContentSerialized = JsonSerializer.Serialize(this.Errors);
-            
-            return _errorContentSerialized;
-        }
+            => ErrorContentSerialized ?? (ErrorContentSerialized = JsonSerializer.Serialize(this.Errors));
     }
 }

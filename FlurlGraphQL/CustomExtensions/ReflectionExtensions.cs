@@ -75,7 +75,7 @@ namespace FlurlGraphQL.ReflectionExtensions
         /// <returns></returns>
         public static T BruteForceGetPropertyValue<T>(this object obj, string name)
         {
-            PropertyInfo prop = obj?.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.IgnoreCase);
+            PropertyInfo prop = obj?.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase);
             if (prop != null)
                 return (T)prop.GetValue(obj);
 

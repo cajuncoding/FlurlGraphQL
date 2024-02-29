@@ -189,19 +189,35 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                 .Select(edge =>
                 {
                     var node = edge[GraphQLFields.Node] as JsonObject;
-                    
-                    //NOW we must MOVE / Re-locate all Nodes into our output JsonArray which means we have to remove them from the Parent to avoid "Node already has a Parent" exceptions...
-                    edge.Remove(GraphQLFields.Node);
 
-                    //If not already defined, we map the Edges Cursor value to the Node so that the model is simplified
-                    //  and any consumer can just add a "Cursor" property to their model to get the node's cursor.
-                    if (node != null && node[GraphQLFields.Cursor] == null && edge[GraphQLFields.Cursor] is JsonValue cursorJsonValue)
-                        node.Add(GraphQLFields.Cursor, cursorJsonValue.ToString());
+                    if (node != null)
+                    {
+                        //NOW we must MOVE / Re-locate all Nodes into our output JsonArray which means we have to remove them from the Parent to avoid "Node already has a Parent" exceptions...
+                        edge.Remove(GraphQLFields.Node);
 
-                    //TODO: It is possible to add Arbitrary fields to the Edge that may be lost so we may want to add those to the Node here in the future . . . but may need to be a configurable option somewhere?
+                        //Migrate all Properties from the Edge level to the Node level so they can more easily be mapped into C# Models
+                        //  by simply adding corresponding properties; the main use case for this is likely the Cursor property of the Edge...
+                        //We do check to ensure that a Json property of the same name doesn't already exist to ensure we don't incorrectly overwrite it!
+                        //NOTE: For example with the Cursor, now any consumer can just add a "Cursor" property to their model to get the node's cursor as it's been flattened into the node itself.
+                        //NOTE: We don't need to worry about the actual Node property here since it was already removed above (it MUST be removed for other reasons)...
+                        var edgePropsToMove = edge.Where(p => !node.ContainsKey(p.Key)).ToArray();
+
+                        //We must FIRST Remove the Props from the Edge to remove them from the Parent to avoid "Node already has a Parent" exceptions;
+                        //  clearing the Edge seems to be the easiest/fastest approach... 
+                        if (edgePropsToMove.HasAny())
+                            edge.Clear();
+
+                        foreach (var edgeProp in edgePropsToMove)
+                        {
+                            if (edgeProp.Value is JsonValue edgePropJsonValue)
+                                node.Add(edgeProp.Key, edgePropJsonValue);
+                        }
+                    }
 
                     return node;
-                }).ToArray();
+                })
+                .Where(i => i.IsNotNullOrUndefined())
+                .ToArray();
         }
 
         private PaginationType? DeterminePaginationType(JsonNode json)

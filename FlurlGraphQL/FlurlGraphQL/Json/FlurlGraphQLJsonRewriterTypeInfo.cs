@@ -87,15 +87,15 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         protected static string GetMappedJsonPropertyName(PropertyInfo propInfo)
         {
             var mappingAttribute = propInfo.FindAttributes(
-                SystemTextJsonConstants.JsonPropertyAttributeName,
-                NewtonsoftJsonConstants.JsonPropertyAttributeName
+                SystemTextJsonConstants.JsonPropertyAttributeClassName,
+                NewtonsoftJsonConstants.JsonPropertyAttributeClassName
             ).FirstOrDefault();
 
             switch (mappingAttribute?.GetType().Name)
             {
-                case SystemTextJsonConstants.JsonPropertyAttributeName:
+                case SystemTextJsonConstants.JsonPropertyAttributeClassName:
                     return mappingAttribute.BruteForceGetPropertyValue<string>(SystemTextJsonConstants.JsonPropertyAttributeNamePropertyName);
-                case NewtonsoftJsonConstants.JsonPropertyAttributeName:
+                case NewtonsoftJsonConstants.JsonPropertyAttributeClassName:
                     return mappingAttribute.BruteForceGetPropertyValue<string>(NewtonsoftJsonConstants.JsonPropertyAttributeNamePropertyName);
                 default:
                     return propInfo.Name;

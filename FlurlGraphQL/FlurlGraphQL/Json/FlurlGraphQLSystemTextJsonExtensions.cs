@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using FlurlGraphQL.FlurlGraphQL.Json;
-using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.SystemTextJsonExtensions;
-using FlurlGraphQL.TypeCacheHelpers;
 
 namespace FlurlGraphQL
 {
@@ -34,9 +31,9 @@ namespace FlurlGraphQL
                 ? new JsonSerializerOptions() 
                 : new JsonSerializerOptions(jsonSerializerOptions);
 
-            //Must ALWAYS enable Case-insensitive Field Matching since GraphQL Json (and Json in general) use CamelCase and nearly always mismatch C# Naming Pascal Case standards...
+            //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft) we always enable case-insensitive Field Matching with System.Text.Json.
+            //This is also helpful since GraphQL Json (and Json in general) use CamelCase and nearly always mismatch C# Naming Pascal Case standards of C# Class Models, etc...
             //NOTE: WE are operating on a copy of the original Json Settings so this does NOT mutate the core/original settings from Flurl or those specified for the GraphQL request, etc.
-            //TODO: Decide if we want to keep this enforced... as it's not necessary now that we Re-Write the Json before de-serializing to the Model...
             sanitizedJsonSerializerOptions.PropertyNameCaseInsensitive = true;
 
             return ConvertJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(json, sanitizedJsonSerializerOptions);
@@ -54,38 +51,40 @@ namespace FlurlGraphQL
             var pageInfo = json[GraphQLFields.PageInfo]?.Deserialize<GraphQLCursorPageInfo>(jsonSerializerOptions);
             var totalCount = (int?)json[GraphQLFields.TotalCount];
 
-            PaginationType? paginationType = null;
-            List<TEntityResult> entityResults = null;
-
             //Get our Json Rewriter from our Factory (which provides Caching for Types already processed)!
             var graphqlJsonRewriter = FlurlGraphQLSystemTextJsonRewriter.ForType<TEntityResult>();
+
             var rewriterResults = graphqlJsonRewriter.RewriteJsonAsNeededForEasyGraphQLModelMapping(json);
             
-            paginationType = rewriterResults.PaginationType;
+            var paginationType = rewriterResults.PaginationType;
+            IReadOnlyList<TEntityResult> entityResults = null;
 
             switch (rewriterResults.Json)
             {
                 case JsonArray arrayResults:
-                    entityResults = arrayResults.Deserialize<List<TEntityResult>>(jsonSerializerOptions);
+                    entityResults = arrayResults.Deserialize<TEntityResult[]>(jsonSerializerOptions);
                     break;
                 case JsonObject objectResult:
                     var singleEntityResult = objectResult.Deserialize<TEntityResult>(jsonSerializerOptions);
-                    entityResults = new List<TEntityResult>(capacity: 1) { singleEntityResult };
+                    entityResults = new[] { singleEntityResult };
                     break;
             }
 
-            //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
-            if (paginationType == PaginationType.Cursor)
-                return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
-            else if (paginationType == PaginationType.Offset)
-                return new GraphQLCollectionSegmentResults<TEntityResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
-            //If we have a Total Count then we also must return a Paging result because it's possible to request TotalCount by itself without any other PageInfo or Nodes...
-            //NOTE: WE must check this AFTER we process based on Cursor Type to make sure Cursor/Offset are both handled (if specified)...
-            else if (totalCount.HasValue)
-                return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
-            //If not a paging result then we simply return the typed results...
-            else
-                return new GraphQLQueryResults<TEntityResult>(entityResults);
+            switch (paginationType)
+            {
+                //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
+                case PaginationType.Cursor:
+                    return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
+                case PaginationType.Offset:
+                    return new GraphQLCollectionSegmentResults<TEntityResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
+                default:
+                {
+                    //If we have a Total Count then we also must return a valid Paging result because it's possible to request TotalCount by itself without any other PageInfo or Nodes...
+                    return totalCount.HasValue 
+                        ? new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo) 
+                        : new GraphQLQueryResults<TEntityResult>(entityResults);
+                }
+            }
         }
 
         #endregion

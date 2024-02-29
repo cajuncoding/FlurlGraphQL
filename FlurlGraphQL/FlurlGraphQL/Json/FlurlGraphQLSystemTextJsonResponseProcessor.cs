@@ -8,9 +8,9 @@ namespace FlurlGraphQL
 {
     public class FlurlGraphQLSystemTextJsonResponseProcessor : IFlurlGraphQLResponseProcessor
     {
-        public FlurlGraphQLSystemTextJsonResponseProcessor(JsonNode rawDataJsonNode, List<GraphQLError> errors, FlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
+        public FlurlGraphQLSystemTextJsonResponseProcessor(JsonObject rawDataJsonNode, List<GraphQLError> errors, FlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
         {
-            this.RawDataJsonNode = rawDataJsonNode;
+            this.RawDataJsonObject = rawDataJsonNode;
             this.Errors = errors?.AsReadOnly();
             this.JsonSerializer = systemTextJsonSerializer.AssertArgIsNotNull(nameof(systemTextJsonSerializer));
         }
@@ -19,11 +19,13 @@ namespace FlurlGraphQL
         public FlurlGraphQLSystemTextJsonSerializer JsonSerializer { get; }
         #endregion
 
-        protected JsonNode RawDataJsonNode { get; }
+        protected JsonObject RawDataJsonObject { get; }
         protected IReadOnlyList<GraphQLError> Errors { get; }
+        protected string ErrorContentSerialized { get; set; }
+
 
         public TJson GetRawJsonData<TJson>()
-            => this.RawDataJsonNode is TJson rawDataJson
+            => this.RawDataJsonObject is TJson rawDataJson
                 ? rawDataJson
                 : throw new ArgumentOutOfRangeException(
                     nameof(TJson), 
@@ -34,7 +36,7 @@ namespace FlurlGraphQL
 
         public virtual IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class
         {
-            var rawDataJson = (JsonNode)this.RawDataJsonNode;
+            var rawDataJson = (JsonNode)this.RawDataJsonObject;
 
             //BBernard
             //Extract the data results for the operation name specified, or first results as default (most common use case)...
@@ -54,14 +56,15 @@ namespace FlurlGraphQL
 
         public virtual IGraphQLBatchQueryResults LoadBatchQueryResults()
         {
-            //TODO: WIP...
-            throw new NotImplementedException();
+            var operationResults = this.RawDataJsonObject
+                .Select(prop => new GraphQLQueryOperationResult(prop.Key, this))
+                .ToList();
+
+            return new GraphQLBatchQueryResults(operationResults);
         }
 
         public virtual string GetErrorContent()
-        {
-            //TODO: WIP...
-            throw new NotImplementedException();
-        }
+            => ErrorContentSerialized ?? (ErrorContentSerialized = JsonSerializer.Serialize(this.Errors));
+
     }
 }
