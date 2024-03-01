@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using FlurlGraphQL.FlurlGraphQL.Json;
 using FlurlGraphQL.SystemTextJsonExtensions;
 
@@ -31,10 +32,15 @@ namespace FlurlGraphQL
                 ? new JsonSerializerOptions() 
                 : new JsonSerializerOptions(jsonSerializerOptions);
 
-            //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft) we always enable case-insensitive Field Matching with System.Text.Json.
+            //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we always enable case-insensitive Field Matching with System.Text.Json.
             //This is also helpful since GraphQL Json (and Json in general) use CamelCase and nearly always mismatch C# Naming Pascal Case standards of C# Class Models, etc...
             //NOTE: WE are operating on a copy of the original Json Settings so this does NOT mutate the core/original settings from Flurl or those specified for the GraphQL request, etc.
             sanitizedJsonSerializerOptions.PropertyNameCaseInsensitive = true;
+
+            //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we need to provide support for String to Enum conversion along with support for enum annotations
+            //  via [EnumMember(Value ="CustomName")] annotation (compatible with Newtonsoft.Json). In addition we now also support [Description("CustomName")] annotation for
+            //  easier syntax that is arguably more intuitive to use.
+            sanitizedJsonSerializerOptions.Converters.Add(new JsonStringEnumMemberConverter(allowIntegerValues: true));
 
             return ConvertJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(json, sanitizedJsonSerializerOptions);
         }
@@ -48,8 +54,13 @@ namespace FlurlGraphQL
             //Dynamically parse the data from the results...
             //NOTE: We process PageInfo as Cursor Paging as the Default (because it's strongly encouraged by GraphQL.org
             //          & Offset Paging model is a subset of Cursor Paging (less flexible).
-            var pageInfo = json[GraphQLFields.PageInfo]?.Deserialize<GraphQLCursorPageInfo>(jsonSerializerOptions);
-            var totalCount = (int?)json[GraphQLFields.TotalCount];
+            GraphQLCursorPageInfo pageInfo = null;
+            int? totalCount = null;
+            if (json is JsonObject jsonObject)
+            {
+                pageInfo = jsonObject[GraphQLFields.PageInfo]?.Deserialize<GraphQLCursorPageInfo>(jsonSerializerOptions);
+                totalCount = (int?)jsonObject[GraphQLFields.TotalCount];
+            }
 
             //Get our Json Rewriter from our Factory (which provides Caching for Types already processed)!
             var graphqlJsonRewriter = FlurlGraphQLSystemTextJsonRewriter.ForType<TEntityResult>();

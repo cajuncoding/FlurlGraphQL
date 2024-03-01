@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
+using FlurlGraphQL.FlurlGraphQL.Json;
 using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -15,7 +16,7 @@ namespace FlurlGraphQL.Tests
     {
         #region Sample Json Strings
 
-        private string NestedJsonStructureFlattened { get; } = @"
+        private string NestedJsonStructureFlattenedWithForceEnum { get; } = @"
             [
                 {
                     ""cursor"": ""MQ=="",
@@ -24,18 +25,21 @@ namespace FlurlGraphQL.Tests
                             ""cursor"": ""MQ=="",
                             ""height"": 1.72,
                             ""name"": ""C-3PO"",
-                            ""personalIdentifier"": 2000
+                            ""personalIdentifier"": 2000,
+                            ""theForce"": ""NONE""
                         },
                         {
                             ""cursor"": ""Mg=="",
                             ""height"": 1.72,
                             ""name"": ""Han Solo"",
-                            ""personalIdentifier"": 1002
+                            ""personalIdentifier"": 1002,
+                            ""theForce"": ""NONE""
                         }
                     ],
                     ""height"": 1.72,
                     ""name"": ""Luke Skywalker"",
-                    ""personalIdentifier"": 1000
+                    ""personalIdentifier"": 1000,
+                    ""theForce"": ""LIGHT_SIDE""
                 },
                 {
                     ""cursor"": ""Mg=="",
@@ -44,12 +48,14 @@ namespace FlurlGraphQL.Tests
                             ""cursor"": ""MQ=="",
                             ""height"": 1.72,
                             ""name"": ""Wilhuff Tarkin"",
-                            ""personalIdentifier"": 1004
+                            ""personalIdentifier"": 1004,
+                            ""theForce"": ""NONE""
                         }
                     ],
                     ""height"": 1.72,
                     ""name"": ""Darth Vader"",
-                    ""personalIdentifier"": 1001
+                    ""personalIdentifier"": 1001,
+                    ""theForce"": ""DARK_SIDE""
                 }
             ]
         ";
@@ -123,19 +129,30 @@ namespace FlurlGraphQL.Tests
         #endregion
 
         [TestMethod]
-        public void TestSimpleSystemTextJsonParsingOfFlattenedGraphQLResults()
+        public void TestSimpleSystemTextJsonParsingOfPreFlattenedJsonWithStringEnumWithAnnotationJsonConverter()
         {
             var jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
-            var characterResults = JsonSerializer.Deserialize<List<StarWarsCharacter>>(NestedJsonStructureFlattened, jsonOptions);
+            jsonOptions.Converters.Add(new JsonStringEnumMemberConverter(allowIntegerValues: true));
+            //jsonOptions.Converters.Add(new JsonStringEnumConverter());
 
-            var graphqlConnectionResults = new GraphQLConnectionResults<StarWarsCharacter>(characterResults, 10, new GraphQLCursorPageInfo(
-                startCursor: characterResults.First().Cursor,
-                endCursor: characterResults.Last().Cursor,
-                hasNextPage: true,
-                hasPreviousPage: false
-            ));
+            var characterResults = JsonSerializer.Deserialize<List<StarWarsCharacterWithEnum>>(NestedJsonStructureFlattenedWithForceEnum, jsonOptions);
 
-            AssertCursorPaginatedResultsAreValid(graphqlConnectionResults);
+            Assert.IsNotNull(characterResults);
+            Assert.AreEqual(2, characterResults.Count);
+            Assert.AreEqual(TheForce.LightSide, characterResults.First(c => c.Name.StartsWith("Luke")).TheForce);
+            Assert.AreEqual(TheForce.DarkSide, characterResults.First(c => c.Name.StartsWith("Darth")).TheForce);
+
+            foreach (var result in characterResults)
+            {
+                TestContext.WriteLine($"Character [{result.PersonalIdentifier}] [{result.Name}] [{result.Height}]");
+
+                foreach (var friend in result.Friends)
+                {
+                    Assert.IsNotNull(friend);
+                    Assert.AreEqual(TheForce.None, friend.TheForce);
+                    TestContext.WriteLine($"   Friend [{friend.PersonalIdentifier}] [{friend.Name}] [{friend.Height}]");
+                }
+            }
         }
 
         [TestMethod]
@@ -143,8 +160,6 @@ namespace FlurlGraphQL.Tests
         {
             var systemTextJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedJsonText);
 
-            //NOTE: This will explicitly test/exercise (also for Debugging) the Internal Extension method and by extension also
-            //			the custom Json Converter [FlurlGraphQLNewtonsoftJsonPaginatedResultsConverter]!
             var characterResults = systemTextJsonGraphQLProcessor.LoadTypedResults<StarWarsCharacter>().ToGraphQLConnectionResultsInternal();
 
             AssertCursorPaginatedResultsAreValid(characterResults);
@@ -182,8 +197,6 @@ namespace FlurlGraphQL.Tests
         {
             var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.NestedPaginatedJsonText);
 
-            //NOTE: This will explicitly test/exercise (also for Debugging) the Internal Extension method and by extension also
-            //			the custom Json Converter [FlurlGraphQLNewtonsoftJsonPaginatedResultsConverter]!
             var characterResults = newtonsoftJsonGraphQLProcessor.LoadTypedResults<StarWarsCharacter>().ToGraphQLConnectionResultsInternal();
 
             AssertCursorPaginatedResultsAreValid(characterResults);

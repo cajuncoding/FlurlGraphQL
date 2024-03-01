@@ -38,6 +38,7 @@
 	<ItemGroup>
 		<!-- [assembly: InternalsVisibleTo("FlurlGraphQL.Tests")] -->
 		<InternalsVisibleTo Include="FlurlGraphQL.Tests" />
+		<InternalsVisibleTo Include="FlurlGraphQL.Benchmarks" />
 	</ItemGroup>
 
 </Project>
