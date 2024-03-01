@@ -45,6 +45,7 @@
 		
 		<!-- [assembly: InternalsVisibleTo("FlurlGraphQL.Tests")] -->
 		<InternalsVisibleTo Include="FlurlGraphQL.Tests" />
+		<InternalsVisibleTo Include="FlurlGraphQL.Benchmarks" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -58,6 +59,7 @@
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
+	  <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
 	</ItemGroup>
 
 </Project>

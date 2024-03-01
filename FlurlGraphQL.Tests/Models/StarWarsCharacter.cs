@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
@@ -13,6 +14,26 @@ namespace FlurlGraphQL.Tests.Models
         public decimal Height { get; set; }
         public List<StarWarsCharacter> Friends { get; set; }
         public string Cursor { get; set; }
+    }
+
+    internal class StarWarsCharacterWithEnum
+    {
+        public int PersonalIdentifier { get; set; }
+        public string Name { get; set; }
+        public decimal Height { get; set; }
+        public List<StarWarsCharacterWithEnum> Friends { get; set; }
+        public string Cursor { get; set; }
+        public TheForce TheForce { get; set; }
+    }
+
+    internal enum TheForce
+    {
+        [EnumMember(Value = "NONE")]
+        None = 0,
+        [EnumMember(Value = "LIGHT_SIDE")]
+        LightSide = 1,
+        [EnumMember(Value = "DARK_SIDE")]
+        DarkSide = -1
     }
 
     internal class StarWarsCharacterWithJsonMappings

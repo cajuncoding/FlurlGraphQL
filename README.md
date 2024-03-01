@@ -43,6 +43,21 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .ReceiveGraphQLQueryResults<StarWarsCharacter>();
 ```
 
+## Performance with System.Text.Json vs Newtonsoft.Json
+    // * Summary *
+
+    BenchmarkDotNet v0.13.12, Windows 11 (10.0.22621.3155/22H2/2022Update/SunValley2)
+    AMD Ryzen 9 5900X, 1 CPU, 24 logical and 12 physical cores
+    .NET SDK 8.0.200-preview.23624.5
+      [Host]     : .NET 6.0.27 (6.0.2724.6912), X64 RyuJIT AVX2 [AttachedDebugger]
+      DefaultJob : .NET 6.0.27 (6.0.2724.6912), X64 RyuJIT AVX2
+
+
+    | Method                    | Mean      | Error    | StdDev   | Ratio |
+    |-------------------------- |----------:|---------:|---------:|------:|
+    | ParsingNewtonsoftJson     | 578.75 ms | 4.985 ms | 4.663 ms |  1.00 |
+    | ParsingWithSystemTextJson |  54.50 ms | 0.738 ms | 0.654 ms |  0.09 |
+
 ## Nuget Package (netstandard2.0 & netstandard2.1)
 To use this in your project, add the [FlurlGraphQL.Querying](https://www.nuget.org/packages/FlurlGraphQL.Querying/) NuGet package to your project.
 
