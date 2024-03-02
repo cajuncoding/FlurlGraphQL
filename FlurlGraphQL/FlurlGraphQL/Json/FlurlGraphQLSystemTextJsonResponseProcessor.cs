@@ -12,11 +12,11 @@ namespace FlurlGraphQL
         {
             this.RawDataJsonObject = rawDataJsonNode;
             this.Errors = errors?.AsReadOnly();
-            this.JsonSerializer = systemTextJsonSerializer.AssertArgIsNotNull(nameof(systemTextJsonSerializer));
+            this.GraphQLJsonSerializer = systemTextJsonSerializer.AssertArgIsNotNull(nameof(systemTextJsonSerializer));
         }
 
         #region Non-interface Properties
-        public FlurlGraphQLSystemTextJsonSerializer JsonSerializer { get; }
+        public FlurlGraphQLSystemTextJsonSerializer GraphQLJsonSerializer { get; }
         #endregion
 
         protected JsonObject RawDataJsonObject { get; }
@@ -29,7 +29,7 @@ namespace FlurlGraphQL
                 ? rawDataJson
                 : throw new ArgumentOutOfRangeException(
                     nameof(TJson), 
-                    $"Invalid type [{typeof(TJson).Name}] was specified; expected type <{nameof(JsonNode)}> as the supported type for Raw Json using System.Text.Json Serialization."
+                    $"Invalid type [{typeof(TJson).Name}] was specified; expected type <{nameof(JsonNode)}> as the supported type for Raw Json when using System.Text.Json Serialization."
                 );
 
         public virtual IReadOnlyList<GraphQLError> GetGraphQLErrors() => this.Errors;
@@ -45,7 +45,7 @@ namespace FlurlGraphQL
                 ? (JsonNode)rawDataJson.AsObject().FirstOrDefault().Value
                 : rawDataJson[queryOperationName];
 
-            var typedResults = querySingleResultJson.ConvertJsonToGraphQLResultsInternal<TResult>(JsonSerializer.JsonSerializerOptions);
+            var typedResults = querySingleResultJson.ConvertJsonToGraphQLResultsWithJsonSerializerInternal<TResult>(GraphQLJsonSerializer.JsonSerializerOptions);
 
             //Ensure that the Results we return are initialized along with any potential Errors (that have already been parsed/captured)... 
             if (this.Errors != null && typedResults is GraphQLQueryResults<TResult> graphqlResults)
@@ -64,7 +64,7 @@ namespace FlurlGraphQL
         }
 
         public virtual string GetErrorContent()
-            => ErrorContentSerialized ?? (ErrorContentSerialized = JsonSerializer.Serialize(this.Errors));
+            => ErrorContentSerialized ?? (ErrorContentSerialized = GraphQLJsonSerializer.Serialize(this.Errors));
 
     }
 }

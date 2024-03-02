@@ -18,6 +18,7 @@ namespace FlurlGraphQL
 
         private readonly IFlurlGraphQLResponseProcessor _graphQLResponseProcessor;
         private object _cachedParsedResults;
+        private readonly object _padLock = new object();
 
         public string OperationName { get; }
 
@@ -26,7 +27,7 @@ namespace FlurlGraphQL
             if (_cachedParsedResults is IGraphQLQueryResults<TResult> typedResult)
                 return typedResult;
 
-            lock (_cachedParsedResults)
+            lock (_padLock)
             {
                 var parsedResult = _graphQLResponseProcessor.LoadTypedResults<TResult>(this.OperationName);
                 _cachedParsedResults = parsedResult;

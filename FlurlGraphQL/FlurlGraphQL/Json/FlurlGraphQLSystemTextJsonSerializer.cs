@@ -20,9 +20,21 @@ namespace FlurlGraphQL
             //         depending on if the System.Text.Json Serializer is used or if the Newtonsoft Json Serializer is being used.
             var currentJsonOptions = flurlSerializer.BruteForceGetFieldValue<JsonSerializerOptions>("_options");
 
+            //Clone existing Options if available so we isolate our custom changes needed for GraphQL
+            //  (e.g. custom String Enum converter, Case-insensitive, etc.)!
             var graphqlJsonOptions = currentJsonOptions != null
-                ? new JsonSerializerOptions(currentJsonOptions) //Clone existing Options if available!
-                : new JsonSerializerOptions { PropertyNameCaseInsensitive = true }; //Default Options (always Disable Case Sensitivity; which is enabled by default)
+                ? new JsonSerializerOptions(currentJsonOptions)
+                : new JsonSerializerOptions();
+
+            //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we always enable case-insensitive Field Matching with System.Text.Json.
+            //This is also helpful since GraphQL Json (and Json in general) use CamelCase and nearly always mismatch C# Naming Pascal Case standards of C# Class Models, etc...
+            //NOTE: WE are operating on a copy of the original Json Settings so this does NOT mutate the core/original settings from Flurl or those specified for the GraphQL request, etc.
+            graphqlJsonOptions.PropertyNameCaseInsensitive = true;
+
+            //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we need to provide support for String to Enum conversion along with support for enum annotations
+            //  via [EnumMember(Value ="CustomName")] annotation (compatible with Newtonsoft.Json). In addition we now also support [Description("CustomName")] annotation for
+            //  easier syntax that is arguably more intuitive to use.
+            graphqlJsonOptions.Converters.Add(new JsonStringEnumMemberConverter(allowIntegerValues: true));
 
             return new FlurlGraphQLSystemTextJsonSerializer(graphqlJsonOptions);
         }

@@ -1,8 +1,11 @@
 using System;
 using System.Threading.Tasks;
+using Flurl.Http;
 using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FlurlGraphQL.Tests
 {
@@ -53,7 +56,7 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestExecuteRequestWithCustomJsonSerializerSettings()
+        public async Task TestExecuteRequestWithCustomNewtonsoftJsonSerializerSettings()
         {
             var response = await GraphQLApiEndpoint
                 .WithGraphQLQuery(@"
@@ -69,7 +72,7 @@ namespace FlurlGraphQL.Tests
                 ")
                 .UseGraphQLNewtonsoftJsonSerializerSettings(new JsonSerializerSettings()
                 {
-                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore,
                     Formatting = Formatting.Indented
                 })
                 //.SetGraphQLVariable("first", 2)
@@ -80,14 +83,65 @@ namespace FlurlGraphQL.Tests
             Assert.IsTrue(response.GraphQLRequest is FlurlGraphQLRequest);
             var request = response.GraphQLRequest as FlurlGraphQLRequest;
             Assert.IsTrue(request.GraphQLJsonSerializer is FlurlGraphQLNewtonsoftJsonSerializer);
-            
+
             var jsonSerializerSettings = ((FlurlGraphQLNewtonsoftJsonSerializer)request.GraphQLJsonSerializer).JsonSerializerSettings;
             Assert.AreEqual(Newtonsoft.Json.NullValueHandling.Ignore, jsonSerializerSettings.NullValueHandling);
             Assert.AreEqual(Formatting.Indented, jsonSerializerSettings.Formatting);
 
+            var baseFlurlSerializer = ((IFlurlRequest)request).Settings.JsonSerializer;
+            Assert.AreEqual(request.GraphQLJsonSerializer, baseFlurlSerializer);
+
             var results = await response.ReceiveGraphQLQueryResults<StarWarsCharacter>().ConfigureAwait(false);
             Assert.IsNotNull(results);
             Assert.AreEqual(2, results.Count);
+            Assert.IsNotNull(results[0].Name);
+            Assert.IsNotNull(results[0].Name);
+        }
+
+        [TestMethod]
+        public async Task TestExecuteRequestWithCustomSystemTextJsonSerializerSettings()
+        {
+            var response = await GraphQLApiEndpoint
+                .WithGraphQLQuery(@"
+                    query($first:Int) {
+                      characters (first:$first) {
+                        nodes {
+                          personalIdentifier
+                          name
+			              height
+                        }
+                      }
+                    }
+                ")
+                .UseGraphQLSystemTextJsonSerializerOptions(new JsonSerializerOptions()
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    WriteIndented = true,
+                    //NOTE: THIS is switched to true by the framework but we are testing that we can explicitly OVERRIDE it HERE!
+                    PropertyNameCaseInsensitive = false
+                })
+                //.SetGraphQLVariable("first", 2)
+                .SetGraphQLVariables(new { first = 2 })
+                .PostGraphQLQueryAsync()
+                .ConfigureAwait(false);
+
+            Assert.IsTrue(response.GraphQLRequest is FlurlGraphQLRequest);
+            var request = response.GraphQLRequest as FlurlGraphQLRequest;
+            Assert.IsTrue(request.GraphQLJsonSerializer is FlurlGraphQLSystemTextJsonSerializer);
+
+            var jsonSerializerOptions = ((FlurlGraphQLSystemTextJsonSerializer)request.GraphQLJsonSerializer).JsonSerializerOptions;
+            Assert.AreEqual(false, jsonSerializerOptions.PropertyNameCaseInsensitive);
+            Assert.AreEqual(true, jsonSerializerOptions.WriteIndented);
+
+            var baseFlurlSerializer = ((IFlurlRequest)request).Settings.JsonSerializer;
+            Assert.AreEqual(request.GraphQLJsonSerializer, baseFlurlSerializer);
+
+            var results = await response.ReceiveGraphQLQueryResults<StarWarsCharacter>().ConfigureAwait(false);
+            Assert.IsNotNull(results);
+            //We still get 2 results but the values are Null...
+            Assert.AreEqual(2, results.Count);
+            Assert.IsNull(results[0].Name);
+            Assert.IsNull(results[0].Name);
         }
     }
 }

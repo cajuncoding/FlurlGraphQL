@@ -1,0 +1,41 @@
+﻿[
+    {
+        "cursor": "MQ==",
+        "friends": [
+            {
+                "cursor": "MQ==",
+                "height": 1.72,
+                "name": "C-3PO",
+                "personalIdentifier": 2000,
+                "theForce": "NONE"
+            },
+            {
+                "cursor": "Mg==",
+                "height": 1.72,
+                "name": "Han Solo",
+                "personalIdentifier": 1002,
+                "theForce": "NONE"
+            }
+        ],
+        "height": 1.72,
+        "name": "Luke Skywalker",
+        "personalIdentifier": 1000,
+        "theForce": "LIGHT_SIDE"
+    },
+    {
+        "cursor": "Mg==",
+        "friends": [
+            {
+                "cursor": "MQ==",
+                "height": 1.72,
+                "name": "Wilhuff Tarkin",
+                "personalIdentifier": 1004,
+                "theForce": "NONE"
+            }
+        ],
+        "height": 1.72,
+        "name": "Darth Vader",
+        "personalIdentifier": 1001,
+        "theForce": "DARK_SIDE"
+    }
+]

@@ -14,117 +14,13 @@ namespace FlurlGraphQL.Tests
     [TestClass]
     public class FlurlGraphQLParsingTests : BaseFlurlGraphQLTest
     {
+        public FlurlGraphQLParsingTests() : base()
+        {
+            NestedJsonStructureFlattenedWithForceEnum = LoadTestData("NestedPreFlattened.StarWarsDataWithForceEnum.json");
+        }
         #region Sample Json Strings
 
-        private string NestedJsonStructureFlattenedWithForceEnum { get; } = @"
-            [
-                {
-                    ""cursor"": ""MQ=="",
-                    ""friends"": [
-                        {
-                            ""cursor"": ""MQ=="",
-                            ""height"": 1.72,
-                            ""name"": ""C-3PO"",
-                            ""personalIdentifier"": 2000,
-                            ""theForce"": ""NONE""
-                        },
-                        {
-                            ""cursor"": ""Mg=="",
-                            ""height"": 1.72,
-                            ""name"": ""Han Solo"",
-                            ""personalIdentifier"": 1002,
-                            ""theForce"": ""NONE""
-                        }
-                    ],
-                    ""height"": 1.72,
-                    ""name"": ""Luke Skywalker"",
-                    ""personalIdentifier"": 1000,
-                    ""theForce"": ""LIGHT_SIDE""
-                },
-                {
-                    ""cursor"": ""Mg=="",
-                    ""friends"": [
-                        {
-                            ""cursor"": ""MQ=="",
-                            ""height"": 1.72,
-                            ""name"": ""Wilhuff Tarkin"",
-                            ""personalIdentifier"": 1004,
-                            ""theForce"": ""NONE""
-                        }
-                    ],
-                    ""height"": 1.72,
-                    ""name"": ""Darth Vader"",
-                    ""personalIdentifier"": 1001,
-                    ""theForce"": ""DARK_SIDE""
-                }
-            ]
-        ";
-
-        private string NestedPaginatedJsonText { get; } = @"
-            {
-	            ""data"": {
-		            ""characters"": {
-			            ""totalCount"": 8,
-			            ""pageInfo"": {
-				            ""hasNextPage"": true,
-				            ""hasPreviousPage"": false,
-				            ""startCursor"": ""MQ=="",
-				            ""endCursor"": ""Mg==""
-			            },
-			            ""edges"": [
-				            {
-					            ""cursor"": ""MQ=="",
-					            ""node"": {
-						            ""personalIdentifier"": 1000,
-						            ""name"": ""Luke Skywalker"",
-						            ""height"": 1.72,
-						            ""friends"": {
-							            ""edges"": [
-								            {
-									            ""cursor"": ""MQ=="",
-									            ""node"": {
-										            ""personalIdentifier"": 2000,
-										            ""name"": ""C-3PO"",
-										            ""height"": 1.72
-									            }
-								            },
-								            {
-									            ""cursor"": ""Mg=="",
-									            ""node"": {
-										            ""personalIdentifier"": 1002,
-										            ""name"": ""Han Solo"",
-										            ""height"": 1.72
-									            }
-								            }
-							            ]
-						            }
-					            }
-				            },
-				            {
-					            ""cursor"": ""Mg=="",
-					            ""node"": {
-						            ""personalIdentifier"": 1001,
-						            ""name"": ""Darth Vader"",
-						            ""height"": 1.72,
-						            ""friends"": {
-							            ""edges"": [
-								            {
-									            ""cursor"": ""MQ=="",
-									            ""node"": {
-										            ""personalIdentifier"": 1004,
-										            ""name"": ""Wilhuff Tarkin"",
-										            ""height"": 1.72
-									            }
-								            }
-							            ]
-						            }
-					            }
-				            }
-			            ]
-		            }
-	            }
-            }
-        ";
+        private string NestedJsonStructureFlattenedWithForceEnum { get; }
 
         #endregion
 
@@ -158,7 +54,7 @@ namespace FlurlGraphQL.Tests
         [TestMethod]
         public void TestSystemTextJsonParsingOfNestedPaginatedGraphQLResults()
         {
-            var systemTextJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedJsonText);
+            var systemTextJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
 
             var characterResults = systemTextJsonGraphQLProcessor.LoadTypedResults<StarWarsCharacter>().ToGraphQLConnectionResultsInternal();
 
@@ -168,7 +64,7 @@ namespace FlurlGraphQL.Tests
         [TestMethod]
         public void TestSystemTextJsonParsingOfNestedPaginatedGraphQLResultsWithJsonPropertyNameMappings()
         {
-            var systemTextJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedJsonText);
+            var systemTextJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
 
             //NOTE: This will explicitly test/exercise (also for Debugging) the Internal Extension method and by extension also
             //			the custom Json Converter [FlurlGraphQLNewtonsoftJsonPaginatedResultsConverter]!
@@ -195,7 +91,7 @@ namespace FlurlGraphQL.Tests
         [TestMethod]
         public void TestNewtonsoftJsonParsingOfNestedPaginatedGraphQLResults()
         {
-            var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.NestedPaginatedJsonText);
+            var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
 
             var characterResults = newtonsoftJsonGraphQLProcessor.LoadTypedResults<StarWarsCharacter>().ToGraphQLConnectionResultsInternal();
 

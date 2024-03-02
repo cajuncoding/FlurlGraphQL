@@ -30,7 +30,7 @@ namespace FlurlGraphQL
         #region Configuration Extension - NewtonsoftJson Serializer Settings (ONLY Available after an IFlurlRequest is initialized)...
 
         /// <summary>
-        /// Initialize a custom Json Serializer using System.Text.Json, but only for this GraphQL request; isolated from the base FlurlRequest and any other GraphQL Requests.
+        /// Initialize a custom Json Serializer using Newtonsoft.Json, but only for this GraphQL request; isolated from any other GraphQL Requests.
         /// </summary>
         /// <param name="request"></param>
         /// <param name="newtonsoftJsonSettings"></param>
@@ -39,7 +39,7 @@ namespace FlurlGraphQL
             => request.ToGraphQLRequest().UseGraphQLNewtonsoftJsonSerializerSettings(newtonsoftJsonSettings);
 
         /// <summary>
-        /// Initialize a custom Json Serializer using System.Text.Json, but only for this GraphQL request; isolated from the base FlurlRequest and any other GraphQL Requests.
+        /// Initialize a custom GraphQL Json Serializer using Newtonsoft.Json, but only for this GraphQL request; isolated from any other GraphQL Requests.
         /// </summary>
         /// <param name="graphqlRequest"></param>
         /// <param name="newtonsoftJsonSettings"></param>
