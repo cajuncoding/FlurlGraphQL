@@ -271,7 +271,7 @@ namespace FlurlGraphQL
 
         #endregion
 
-        #region PostGraphQLQueryAsnc()...
+        #region PostGraphQLQueryAsnc() & GetGraphQLQueryAsync()...
 
         /// <summary>
         /// Execute the GraphQL Query as a POST request (Strongly Recommended vs GET), along with initialized variables, with the GraphQL Server specified by the original Url.

@@ -20,31 +20,6 @@ namespace FlurlGraphQL
 
         #region Json Parsing Extensions
 
-        internal static IGraphQLQueryResults<TEntityResult> ConvertJsonToGraphQLResultsInternal<TEntityResult>(this JsonNode json, JsonSerializerOptions jsonSerializerOptions = null)
-            where TEntityResult : class
-        {
-            if (json == null)
-                return new GraphQLQueryResults<TEntityResult>();
-
-            //Ensure that all json parsing uses a Serializer with the GraphQL Contract Resolver...
-            //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
-            var sanitizedJsonSerializerOptions = jsonSerializerOptions == null 
-                ? new JsonSerializerOptions() 
-                : new JsonSerializerOptions(jsonSerializerOptions);
-
-            //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we always enable case-insensitive Field Matching with System.Text.Json.
-            //This is also helpful since GraphQL Json (and Json in general) use CamelCase and nearly always mismatch C# Naming Pascal Case standards of C# Class Models, etc...
-            //NOTE: WE are operating on a copy of the original Json Settings so this does NOT mutate the core/original settings from Flurl or those specified for the GraphQL request, etc.
-            sanitizedJsonSerializerOptions.PropertyNameCaseInsensitive = true;
-
-            //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we need to provide support for String to Enum conversion along with support for enum annotations
-            //  via [EnumMember(Value ="CustomName")] annotation (compatible with Newtonsoft.Json). In addition we now also support [Description("CustomName")] annotation for
-            //  easier syntax that is arguably more intuitive to use.
-            sanitizedJsonSerializerOptions.Converters.Add(new JsonStringEnumMemberConverter(allowIntegerValues: true));
-
-            return ConvertJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(json, sanitizedJsonSerializerOptions);
-        }
-
         internal static IGraphQLQueryResults<TEntityResult> ConvertJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(this JsonNode json, JsonSerializerOptions jsonSerializerOptions)
             where TEntityResult : class
         {

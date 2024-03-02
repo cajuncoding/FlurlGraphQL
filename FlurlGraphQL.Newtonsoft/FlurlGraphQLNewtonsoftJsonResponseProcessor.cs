@@ -29,7 +29,7 @@ namespace FlurlGraphQL
             ? rawDataJson
             : throw new ArgumentOutOfRangeException(
                 nameof(TJson),
-                $"Invalid type [{typeof(TJson).Name}] was specified; expected type <{nameof(JObject)}> as the supported type for Raw Json using Newtonsoft.Json Serialization."
+                $"Invalid type [{typeof(TJson).Name}] was specified; expected type <{nameof(JObject)}> as the supported type for Raw Json when using Newtonsoft.Json Serialization."
             );
 
         public virtual IReadOnlyList<GraphQLError> GetGraphQLErrors() => this.Errors;

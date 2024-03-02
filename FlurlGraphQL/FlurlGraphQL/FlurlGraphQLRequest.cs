@@ -30,7 +30,10 @@ namespace FlurlGraphQL
         internal FlurlGraphQLRequest(IFlurlRequest baseRequest)
         {
             BaseFlurlRequest = baseRequest.AssertArgIsNotNull(nameof(baseRequest));
+
+            //Initialize a valid GraphQL Json serializer from the BaseFlurl Request (e.g. System.Text.Json vs Newtonsoft.Json)...
             GraphQLJsonSerializer = FlurlGraphQLJsonSerializerFactory.FromFlurlSerializer(baseRequest.Settings.JsonSerializer);
+
             PersistedQueryPayloadFieldName = FlurlGraphQLConfig.DefaultConfig.PersistedQueryPayloadFieldName;
         }
 
@@ -38,7 +41,21 @@ namespace FlurlGraphQL
 
         public bool IsMutationQuery { get; protected set; }
 
-        public IFlurlGraphQLJsonSerializer GraphQLJsonSerializer { get; internal set; }
+        /// <summary>
+        /// The GraphQL Serializer may be customized only for this request though this is usually done with one of the helpers methods 
+        /// (e.g. UseGraphQLNewtonsoftJsonSerializerSettings()).
+        /// 
+        /// Therefore this will also update the base Flurl serializer for this request with the GraphQL (wrapped) serializer so the entire pipeline 
+        /// is now consistent and using the very same Serializer!
+        /// 
+        /// NOTE: The GraphQL Json Serializer is a valid ISerializer for Flurl so we can simply set/update it on the base Settings
+        ///         for this request directly to ensure that the Serialization/Deserialization pipeline is ALWAYS consistent; we don't want
+        ///         to accidentally end up with a base Flurl System.Text.Json serializer with a Newtonsoft GraphQL serializer or vice versa)!
+        /// </summary>
+        public IFlurlGraphQLJsonSerializer GraphQLJsonSerializer {
+            get => (IFlurlGraphQLJsonSerializer)BaseFlurlRequest.Settings.JsonSerializer;
+            internal set => BaseFlurlRequest.Settings.JsonSerializer = value;
+        }
 
         public string PersistedQueryPayloadFieldName { get; internal set; }
 

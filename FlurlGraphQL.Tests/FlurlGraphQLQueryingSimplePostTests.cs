@@ -2,6 +2,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using Flurl.Http;
 using FlurlGraphQL.SystemTextJsonExtensions;
 using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
