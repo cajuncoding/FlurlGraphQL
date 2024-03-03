@@ -25,13 +25,58 @@ namespace FlurlGraphQL.Tests
         #endregion
 
         [TestMethod]
+        public void TestSimpleSystemTextJsonParsingOfErrors()
+        {
+            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
+            var graphqlSerializer = FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(new DefaultJsonSerializer());
+
+            var errorJsonText = LoadTestData("Errors.SimpleTestData.json");
+            var graphqlErrors = graphqlSerializer.ParseErrorsFromGraphQLExceptionErrorContent(errorJsonText);
+
+            AssertSimpleErrorTestDataIsValid(graphqlErrors);
+        }
+
+        [TestMethod]
+        public void TestSimpleNewtonsoftJsonParsingOfErrors()
+        {
+            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
+            var graphqlSerializer = FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(new NewtonsoftJsonSerializer());
+
+            var errorJsonText = LoadTestData("Errors.SimpleTestData.json");
+            var graphqlErrors = graphqlSerializer.ParseErrorsFromGraphQLExceptionErrorContent(errorJsonText);
+
+            AssertSimpleErrorTestDataIsValid(graphqlErrors);
+        }
+
+        private void AssertSimpleErrorTestDataIsValid(IReadOnlyList<GraphQLError> graphqlErrors)
+        {
+            Assert.IsNotNull(graphqlErrors);
+            Assert.IsNotNull(graphqlErrors);
+            Assert.AreEqual(1, graphqlErrors.Count);
+
+            var error = graphqlErrors[0];
+            Assert.IsNotNull(error);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(error.Message));
+            Assert.AreEqual(1, error.Locations.Count);
+            Assert.AreEqual(1, error.Extensions.Count);
+
+            var location = error.Locations[0];
+            Assert.AreEqual((uint)2, location.Line);
+            Assert.AreEqual((uint)32, location.Column);
+
+            var extension = error.Extensions.First();
+            Assert.IsNotNull(extension);
+            Assert.AreEqual("code", extension.Key);
+            Assert.AreEqual("HC0011", extension.Value);
+        }
+
+        [TestMethod]
         public void TestSimpleSystemTextJsonParsingOfPreFlattenedJsonWithStringEnumWithAnnotationJsonConverter()
         {
-            var jsonOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
-            jsonOptions.Converters.Add(new JsonStringEnumMemberConverter(allowIntegerValues: true));
-            //jsonOptions.Converters.Add(new JsonStringEnumConverter());
+            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
+            var graphqlSerializer = FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(new DefaultJsonSerializer());
 
-            var characterResults = JsonSerializer.Deserialize<List<StarWarsCharacterWithEnum>>(NestedJsonStructureFlattenedWithForceEnum, jsonOptions);
+            var characterResults = graphqlSerializer.Deserialize<List<StarWarsCharacterWithEnum>>(NestedJsonStructureFlattenedWithForceEnum);
 
             Assert.IsNotNull(characterResults);
             Assert.AreEqual(2, characterResults.Count);

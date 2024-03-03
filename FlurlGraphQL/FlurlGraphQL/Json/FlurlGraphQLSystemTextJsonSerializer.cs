@@ -24,7 +24,7 @@ namespace FlurlGraphQL
             //  (e.g. custom String Enum converter, Case-insensitive, etc.)!
             var graphqlJsonOptions = currentJsonOptions != null
                 ? new JsonSerializerOptions(currentJsonOptions)
-                : new JsonSerializerOptions();
+                : CreateDefaultSerializerOptions();
 
             //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we always enable case-insensitive Field Matching with System.Text.Json.
             //This is also helpful since GraphQL Json (and Json in general) use CamelCase and nearly always mismatch C# Naming Pascal Case standards of C# Class Models, etc...
@@ -38,6 +38,9 @@ namespace FlurlGraphQL
 
             return new FlurlGraphQLSystemTextJsonSerializer(graphqlJsonOptions);
         }
+
+        public static JsonSerializerOptions CreateDefaultSerializerOptions() 
+            => new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
 
         #region Base Flurl ISerializer implementation...
 
@@ -75,6 +78,18 @@ namespace FlurlGraphQL
                 graphqlResult.Errors,
                 graphqlResponse.GraphQLJsonSerializer as FlurlGraphQLSystemTextJsonSerializer
             );
+        }
+
+        /// <summary>
+        /// Parses only the Errros from a GraphQL response. Used when Flurl throws and HttpException that still contains a valid 
+        /// GraphQL Json response.
+        /// </summary>
+        /// <param name="errorContent"></param>
+        /// <returns></returns>
+        public virtual IReadOnlyList<GraphQLError> ParseErrorsFromGraphQLExceptionErrorContent(string errorContent)
+        {
+            var graphqlResult = Deserialize<SystemTextJsonGraphQLResult>(errorContent);
+            return graphqlResult.Errors;
         }
     }
 

@@ -12,10 +12,26 @@ namespace FlurlGraphQL.SystemTextJsonExtensions
         {
             if (json == null) return string.Empty;
 
-            var serializerOptions = options ?? new JsonSerializerOptions();
+            var serializerOptions = options ?? FlurlGraphQLSystemTextJsonSerializer.CreateDefaultSerializerOptions();
             serializerOptions.WriteIndented = true;
 
             return json.ToJsonString(serializerOptions);
+        }
+
+        public static object ConvertToCSharpInferredType(this JsonElement jsonElement)
+        {
+            switch(jsonElement.ValueKind)
+            {
+                case JsonValueKind.Null: return null;
+                case JsonValueKind.Undefined: return null;
+                case JsonValueKind.True: return true;
+                case JsonValueKind.False: return false;
+                case JsonValueKind.String: return jsonElement.GetString();
+                case JsonValueKind.Number: return jsonElement.GetDecimal();
+                case JsonValueKind.Array: return jsonElement.EnumerateArray().Select(i => i.ConvertToCSharpInferredType()).ToArray();
+                case JsonValueKind.Object: return JsonObject.Create(jsonElement);
+                default: return JsonObject.Create(jsonElement);
+            }
         }
     }
 

@@ -1,0 +1,16 @@
+{
+  "errors": [
+    {
+      "message": "Expected a \u0060Dollar\u0060-token, but found a \u0060Name\u0060-token.",
+      "locations": [
+        {
+          "line": 2,
+          "column": 32
+        }
+      ],
+      "extensions": {
+        "code": "HC0011"
+      }
+    }
+  ]
+}
