@@ -229,8 +229,8 @@ namespace FlurlGraphQL
         /// <param name="request"></param>
         /// <param name="systemTextJsonOptions"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
-        public static IFlurlGraphQLRequest UseGraphQLSystemTextJsonSerializerOptions(this IFlurlRequest request, JsonSerializerOptions systemTextJsonOptions)
-            => request.ToGraphQLRequest().UseGraphQLSystemTextJsonSerializerOptions(systemTextJsonOptions);
+        public static IFlurlGraphQLRequest UseGraphQLSystemTextJson(this IFlurlRequest request, JsonSerializerOptions systemTextJsonOptions = null)
+            => request.ToGraphQLRequest().UseGraphQLSystemTextJson(systemTextJsonOptions);
 
         /// <summary>
         /// Initialize a custom Json Serializer using System.Text.Json, but only for this GraphQL request; isolated from the base FlurlRequest and any other GraphQL Requests.
@@ -238,10 +238,17 @@ namespace FlurlGraphQL
         /// <param name="graphqlRequest"></param>
         /// <param name="systemTextJsonOptions"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
-        public static IFlurlGraphQLRequest UseGraphQLSystemTextJsonSerializerOptions(this IFlurlGraphQLRequest graphqlRequest, JsonSerializerOptions systemTextJsonOptions)
+        public static IFlurlGraphQLRequest UseGraphQLSystemTextJson(this IFlurlGraphQLRequest graphqlRequest, JsonSerializerOptions systemTextJsonOptions)
         {
             if (graphqlRequest is FlurlGraphQLRequest flurlGraphQLRequest)
-                flurlGraphQLRequest.GraphQLJsonSerializer = new FlurlGraphQLSystemTextJsonSerializer(systemTextJsonOptions.AssertArgIsNotNull(nameof(systemTextJsonOptions)));
+            {
+                if (systemTextJsonOptions == null && flurlGraphQLRequest.GraphQLJsonSerializer is IFlurlGraphQLSystemTextJsonSerializer existingSystemTextJsonSerializer)
+                    flurlGraphQLRequest.GraphQLJsonSerializer = existingSystemTextJsonSerializer;
+                else
+                    flurlGraphQLRequest.GraphQLJsonSerializer = new FlurlGraphQLSystemTextJsonSerializer(
+                        systemTextJsonOptions ?? FlurlGraphQLSystemTextJsonSerializer.CreateDefaultSerializerOptions()
+                    );
+            }
 
             return graphqlRequest;
         }

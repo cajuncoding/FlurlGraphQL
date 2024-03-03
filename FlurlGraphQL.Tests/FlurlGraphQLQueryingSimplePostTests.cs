@@ -130,14 +130,17 @@ namespace FlurlGraphQL.Tests
 	                    }
                     }
                 ")
+                //SHOULD also be Default Behavior!
+                .UseGraphQLSystemTextJson()
                 .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
                 .PostGraphQLQueryAsync()
                 .ReceiveGraphQLRawSystemTextJsonResponse()
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(json);
-
+            Assert.IsTrue(json is JsonObject);
             Assert.AreEqual(2, json["charactersById"]!.AsArray().Count);
+
             TestContext.WriteLine(json.ToJsonStringIndented());
         }
 
@@ -160,14 +163,16 @@ namespace FlurlGraphQL.Tests
 	                    }
                     }
                 ")
+                .UseGraphQLNewtonsoftJson()
                 .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
                 .PostGraphQLQueryAsync()
                 .ReceiveGraphQLRawNewtonsoftJsonResponse()
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(json);
-
+            Assert.IsTrue(json is JToken);
             Assert.AreEqual(2, (json["charactersById"] as JArray)?.Count);
+
             TestContext.WriteLine(json.ToString(Formatting.Indented));
         }
 

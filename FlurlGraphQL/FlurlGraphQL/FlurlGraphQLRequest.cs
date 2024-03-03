@@ -221,7 +221,7 @@ namespace FlurlGraphQL
                 this.SetGraphQLVariables(variables, nullValueHandling);
 
             //Execute the Request with shared Exception handling...
-            return await ExecuteRequestWithExceptionHandling(async () =>
+            return await  ExecuteRequestWithExceptionHandling(async () =>
             {
                 var jsonPayload = BuildPostRequestJsonPayload();
 
@@ -345,13 +345,15 @@ namespace FlurlGraphQL
                     throw;
                 
                 var httpStatusCode = responseHttpStatusCode ?? HttpStatusCode.BadRequest;
-                
+
+                //Parse Errors here...
+                var graphqlErrors = this.GraphQLJsonSerializer.ParseErrorsFromGraphQLExceptionErrorContent(errorContent);
+
                 throw new FlurlGraphQLException(
                     $"[{(int)httpStatusCode}-{httpStatusCode}] The GraphQL server returned an error response for the query."
                         + " This is likely caused by a malformed/non-parsable query, or a Schema validation issue; please validate the query syntax, operation name, and arguments"
                         + " to ensure that the query is valid.",
-                    //TODO: RE-ADD Support for dynamically parsing GraphQLErrors in this use case...
-                    null,
+                    graphqlErrors,
                     this.GraphQLQuery, 
                     errorContent, 
                     httpStatusCode, 

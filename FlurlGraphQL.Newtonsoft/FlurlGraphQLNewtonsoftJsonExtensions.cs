@@ -35,8 +35,8 @@ namespace FlurlGraphQL
         /// <param name="request"></param>
         /// <param name="newtonsoftJsonSettings"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
-        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJsonSerializerSettings(this IFlurlRequest request, JsonSerializerSettings newtonsoftJsonSettings)
-            => request.ToGraphQLRequest().UseGraphQLNewtonsoftJsonSerializerSettings(newtonsoftJsonSettings);
+        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJson(this IFlurlRequest request, JsonSerializerSettings newtonsoftJsonSettings = null)
+            => request.ToGraphQLRequest().UseGraphQLNewtonsoftJson(newtonsoftJsonSettings);
 
         /// <summary>
         /// Initialize a custom GraphQL Json Serializer using Newtonsoft.Json, but only for this GraphQL request; isolated from any other GraphQL Requests.
@@ -44,10 +44,17 @@ namespace FlurlGraphQL
         /// <param name="graphqlRequest"></param>
         /// <param name="newtonsoftJsonSettings"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
-        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJsonSerializerSettings(this IFlurlGraphQLRequest graphqlRequest, JsonSerializerSettings newtonsoftJsonSettings)
+        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJson(this IFlurlGraphQLRequest graphqlRequest, JsonSerializerSettings newtonsoftJsonSettings)
         {
             if (graphqlRequest is FlurlGraphQLRequest flurlGraphQLRequest)
-                flurlGraphQLRequest.GraphQLJsonSerializer = new FlurlGraphQLNewtonsoftJsonSerializer(newtonsoftJsonSettings.AssertArgIsNotNull(nameof(newtonsoftJsonSettings)));
+            {
+                if (newtonsoftJsonSettings == null && flurlGraphQLRequest.GraphQLJsonSerializer is IFlurlGraphQLNewtonsoftJsonSerializer existingNewtonsoftJsonSerializer)
+                    flurlGraphQLRequest.GraphQLJsonSerializer = existingNewtonsoftJsonSerializer;
+                else
+                    flurlGraphQLRequest.GraphQLJsonSerializer = new FlurlGraphQLNewtonsoftJsonSerializer(
+                        newtonsoftJsonSettings ?? FlurlGraphQLNewtonsoftJsonSerializer.CreateDefaultSerializerSettings()
+                    );
+            }
 
             return graphqlRequest;
         }

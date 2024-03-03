@@ -8,6 +8,7 @@ using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace FlurlGraphQL
 {
@@ -22,12 +23,17 @@ namespace FlurlGraphQL
             var currentJsonSettings = flurlSerializer.BruteForceGetFieldValue<JsonSerializerSettings>("_settings");
             
             var graphqlJsonSettings = currentJsonSettings != null
-                ? new JsonSerializerSettings(currentJsonSettings) //Clone existing Options if available!
-                : JsonConvert.DefaultSettings?.Invoke() ?? new JsonSerializerSettings(); //Default Options (always Disable Case Sensitivity; which is enabled by default)
+                //Clone existing Options if available!
+                ? new JsonSerializerSettings(currentJsonSettings)
+                //Default Options are used as fallback...
+                : CreateDefaultSerializerSettings();
 
             return new FlurlGraphQLNewtonsoftJsonSerializer(graphqlJsonSettings);
         }
-        
+
+        public static JsonSerializerSettings CreateDefaultSerializerSettings()
+            => JsonConvert.DefaultSettings?.Invoke() ?? new JsonSerializerSettings();
+
         #region Base Flurl ISerializer implementation...
 
         public string Serialize(object obj) => FlurlNewtonsoftSerializer.Serialize(obj);
@@ -62,6 +68,18 @@ namespace FlurlGraphQL
                 graphqlResult.Errors,
                 graphqlResponse.GraphQLJsonSerializer as FlurlGraphQLNewtonsoftJsonSerializer
             );
+        }
+
+        /// <summary>
+        /// Parses only the Errros from a GraphQL response. Used when Flurl throws and HttpException that still contains a valid 
+        /// GraphQL Json response.
+        /// </summary>
+        /// <param name="errorContent"></param>
+        /// <returns></returns>
+        public virtual IReadOnlyList<GraphQLError> ParseErrorsFromGraphQLExceptionErrorContent(string errorContent)
+        {
+            var graphqlResult = Deserialize<NewtonsoftGraphQLResult>(errorContent);
+            return graphqlResult.Errors;
         }
     }
 

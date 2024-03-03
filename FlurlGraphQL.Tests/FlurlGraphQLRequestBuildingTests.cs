@@ -70,7 +70,7 @@ namespace FlurlGraphQL.Tests
                       }
                     }
                 ")
-                .UseGraphQLNewtonsoftJsonSerializerSettings(new JsonSerializerSettings()
+                .UseGraphQLNewtonsoftJson(new JsonSerializerSettings()
                 {
                     NullValueHandling = NullValueHandling.Ignore,
                     Formatting = Formatting.Indented
@@ -113,7 +113,7 @@ namespace FlurlGraphQL.Tests
                       }
                     }
                 ")
-                .UseGraphQLSystemTextJsonSerializerOptions(new JsonSerializerOptions()
+                .UseGraphQLSystemTextJson(new JsonSerializerOptions()
                 {
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                     WriteIndented = true,
