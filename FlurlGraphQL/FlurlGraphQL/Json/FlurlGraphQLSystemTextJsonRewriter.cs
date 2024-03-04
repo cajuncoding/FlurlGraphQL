@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json.Nodes;
 using FlurlGraphQL.CustomExtensions;
+using FlurlGraphQL.SystemTextJsonExtensions;
 using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL.FlurlGraphQL.Json
@@ -32,6 +34,9 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         {
             if (json == null) return (null, null);
 
+            if (Debugger.IsAttached)
+                Debug.WriteLine($"[{nameof(FlurlGraphQLSystemTextJsonRewriter)}] Original GraphQL Json:{Environment.NewLine}{json.ToJsonStringIndented()}");
+
             //NOTE: We really only need to know the Pagination Type of the Parent/Root node so that we can correctly determine the proper
             //          type of Paginated results (e.g. ConnectionResults vs CollectionSegmentResults) for the FlurlGraphQL root results type
             //          which nearly always is a simple List<> of Models, so we wrap them in our Results at the top level.
@@ -46,6 +51,9 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                 processedJson = RewriteGraphQLJsonObjectAsNeeded(jsonObject, false);
 
             var rewrittenJson = RewriteGraphQLJsonAsNeededRecursively(processedJson);
+
+            if (Debugger.IsAttached)
+                Debug.WriteLine($"[{nameof(FlurlGraphQLSystemTextJsonRewriter)}] Rewrittern GraphQL Json:{Environment.NewLine}{rewrittenJson.ToJsonStringIndented()}");
 
             return (rewrittenJson, paginationType);
         }
@@ -64,7 +72,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         /// <param name="json"></param>
         /// <param name="recursiveRewriterPropInfos"></param>
         /// <returns></returns>
-        private JsonNode RewriteGraphQLJsonAsNeededRecursively(JsonNode json, IList<FlurlGraphQLJsonRewriterPropInfo> recursiveRewriterPropInfos = null)
+        private JsonNode RewriteGraphQLJsonAsNeededRecursively  (JsonNode json, IList<FlurlGraphQLJsonRewriterPropInfo> recursiveRewriterPropInfos = null)
         {
             //If not currently processing recursively then we default to the Root Properties of the JsonRewriterTypeInfo...
             var propsToRewrite = recursiveRewriterPropInfos ?? this.JsonRewriterTypeInfo.ChildPropertiesToRewrite;
@@ -80,10 +88,8 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                         finalJson = RewriteGraphQLJsonArrayAsNeededRecursively(jsonArray, propsToRewrite);
                         break;
                     case JsonObject jsonObject:
-                    {
                         finalJson = RewriteGraphQLJsonObjectAsNeededRecursively(jsonObject, propsToRewrite);
                         break;
-                    }
                 }
             }
 
@@ -107,8 +113,6 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
 
         private JsonObject RewriteGraphQLJsonObjectAsNeededRecursively(JsonObject jsonObject, IList<FlurlGraphQLJsonRewriterPropInfo> propsToRewrite)
         {
-            JsonObject finalJson = jsonObject;
-
             foreach (var rewriterPropInfo in propsToRewrite)
             {
                 //NOTE: If for some reason the Property Node is not found then this will be null and further processing will be skipped
@@ -137,11 +141,10 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                 if (jsonPropNode != null)
                 {
                     jsonObject[rewriterPropInfo.PropertyMappedJsonName] = jsonPropNode;
-                    finalJson = jsonObject;
                 }
             }
 
-            return finalJson;
+            return jsonObject;
         }
 
         private JsonArray RewriteGraphQLJsonObjectAsNeeded(JsonObject json, bool isIGraphQLEdgeImplementedOnProp)

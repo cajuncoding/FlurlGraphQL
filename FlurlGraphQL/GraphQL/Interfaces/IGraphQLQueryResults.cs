@@ -24,6 +24,17 @@ namespace FlurlGraphQL
                 : new GraphQLConnectionResults<TResult>(results);
         }
 
+        internal static IGraphQLCollectionSegmentResults<TResult> ToCollectionSegmentResultsInternal<TResult>(this IGraphQLQueryResults<TResult> results) where TResult : class
+        {
+            if (results == null)
+                return null;
+
+            return results is IGraphQLCollectionSegmentResults<TResult> collectionSegmentResults
+                ? collectionSegmentResults
+                //If all we have are results then we can't provide TotalCount so it's null (e.g. because it wasn't requested/available)...
+                : new GraphQLCollectionSegmentResults<TResult>(results);
+        }
+
         internal static IGraphQLCollectionSegmentResults<TResult> ToCollectionSegmentResultsInternal<TResult>(this IGraphQLConnectionResults<TResult> connectionResults)
             where TResult : class
         {
