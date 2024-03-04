@@ -13,6 +13,9 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
     public class FlurlGraphQLJsonRewriterTypeInfo
     {
         #region Factory Methods with Caching
+        //System.Text.Json currently has a Maximum Json depth support of 64 so there's no need to support
+        //  any more levels than that in our TypeInfo models...
+        public const int MAX_DEPTH = 64;
 
         protected static ConcurrentDictionary<Type, Lazy<FlurlGraphQLJsonRewriterTypeInfo>> JsonTypeInfoCache { get; }
             = new ConcurrentDictionary<Type, Lazy<FlurlGraphQLJsonRewriterTypeInfo>>();
@@ -52,9 +55,16 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
 
         #region Internal Helpers
 
-        protected static IList<FlurlGraphQLJsonRewriterPropInfo> BuildRewriterJsonPropInfosRecursivelyInternal(Type targetType)
+        protected static IList<FlurlGraphQLJsonRewriterPropInfo> BuildRewriterJsonPropInfosRecursivelyInternal(Type targetType, int depth = 0)
         {
-            var collectionProperties = targetType
+            if(depth > MAX_DEPTH)
+                return Array.Empty<FlurlGraphQLJsonRewriterPropInfo>();
+
+            var sanitizedType = targetType.IsGenericType
+                ? targetType.GenericTypeArguments.First()
+                : targetType;
+
+            var collectionProperties = sanitizedType
                     .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                     .Where(p => p.CanWrite && p.PropertyType.InheritsFrom(GraphQLTypeCache.ICollection));
 
@@ -70,7 +80,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                     implementsIGraphQLQueryResults: propertyType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType),
                     implementsIGraphQLEdge: propertyType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLEdgeEntityType),
                     //Recursively traverse and build Child Property Info...
-                    childProperties: BuildRewriterJsonPropInfosRecursivelyInternal(propertyType)
+                    childProperties: BuildRewriterJsonPropInfosRecursivelyInternal(propertyType, depth + 1)
                 );
             }).ToArray();
 

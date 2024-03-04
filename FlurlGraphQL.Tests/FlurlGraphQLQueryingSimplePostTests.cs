@@ -230,13 +230,13 @@ namespace FlurlGraphQL.Tests
             //INTENTIONALLY Place the Nested Paginated selection as FIRST item to validate functionality!
             var results = await GraphQLApiEndpoint
                 .WithGraphQLQuery(@"
-                    query ($ids: [Int!], $friendsCount: Int!) {
+                    query ($ids: [Int!], $firstLevelFriendsCount: Int!, $secondLevelFriendsCount: Int!) {
 	                    charactersById(ids: $ids) {
-		                    friends(first: $friendsCount) {
+		                    friends(first: $firstLevelFriendsCount) {
 			                    nodes {
 				                    personalIdentifier
 				                    name
-				                    friends(first: 1) {
+				                    friends(first: $secondLevelFriendsCount) {
 					                    nodes {
 						                    name
 						                    personalIdentifier
@@ -249,7 +249,11 @@ namespace FlurlGraphQL.Tests
 	                    }
                     }
                 ")
-                .SetGraphQLVariables(new { ids = idArrayParam, friendsCount = 2 })
+                .SetGraphQLVariables(new { 
+                    ids = idArrayParam, 
+                    firstLevelFriendsCount = 2, 
+                    secondLevelFriendsCount = 1
+                })
                 .PostGraphQLQueryAsync()
                 .ReceiveGraphQLQueryResults<StarWarsCharacter>()
                 .ConfigureAwait(false);
@@ -266,6 +270,14 @@ namespace FlurlGraphQL.Tests
                 foreach (var friend in result.Friends)
                 {
                     Assert.AreEqual(1, friend.Friends.Count);
+                    Assert.IsTrue(friend.PersonalIdentifier >= 1000);
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(result.Name));
+
+                    foreach (var secondLevelFriend in friend.Friends)
+                    {
+                        Assert.IsTrue(friend.PersonalIdentifier >= 1000);
+                        Assert.IsFalse(string.IsNullOrWhiteSpace(result.Name));
+                    }
                 }
                 index++;
             }

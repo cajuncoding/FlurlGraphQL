@@ -169,10 +169,8 @@ namespace FlurlGraphQL
         /// <param name="queryOperationName"></param>
         /// <returns>Returns an IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
         public static async Task<IGraphQLCollectionSegmentResults<TResult>> ReceiveGraphQLCollectionSegmentResults<TResult>(this Task<IFlurlGraphQLResponse> responseTask, string queryOperationName = null)
-            where TResult : class 
-            => (await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false))
-                .ToGraphQLConnectionResultsInternal()
-                .ToCollectionSegmentResultsInternal();
+            where TResult : class
+            => (await responseTask.ReceiveGraphQLQueryResults<TResult>(queryOperationName).ConfigureAwait(false)).ToCollectionSegmentResultsInternal();
 
         /// <summary>
         /// Processes/parses the results of the GraphQL query execution into the typed results along with associated offset paging info
