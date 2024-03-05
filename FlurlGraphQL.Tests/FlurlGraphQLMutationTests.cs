@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL.Tests
 {
@@ -57,11 +56,5 @@ namespace FlurlGraphQL.Tests
             public int Stars { get; set; }
             public string Commentary { get; set; }
         }
-    }
-
-    public class EventResult
-    {
-        public Guid? EventUUID { get; set; }
-        public int? EventId { get; set; }
     }
 }
