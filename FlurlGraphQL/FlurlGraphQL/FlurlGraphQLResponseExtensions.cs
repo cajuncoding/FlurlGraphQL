@@ -62,7 +62,8 @@ namespace FlurlGraphQL
         /// <param name="queryOperationName"></param>
         /// <returns>Returns an IGraphQLQueryResults set of typed results.</returns>
         public static Task<TResult> ReceiveGraphQLMutationResult<TResult>(this IFlurlGraphQLResponse response, string queryOperationName = null)
-            where TResult : class => Task.FromResult(response).ReceiveGraphQLMutationResult<TResult>(queryOperationName);
+            where TResult : class 
+            => Task.FromResult(response).ReceiveGraphQLMutationResult<TResult>(queryOperationName);
 
         /// <summary>
         /// Processes/parses the results of the GraphQL query execution into the typed results along with associated cursor paging details as defined in the GraphQL Spec for Connections.
@@ -87,7 +88,8 @@ namespace FlurlGraphQL
         /// <param name="queryOperationName"></param>
         /// <returns>Returns an IGraphQLQueryConnectionResult set of typed results along with paging information returned by the query.</returns>
         public static Task<IGraphQLConnectionResults<TResult>> ReceiveGraphQLConnectionResults<TResult>(this IFlurlGraphQLResponse response, string queryOperationName = null)
-            where TResult : class => Task.FromResult(response).ReceiveGraphQLConnectionResults<TResult>(queryOperationName);
+            where TResult : class 
+            => Task.FromResult(response).ReceiveGraphQLConnectionResults<TResult>(queryOperationName);
 
         /// <summary>
         /// This will automatically iterate to retrieve ALL possible page results using the GraphQL query. It will return a list of pages containing the typed results
