@@ -147,7 +147,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
             return jsonObject;
         }
 
-        private JsonArray RewriteGraphQLJsonObjectAsNeeded(JsonObject json, bool isIGraphQLEdgeImplementedOnProp)
+        private JsonNode RewriteGraphQLJsonObjectAsNeeded(JsonObject json, bool isIGraphQLEdgeImplementedOnProp)
         {
             IList<JsonObject> entityNodes = Array.Empty<JsonObject>();
 
@@ -180,6 +180,10 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                 //We don't actually need to Clear the Edges (so we save a little work here) because the parent of each item was actually the [node] child within the [edge]!
                 //edgesJson.Clear();
             }
+            else
+            {
+                return json;
+            }    
 
             var rewrittenJsonArray = new JsonArray(entityNodes.OfType<JsonNode>().ToArray());
             return rewrittenJsonArray;

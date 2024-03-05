@@ -12,7 +12,7 @@ namespace FlurlGraphQL
             Message = message;
             Locations = locations;//?.AsReadOnly();
             Path = path;//?.AsReadOnly();
-            Extensions = (IReadOnlyDictionary<string, object>)extensions.Select(kv =>
+            Extensions = (IReadOnlyDictionary<string, object>)extensions?.Select(kv =>
             {
                 //System.Text.Json does not infer C# types when de-serialzing into 'object' target types
                 //  so we need to validate and re-map them here when necessary...
