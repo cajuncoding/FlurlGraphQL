@@ -1,7 +1,10 @@
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using Flurl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using FlurlGraphQL.Tests.TestConfig;
 
 namespace FlurlGraphQL.Tests
 {
@@ -9,20 +12,17 @@ namespace FlurlGraphQL.Tests
     {
         protected BaseFlurlGraphQLTest()
         {
+            FlurlGraphQLTestConfiguration.InitializeConfig();
+
             CurrentDirectory = Directory.GetCurrentDirectory();
             NestedPaginatedStarWarsJsonText = LoadTestData("NestedPaginated.StarWarsData.json");
-
-            ConfigHelpers.InitEnvironmentFromLocalSettingsJson();
-            GraphQLApiEndpoint = Environment.GetEnvironmentVariable(nameof(GraphQLApiEndpoint)) ?? throw CreateMissingConfigException(nameof(GraphQLApiEndpoint));
         }
-
-        private Exception CreateMissingConfigException(string configName) => new Exception($"The configuration value for [{configName}] could not be loaded.");
 
         public string CurrentDirectory { get; }
 
         public string NestedPaginatedStarWarsJsonText { get; }
 
-        public string GraphQLApiEndpoint { get; }
+        public string GraphQLApiEndpoint => FlurlGraphQLTestConfiguration.GraphQLApiEndpoint;
 
         public TestContext TestContext { get; set; } = null!;
 
