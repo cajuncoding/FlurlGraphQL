@@ -10,12 +10,18 @@ namespace FlurlGraphQL
         private delegate IFlurlGraphQLJsonSerializer JsonSerializerFactoryDelegate(ISerializer flurlSerializer);
 
         private static Lazy<JsonSerializerFactoryDelegate> CreateNewtonsoftJsonSerializerFromFlurlSerializerLazy { get; } = new Lazy<JsonSerializerFactoryDelegate>(() =>
-            AppDomain.CurrentDomain.FindType(
+        {
+            //Ensure that our FlurlGraphQL.Newtonsoft assembly is loaded (since it is dynamically accessed and may not yet be initialized)...
+            AppDomain.CurrentDomain.ForceLoadAssemblies(NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftAssemblyName);
+
+            var newtonsoftType = AppDomain.CurrentDomain.FindType(
                 NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftJsonSerializerClassName,
                 assemblyName: NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftAssemblyName,
                 namespaceName: NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftNamespace
-            ).CreateDelegateForMethod<JsonSerializerFactoryDelegate>(NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftJsonSerializerFactoryMethodName)
-        );
+            );
+
+            return newtonsoftType.CreateDelegateForMethod<JsonSerializerFactoryDelegate>(NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftJsonSerializerFactoryMethodName);
+        });
 
         public static IFlurlGraphQLJsonSerializer FromFlurlSerializer(ISerializer flurlJsonSerializer)
         {
@@ -42,6 +48,10 @@ namespace FlurlGraphQL
         //NOTE: WE will throw a runtime exception if not available because that means that something is mis-configured and not initialized
         //      to support the use of Newtonsoft Json.
         private static IFlurlGraphQLJsonSerializer CreateNewtonsoftJsonSerializer(ISerializer flurlJsonSerializer)
-            => CreateNewtonsoftJsonSerializerFromFlurlSerializerLazy.Value?.Invoke(flurlJsonSerializer);
+            => CreateNewtonsoftJsonSerializerFromFlurlSerializerLazy.Value?.Invoke(flurlJsonSerializer)
+                ?? throw new InvalidOperationException(
+                    $"FlurlGraphQL Newtonsoft Json serialization could not be initialized; failed to load the Newtonsoft Json dependency [{NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftJsonSerializerClassName}]. " +
+                            $"This is likely due to missing reference(s) for the [{NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftAssemblyName}] library which is required for Newtonsoft Json support."
+                );
     }
 }

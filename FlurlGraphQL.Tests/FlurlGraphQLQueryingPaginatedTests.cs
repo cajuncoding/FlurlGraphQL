@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Flurl.Http;
 using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -10,10 +11,11 @@ namespace FlurlGraphQL.Tests
     [TestClass]
     public class FlurlGraphQLQueryingPaginatedTests : BaseFlurlGraphQLTest
     {
-        [TestMethod]
-        public async Task TestSingleQueryCursorPagingNodeResultsAsync()
+        [DataTestMethod]
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSingleQueryCursorPagingNodeResultsAsync(IFlurlRequest graphQLApiRequest)
         {
-            var results = await GraphQLApiEndpoint
+            var results = await graphQLApiRequest
                 .WithGraphQLQuery(@"
                     query($first:Int) {
                       characters (first:$first) {

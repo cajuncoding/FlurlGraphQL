@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using FlurlGraphQL.CustomExtensions;
@@ -80,6 +81,33 @@ namespace FlurlGraphQL.ReflectionExtensions
                 return (T)prop.GetValue(obj);
 
             return default;
+        }
+
+        /// <summary>
+        /// Force load all or specified Assemblies via the filter params.
+        /// Adapted from original Stack Overflow answer here: https://stackoverflow.com/a/2384679/7293142
+        /// </summary>
+        /// <param name="appDomain"></param>
+        /// <param name="assemblyNames"></param>
+        public static void ForceLoadAssemblies(this AppDomain appDomain, params string[] assemblyNames)
+        {
+            var loadedAssemblyPaths = appDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic)
+                .Select(a => a.Location)
+                .ToArray();
+            
+            var assemblyNamesHashSet = new HashSet<string>(assemblyNames, StringComparer.InvariantCultureIgnoreCase);
+            var referencedPaths = Directory.GetFiles(appDomain.BaseDirectory, "*.dll");
+            
+            var pathsToLoad = referencedPaths
+                .Where(p => 
+                    assemblyNamesHashSet.Count == 0 //<== Load ALL Assemblies
+                    || assemblyNamesHashSet.Contains(Path.GetFileName(p)) //<== Support Full File Name & Extension matches... 
+                    || assemblyNamesHashSet.Contains(Path.GetFileNameWithoutExtension(p))) //<== Support File Name only (no Extension) matches... 
+                .Except(loadedAssemblyPaths, StringComparer.InvariantCultureIgnoreCase)
+                .ToList();
+
+            pathsToLoad.ForEach(p => appDomain.Load(AssemblyName.GetAssemblyName(p)));
         }
 
         public static Type FindType(this AppDomain appDomain, string className, string assemblyName = null, string namespaceName = null)

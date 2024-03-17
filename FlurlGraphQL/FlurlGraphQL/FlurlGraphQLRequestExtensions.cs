@@ -24,7 +24,7 @@ namespace FlurlGraphQL
         #region ToGraphQLRequest() Internal Helpers...
 
         private static IFlurlGraphQLRequest ToGraphQLRequest(string url) => new FlurlRequest(url).ToGraphQLRequest();
-        private static IFlurlGraphQLRequest ToGraphQLRequest(Uri url) => new FlurlRequest(url).ToGraphQLRequest();
+        private static IFlurlGraphQLRequest ToGraphQLRequest(Uri uri) => new FlurlRequest(uri).ToGraphQLRequest();
         private static IFlurlGraphQLRequest ToGraphQLRequest(Url url) => new FlurlRequest(url).ToGraphQLRequest();
 
         public static IFlurlGraphQLRequest ToGraphQLRequest(this IFlurlRequest request)
