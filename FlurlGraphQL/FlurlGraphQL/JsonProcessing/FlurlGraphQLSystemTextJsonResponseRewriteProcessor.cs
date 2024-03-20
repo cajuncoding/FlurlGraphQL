@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using FlurlGraphQL.ValidationExtensions;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
-    public class FlurlGraphQLSystemTextJsonResponseProcessor : IFlurlGraphQLResponseProcessor
+    public class FlurlGraphQLSystemTextJsonResponseRewriteProcessor : IFlurlGraphQLResponseProcessor
     {
-        public FlurlGraphQLSystemTextJsonResponseProcessor(JsonObject rawDataJsonNode, List<GraphQLError> errors, FlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
+        public FlurlGraphQLSystemTextJsonResponseRewriteProcessor(JsonObject rawDataJsonNode, List<GraphQLError> errors, FlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
         {
             this.RawDataJsonObject = rawDataJsonNode;
             this.Errors = errors?.AsReadOnly();

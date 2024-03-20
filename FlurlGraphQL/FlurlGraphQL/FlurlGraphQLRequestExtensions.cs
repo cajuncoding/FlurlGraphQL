@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Flurl;
 using Flurl.Http;
 using Flurl.Util;
+using FlurlGraphQL.JsonProcessing;
 using FlurlGraphQL.ValidationExtensions;
 using NullValueHandling = Flurl.NullValueHandling;
 

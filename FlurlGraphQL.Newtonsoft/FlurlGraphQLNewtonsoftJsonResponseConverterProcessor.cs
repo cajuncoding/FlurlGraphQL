@@ -1,38 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
-    public class FlurlGraphQLNewtonsoftJsonResponseConverterProcessor : IFlurlGraphQLResponseProcessor
+    [Obsolete("This is the original/legacy approach to processing Newtonsoft Json via custom converter but is now replaced by the new FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor " +
+                        "which is optimized and benchmarked to be ~2X faster at processing Json with Newtonsoft.Json")]
+    internal class FlurlGraphQLNewtonsoftJsonResponseConverterProcessor : FlurlGraphQLNewtonsoftJsonResponseBaseProcessor, IFlurlGraphQLResponseProcessor
     {
-        public FlurlGraphQLNewtonsoftJsonResponseConverterProcessor(JObject rawDataJObject, List<GraphQLError> errors, FlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
+        internal FlurlGraphQLNewtonsoftJsonResponseConverterProcessor(JObject rawDataJObject, List<GraphQLError> errors, FlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
+            : base(rawDataJObject, errors, newtonsoftJsonSerializer)
         {
-            this.RawDataJObject = rawDataJObject;
-            this.Errors = errors?.AsReadOnly();
-            this.JsonSerializer = newtonsoftJsonSerializer.AssertArgIsNotNull(nameof(newtonsoftJsonSerializer));
         }
 
-        #region Non-interface Properties
-        public FlurlGraphQLNewtonsoftJsonSerializer JsonSerializer { get; }
-        #endregion
-
-        protected JObject RawDataJObject { get; }
-        protected IReadOnlyList<GraphQLError> Errors { get; }
-        protected string ErrorContentSerialized { get; set; }
-
-        public TJson GetRawJsonData<TJson>() => this.RawDataJObject is TJson rawDataJson
-            ? rawDataJson
-            : throw new ArgumentOutOfRangeException(
-                nameof(TJson),
-                $"Invalid type [{typeof(TJson).Name}] was specified; expected type <{nameof(JObject)}> as the supported type for Raw Json when using Newtonsoft.Json Serialization."
-            );
-
-        public virtual IReadOnlyList<GraphQLError> GetGraphQLErrors() => this.Errors;
-
-        public virtual IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class
+        public override IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null)
         {
             var rawDataJson = this.RawDataJObject;
 
@@ -51,17 +32,5 @@ namespace FlurlGraphQL
 
             return typedResults;
         }
-
-        public virtual IGraphQLBatchQueryResults LoadBatchQueryResults()
-        {
-            var operationResults = this.RawDataJObject.Properties()
-                .Select(prop => new GraphQLQueryOperationResult(prop.Name, this))
-                .ToList();
-
-            return new GraphQLBatchQueryResults(operationResults);
-        }
-
-        public virtual string GetErrorContent()
-            => ErrorContentSerialized ?? (ErrorContentSerialized = JsonSerializer.Serialize(this.Errors));
     }
 }

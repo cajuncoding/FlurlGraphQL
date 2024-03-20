@@ -8,7 +8,7 @@ using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.TypeCacheHelpers;
 using FlurlGraphQL.ValidationExtensions;
 
-namespace FlurlGraphQL.FlurlGraphQL.Json
+namespace FlurlGraphQL.JsonProcessing
 {
     public class FlurlGraphQLJsonRewriterTypeInfo
     {

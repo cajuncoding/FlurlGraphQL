@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
+using FlurlGraphQL.JsonProcessing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FlurlGraphQL.Tests

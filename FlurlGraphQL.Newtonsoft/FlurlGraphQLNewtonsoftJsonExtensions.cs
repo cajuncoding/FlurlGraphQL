@@ -4,13 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Flurl.Http.Newtonsoft;
-using FlurlGraphQL.FlurlGraphQL.Json;
 using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.TypeCacheHelpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
     public static class FlurlGraphQLNewtonsoftJsonExtensions
     {

@@ -1,4 +1,7 @@
-﻿namespace FlurlGraphQL.FlurlGraphQL.Json
+﻿
+using FlurlGraphQL.JsonProcessing;
+
+namespace FlurlGraphQL
 {
     internal interface IFlurlGraphQLJsonRewriter<TJsonNode>
     {

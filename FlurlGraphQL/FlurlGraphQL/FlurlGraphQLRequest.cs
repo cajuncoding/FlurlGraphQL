@@ -11,6 +11,7 @@ using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Http.Content;
 using Flurl.Util;
+using FlurlGraphQL.JsonProcessing;
 using FlurlGraphQL.ValidationExtensions;
 using NullValueHandling = Flurl.NullValueHandling;
 

@@ -9,7 +9,7 @@ using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
     public class FlurlGraphQLNewtonsoftJsonSerializer : IFlurlGraphQLNewtonsoftJsonSerializer
     {
@@ -60,17 +60,20 @@ namespace FlurlGraphQL
         public virtual async Task<IFlurlGraphQLResponseProcessor> CreateGraphQLResponseProcessorAsync(IFlurlGraphQLResponse graphqlResponse)
         {
             //NOTE: We use the core Flurl GetJsonAsync<>() method here to get our initial results so that we benefit from it's built in performance, simplicity, stream handling, etc.!
-            var graphqlResult = await graphqlResponse.GetJsonAsync<NewtonsoftGraphQLResult>().ConfigureAwait(false);
-
-            return new FlurlGraphQLNewtonsoftJsonResponseConverterProcessor(
-                graphqlResult.Data,
-                graphqlResult.Errors,
-                graphqlResponse.GraphQLJsonSerializer as FlurlGraphQLNewtonsoftJsonSerializer
-            );
+            var newtonsoftGraphQLResult = await graphqlResponse.GetJsonAsync<NewtonsoftGraphQLResult>().ConfigureAwait(false);
+            return CreateGraphQLResponseProcessor(newtonsoftGraphQLResult);
         }
 
         /// <summary>
-        /// Parses only the Errros from a GraphQL response. Used when Flurl throws and HttpException that still contains a valid 
+        /// Internal Helper to Create the correct IFlurlGraphQLResponseProcessor based on this Json Serializer and the provided Newtonsoft GraphQL Result.
+        /// </summary>
+        /// <param name="newtonsoftGraphQLResult"></param>
+        /// <returns></returns>
+        internal IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(NewtonsoftGraphQLResult newtonsoftGraphQLResult)
+            => new FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor(newtonsoftGraphQLResult.Data, newtonsoftGraphQLResult.Errors, this);
+
+        /// <summary>
+        /// Parses only the Errors from a GraphQL response. Used when Flurl throws and HttpException that still contains a valid 
         /// GraphQL Json response.
         /// </summary>
         /// <param name="errorContent"></param>

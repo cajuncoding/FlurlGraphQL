@@ -3,7 +3,7 @@ using Flurl.Http.Configuration;
 using FlurlGraphQL.ReflectionConstants;
 using FlurlGraphQL.ReflectionExtensions;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
     internal static class FlurlGraphQLJsonSerializerFactory
     {

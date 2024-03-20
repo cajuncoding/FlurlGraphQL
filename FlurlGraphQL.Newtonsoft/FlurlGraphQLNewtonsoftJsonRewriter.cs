@@ -7,7 +7,7 @@ using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL.FlurlGraphQL.Json
+namespace FlurlGraphQL.JsonProcessing
 {
     internal class FlurlGraphQLNewtonsoftJsonRewriter : IFlurlGraphQLJsonRewriter<JToken>
     {
