@@ -16,11 +16,14 @@ namespace FlurlGraphQL.Tests
 
             CurrentDirectory = Directory.GetCurrentDirectory();
             NestedPaginatedStarWarsJsonText = LoadTestData("NestedPaginated.StarWarsData.json");
+            NestedPaginatedBooksAndAuthorsJsonText = LoadTestData("BooksAndAuthorsCursorPaginatedSmallDataSet.json");
         }
 
         public string CurrentDirectory { get; }
 
         public string NestedPaginatedStarWarsJsonText { get; }
+
+        public string NestedPaginatedBooksAndAuthorsJsonText { get; }
 
         public string GraphQLApiEndpoint => FlurlGraphQLTestConfiguration.GraphQLApiEndpoint;
 

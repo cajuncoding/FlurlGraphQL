@@ -1,5 +1,6 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
+using FlurlGraphQL.Benchmarks.TestData;
 
 namespace FlurlGraphQL.Benchmarks
 {
@@ -13,11 +14,17 @@ namespace FlurlGraphQL.Benchmarks
             // Use this to select benchmarks from the console:
             // var summaries = BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 
-            //*******************DEBUG***********************
+            //*******************GENERATE TEST DATA JSON FILE (with Fake/Bogus Data) ***********************
+            //var testDataGenerator = new BooksAndAuthorsTestDataGenerator();
+            //testDataGenerator.GenerateAndWriteToTestDataJsonFile();
+            //return;
+
+            //*******************DEBUG * **********************
             //var benchmark = new FlurlGraphQLParsingBenchmarks();
             //benchmark.GlobalSetup();
-            ////benchmark.ParsingNewtonsoftJson();
-            //benchmark.ParsingWithSystemTextJson();
+            //benchmark.ParsingWithNewtonsoftJsonConverter();
+            //benchmark.ParsingWithNewtonsoftJsonRewriting();
+            //benchmark.ParsingWithSystemTextJsonRewriting();
         }
     }
 }

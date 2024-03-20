@@ -8,7 +8,6 @@ using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using System.Text.Json;
 
 namespace FlurlGraphQL
 {
@@ -63,7 +62,7 @@ namespace FlurlGraphQL
             //NOTE: We use the core Flurl GetJsonAsync<>() method here to get our initial results so that we benefit from it's built in performance, simplicity, stream handling, etc.!
             var graphqlResult = await graphqlResponse.GetJsonAsync<NewtonsoftGraphQLResult>().ConfigureAwait(false);
 
-            return new FlurlGraphQLNewtonsoftJsonResponseProcessor(
+            return new FlurlGraphQLNewtonsoftJsonResponseConverterProcessor(
                 graphqlResult.Data,
                 graphqlResult.Errors,
                 graphqlResponse.GraphQLJsonSerializer as FlurlGraphQLNewtonsoftJsonSerializer

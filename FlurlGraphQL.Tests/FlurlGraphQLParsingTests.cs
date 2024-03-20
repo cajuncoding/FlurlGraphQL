@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
-using FlurlGraphQL.FlurlGraphQL.Json;
+using FlurlGraphQL.CustomExtensions;
 using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -97,7 +95,7 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public void TestSystemTextJsonParsingOfNestedPaginatedGraphQLResults()
+        public void TestSystemTextJsonParsingOfNestedPaginatedStarWarsGraphQLResults()
         {
             var systemTextJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
 
@@ -105,6 +103,16 @@ namespace FlurlGraphQL.Tests
 
             AssertCursorPaginatedResultsAreValid(characterResults);
         }
+
+        //[TestMethod]
+        //public void TestSystemTextJsonParsingOfNestedPaginatedBooksAndAuthorsGraphQLResults()
+        //{
+        //    var systemTextJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedBooksAndAuthorsJsonText);
+
+        //    var bookResults = systemTextJsonGraphQLProcessor.LoadTypedResults<Book>().ToGraphQLConnectionResultsInternal();
+
+        //    //AssertCursorPaginatedResultsAreValid(bookResults);
+        //}
 
         [TestMethod]
         public void TestSystemTextJsonParsingOfNestedPaginatedGraphQLResultsWithJsonPropertyNameMappings()
@@ -134,9 +142,59 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public void TestNewtonsoftJsonParsingOfNestedPaginatedGraphQLResults()
+        public void TestNewtonsoftJsonParsingOfNestedPaginatedStarWarsGraphQLResults()
         {
             var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
+
+            var characterResults = newtonsoftJsonGraphQLProcessor.LoadTypedResults<StarWarsCharacter>().ToGraphQLConnectionResultsInternal();
+
+            AssertCursorPaginatedResultsAreValid(characterResults);
+        }
+
+        [TestMethod]
+        public void TestNewtonsoftJsonParsingOfNestedPaginatedBooksAndAuthorsGraphQLResults()
+        {
+            //var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
+            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
+            var graphqlSerializer = FlurlGraphQLNewtonsoftJsonSerializer.FromFlurlSerializer(new NewtonsoftJsonSerializer());
+            var graphqlResult = graphqlSerializer.Deserialize<NewtonsoftGraphQLResult>(this.NestedPaginatedBooksAndAuthorsJsonText);
+
+            var newtonsoftJsonGraphQLProcessor = new FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor(
+                graphqlResult.Data,
+                graphqlResult.Errors,
+                graphqlSerializer as FlurlGraphQLNewtonsoftJsonSerializer
+            );
+
+            var bookResults = newtonsoftJsonGraphQLProcessor.LoadTypedResults<Book>().ToGraphQLConnectionResultsInternal();
+
+            Assert.IsNotNull(bookResults);
+            Assert.AreEqual(2, bookResults.Count);
+
+            var firstBook = bookResults[0];
+            Assert.IsNotNull(firstBook);
+            Assert.IsFalse(firstBook?.Name?.IsNullOrEmpty());
+            
+            var firstAuthor = firstBook.Authors.FirstOrDefault();
+            Assert.IsNotNull(firstAuthor);
+            Assert.IsFalse(firstAuthor?.FirstName?.IsNullOrEmpty());
+            Assert.AreEqual(8, firstAuthor.AuthoredBooks.Length);
+            Assert.AreEqual(3, firstAuthor.EditedBooks.Length);
+        }
+
+        [TestMethod]
+        public void TestNewtonsoftJsonParsingOfNestedPaginatedGraphQLResultsUsingRewriteProcessor()
+        {
+            var jsonText = this.NestedPaginatedStarWarsJsonText;
+
+            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
+            var graphqlSerializer = FlurlGraphQLNewtonsoftJsonSerializer.FromFlurlSerializer(new NewtonsoftJsonSerializer());
+            var graphqlResult = graphqlSerializer.Deserialize<NewtonsoftGraphQLResult>(jsonText);
+
+            var newtonsoftJsonGraphQLProcessor = new FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor(
+                graphqlResult.Data,
+                graphqlResult.Errors,
+                graphqlSerializer as FlurlGraphQLNewtonsoftJsonSerializer
+            );
 
             var characterResults = newtonsoftJsonGraphQLProcessor.LoadTypedResults<StarWarsCharacter>().ToGraphQLConnectionResultsInternal();
 
@@ -195,7 +253,7 @@ namespace FlurlGraphQL.Tests
             var graphqlSerializer = FlurlGraphQLNewtonsoftJsonSerializer.FromFlurlSerializer(new NewtonsoftJsonSerializer());
             var graphqlResult = graphqlSerializer.Deserialize<NewtonsoftGraphQLResult>(jsonText);
 
-            return new FlurlGraphQLNewtonsoftJsonResponseProcessor(
+            return new FlurlGraphQLNewtonsoftJsonResponseConverterProcessor(
                 graphqlResult.Data,
                 graphqlResult.Errors,
                 graphqlSerializer as FlurlGraphQLNewtonsoftJsonSerializer

@@ -2,24 +2,25 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.Json.Nodes;
 using FlurlGraphQL.CustomExtensions;
-using FlurlGraphQL.SystemTextJsonExtensions;
 using FlurlGraphQL.ValidationExtensions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL.FlurlGraphQL.Json
 {
-    internal class FlurlGraphQLSystemTextJsonRewriter
+    internal class FlurlGraphQLNewtonsoftJsonRewriter
     {
         #region Factory Methods
         
-        public static FlurlGraphQLSystemTextJsonRewriter ForType<T>() 
-            => new FlurlGraphQLSystemTextJsonRewriter(FlurlGraphQLJsonRewriterTypeInfo.ForType<T>());
+        public static FlurlGraphQLNewtonsoftJsonRewriter ForType<T>() 
+            => new FlurlGraphQLNewtonsoftJsonRewriter(FlurlGraphQLJsonRewriterTypeInfo.ForType<T>());
 
         #endregion
 
         public FlurlGraphQLJsonRewriterTypeInfo JsonRewriterTypeInfo { get; }
-        public FlurlGraphQLSystemTextJsonRewriter(FlurlGraphQLJsonRewriterTypeInfo jsonRewriterTypeInfo)
+        
+        public FlurlGraphQLNewtonsoftJsonRewriter(FlurlGraphQLJsonRewriterTypeInfo jsonRewriterTypeInfo)
         {
             JsonRewriterTypeInfo = jsonRewriterTypeInfo.AssertArgIsNotNull(nameof(jsonRewriterTypeInfo));
         }
@@ -30,12 +31,12 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
-        public (JsonNode Json, PaginationType? PaginationType) RewriteJsonAsNeededForEasyGraphQLModelMapping(JsonNode json)
+        public (JToken Json, PaginationType? PaginationType) RewriteJsonAsNeededForEasyGraphQLModelMapping(JToken json)
         {
             if (json == null) return (null, null);
 
             if (Debugger.IsAttached)
-                Debug.WriteLine($"[{nameof(FlurlGraphQLSystemTextJsonRewriter)}] Original GraphQL Json:{Environment.NewLine}{json.ToJsonStringIndented()}");
+                Debug.WriteLine($"[{nameof(FlurlGraphQLNewtonsoftJsonRewriter)}] Original GraphQL Json:{Environment.NewLine}{json.ToString(Formatting.Indented)}");
 
             //NOTE: We really only need to know the Pagination Type of the Parent/Root node so that we can correctly determine the proper
             //          type of Paginated results (e.g. ConnectionResults vs CollectionSegmentResults) for the FlurlGraphQL root results type
@@ -47,13 +48,14 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
 
             //If our ROOT EntityType does not implement IGraphQLResults then we need to Flatten the Root Level first...
             //  This ensures we are accessing the expected data within the [edges], [nodes], or [items] collection for all recursive processing...
-            if(!JsonRewriterTypeInfo.ImplementsIGraphQLQueryResults && json is JsonObject jsonObject)
+            if(!JsonRewriterTypeInfo.ImplementsIGraphQLQueryResults && json is JObject jsonObject)
                 processedJson = RewriteGraphQLJsonObjectAsNeeded(jsonObject, false);
 
+            //Secondly, after the Root is prepared we can recursively process the rest of the Json...
             var rewrittenJson = RewriteGraphQLJsonAsNeededRecursively(processedJson);
 
             if (Debugger.IsAttached)
-                Debug.WriteLine($"[{nameof(FlurlGraphQLSystemTextJsonRewriter)}] Rewritten GraphQL Json:{Environment.NewLine}{rewrittenJson.ToJsonStringIndented()}");
+                Debug.WriteLine($"[{nameof(FlurlGraphQLNewtonsoftJsonRewriter)}] Rewritten GraphQL Json:{Environment.NewLine}{rewrittenJson.ToString(Formatting.Indented)}");
 
             return (rewrittenJson, paginationType);
         }
@@ -72,22 +74,22 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         /// <param name="json"></param>
         /// <param name="recursiveRewriterPropInfos"></param>
         /// <returns></returns>
-        private JsonNode RewriteGraphQLJsonAsNeededRecursively  (JsonNode json, IList<FlurlGraphQLJsonRewriterPropInfo> recursiveRewriterPropInfos = null)
+        private JToken RewriteGraphQLJsonAsNeededRecursively  (JToken json, IList<FlurlGraphQLJsonRewriterPropInfo> recursiveRewriterPropInfos = null)
         {
             //If not currently processing recursively then we default to the Root Properties of the JsonRewriterTypeInfo...
             var propsToRewrite = recursiveRewriterPropInfos ?? this.JsonRewriterTypeInfo.ChildPropertiesToRewrite;
 
-            JsonNode finalJson = json;
+            JToken finalJson = json;
             
             //NOTE: For Performance we ONLY process IF we actually have any properties to process otherwise we short circuit as there is no work to do!!!
             if (propsToRewrite.HasAny())
             {
                 switch (json)
                 {
-                    case JsonArray jsonArray:
+                    case JArray jsonArray:
                         finalJson = RewriteGraphQLJsonArrayAsNeededRecursively(jsonArray, propsToRewrite);
                         break;
-                    case JsonObject jsonObject:
+                    case JObject jsonObject:
                         finalJson = RewriteGraphQLJsonObjectAsNeededRecursively(jsonObject, propsToRewrite);
                         break;
                 }
@@ -97,57 +99,57 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
             return finalJson;
         }
 
-
-        private JsonArray RewriteGraphQLJsonArrayAsNeededRecursively(JsonArray jsonArray, IList<FlurlGraphQLJsonRewriterPropInfo> propsToRewrite)
+        private JArray RewriteGraphQLJsonArrayAsNeededRecursively(JArray jsonArray, IList<FlurlGraphQLJsonRewriterPropInfo> propsToRewrite)
         {
             //Iterate and recursively process all items in the Array as needed...
             var rewrittenJsonItems = jsonArray.Select(jsonItem =>
             {
                 var rewrittenJson = RewriteGraphQLJsonAsNeededRecursively(jsonItem, propsToRewrite);
-                return rewrittenJson;
+                return (object)rewrittenJson;
             }).ToArray();
 
             jsonArray.Clear();
-            return new JsonArray(rewrittenJsonItems);
+            return new JArray(rewrittenJsonItems);
         }
 
-        private JsonObject RewriteGraphQLJsonObjectAsNeededRecursively(JsonObject jsonObject, IList<FlurlGraphQLJsonRewriterPropInfo> propsToRewrite)
+        private JObject RewriteGraphQLJsonObjectAsNeededRecursively(JObject jsonObject, IList<FlurlGraphQLJsonRewriterPropInfo> propsToRewrite)
         {
             foreach (var rewriterPropInfo in propsToRewrite)
             {
                 //NOTE: If for some reason the Property Node is not found then this will be null and further processing will be skipped
                 //          as the Case statement won't match anything...
-                var jsonPropNode = jsonObject[rewriterPropInfo.PropertyMappedJsonName];
+                var jsonPropNode = jsonObject.Field(rewriterPropInfo.PropertyMappedJsonName);
+                JToken jsonUpdatedPropNode = null;
 
                 switch (jsonPropNode)
                 {
                     //Ensure this is Null safe and Fast by skipping anytime the Json is not a valid Object containing a [nodes], [items], or [edges] property...
-                    case JsonArray jsonPropArray:
+                    case JArray jsonPropArray:
                         //If the value is an Array then we need to again recursively process all items in the Array as needed...
-                        jsonPropNode = RewriteGraphQLJsonArrayAsNeededRecursively(jsonPropArray, propsToRewrite);
+                        jsonUpdatedPropNode = RewriteGraphQLJsonArrayAsNeededRecursively(jsonPropArray, propsToRewrite);
                         break;
-                    case JsonObject jsonPropObject:
+                    case JObject jsonPropObject:
                         //First rewrite the current Property Node... 
                         var rewrittenJsonPropObject = RewriteGraphQLJsonObjectAsNeeded(jsonPropObject, rewriterPropInfo.ImplementsIGraphQLEdge);
 
                         //Then Recursively Rewrite all child Json Properties as needed and update our Final Json with the Results!!!
                         //NOTE: WE call back up the generic handler because we don't know if each property is a nested Array or Object so this keeps
                         //          the recursive processing going handling all types consistently...
-                        jsonPropNode = RewriteGraphQLJsonAsNeededRecursively(rewrittenJsonPropObject, rewriterPropInfo.ChildPropertiesToRewrite);
+                        jsonUpdatedPropNode = RewriteGraphQLJsonAsNeededRecursively(rewrittenJsonPropObject, rewriterPropInfo.ChildPropertiesToRewrite);
                         break;
                 }
 
                 //Finally (if updated) then we need to update the fully/recursively rewritten Value on the Parent!
-                if (jsonPropNode != null)
-                    jsonObject[rewriterPropInfo.PropertyMappedJsonName] = jsonPropNode;
+                if (jsonPropNode != null && jsonUpdatedPropNode != null)
+                    jsonPropNode.Replace(jsonUpdatedPropNode);
             }
 
             return jsonObject;
         }
 
-        private JsonNode RewriteGraphQLJsonObjectAsNeeded(JsonObject json, bool isIGraphQLEdgeImplementedOnProp)
+        private JToken RewriteGraphQLJsonObjectAsNeeded(JObject json, bool isIGraphQLEdgeImplementedOnProp)
         {
-            IList<JsonObject> entityNodes = Array.Empty<JsonObject>();
+            IList<JObject> entityNodes = Array.Empty<JObject>();
 
             //Dynamically resolve the Results from:
             // - the Nodes child of the Data Result (for nodes{} based Cursor Paginated queries)
@@ -156,23 +158,23 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
             // - finally use the (non-nested) array of results if not a Paginated result set of any kind above...
             //NOTE: When relocating the nodes we must Clear the original parent Node to explicitly remove all children so that the Nodes can be re-assigned
             //          to a new location in the Json; as System.Text.Json will throw exceptions otherwise!
-            if (json[GraphQLFields.Nodes] is JsonArray nodesJson)
+            if (json.Field(GraphQLFields.Nodes) is JArray nodesJson)
             {
-                entityNodes = nodesJson.OfType<JsonObject>().ToArray();
+                entityNodes = nodesJson.OfType<JObject>().ToArray();
                 nodesJson.Clear();
             }
-            else if (json[GraphQLFields.Items] is JsonArray itemsJson)
+            else if (json.Field(GraphQLFields.Items) is JArray itemsJson)
             {
-                entityNodes = itemsJson.OfType<JsonObject>().ToArray();
+                entityNodes = itemsJson.OfType<JObject>().ToArray();
                 itemsJson.Clear();
             }
             //Handle Edges case (which allow access to the Cursor)
-            else if (json[GraphQLFields.Edges] is JsonArray edgesJson)
+            else if (json.Field(GraphQLFields.Edges) is JArray edgesJson)
             {
                 //Handle case where GraphQLEdge<TNode> wrapper class is used to simplify retrieving the Edges (maintaining the more complex GraphQL model).
                 //  Otherwise we simplify/flatten the edge hierarchy into an Array of Objects for simplified model mapping/deserialization!
                 entityNodes = isIGraphQLEdgeImplementedOnProp
-                    ? edgesJson.OfType<JsonObject>().ToArray()
+                    ? edgesJson.OfType<JObject>().ToArray()
                     : FlattenGraphQLEdgesToJsonArray(edgesJson);
 
                 //We don't actually need to Clear the Edges (so we save a little work here) because the parent of each item was actually the [node] child within the [edge]!
@@ -183,21 +185,21 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                 return json;
             }    
 
-            var rewrittenJsonArray = new JsonArray(entityNodes.OfType<JsonNode>().ToArray());
+            var rewrittenJsonArray = new JArray(entityNodes.OfType<object>().ToArray());
             return rewrittenJsonArray;
         }
 
-        private IList<JsonObject> FlattenGraphQLEdgesToJsonArray(JsonArray edgesArray)
+        private IList<JObject> FlattenGraphQLEdgesToJsonArray(JArray edgesArray)
         {
             return edgesArray
-                .OfType<JsonObject>()
+                .OfType<JObject>()
                 .Select(edge =>
                 {
-                    var node = edge[GraphQLFields.Node] as JsonObject;
+                    var node = edge.Field(GraphQLFields.Node) as JObject;
 
                     if (node != null)
                     {
-                        //NOW we must MOVE / Re-locate all Nodes into our output JsonArray which means we have to remove them from the Parent to avoid "Node already has a Parent" exceptions...
+                        ////NOW we must MOVE / Re-locate all Nodes into our output JArray which means we have to remove them from the Parent to keep our final Json clean...
                         edge.Remove(GraphQLFields.Node);
 
                         //Migrate all Properties from the Edge level to the Node level so they can more easily be mapped into C# Models
@@ -205,29 +207,30 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                         //We do check to ensure that a Json property of the same name doesn't already exist to ensure we don't incorrectly overwrite it!
                         //NOTE: For example with the Cursor, now any consumer can just add a "Cursor" property to their model to get the node's cursor as it's been flattened into the node itself.
                         //NOTE: We don't need to worry about the actual Node property here since it was already removed above (it MUST be removed for other reasons)...
-                        var edgePropsToMove = edge.Where(p => !node.ContainsKey(p.Key)).ToArray();
+                        var edgePropsToMove = edge.Properties().Where(p => !node.ContainsKey(p.Name)).ToArray();
 
-                        //We must FIRST Remove the Props from the Edge to remove them from the Parent to avoid "Node already has a Parent" exceptions;
+                        //We must FIRST Remove the Props from the Edge to remove them from the Parent to keep our final Json clean;
                         //  clearing the Edge seems to be the easiest/fastest approach... 
                         if (edgePropsToMove.HasAny())
-                            edge.Clear();
+                            edge.RemoveAll();
 
                         foreach (var edgeProp in edgePropsToMove)
                         {
-                            if (edgeProp.Value is JsonValue edgePropJsonValue)
-                                node.Add(edgeProp.Key, edgePropJsonValue);
+                            var propValue = edgeProp.Value;
+                            if (propValue.Type != JTokenType.Null && propValue.Type != JTokenType.Undefined)
+                                node.Add(edgeProp.Name, edgeProp.Value);
                         }
                     }
 
                     return node;
                 })
-                .Where(i => i.IsNotNullOrUndefined())
+                .Where(i => i != null)
                 .ToArray();
         }
 
-        private PaginationType? DeterminePaginationType(JsonNode json)
+        private PaginationType? DeterminePaginationType(JToken json)
         {
-            if (json is JsonObject jsonObject)
+            if (json is JObject jsonObject)
             {
                 //Cursor Paging uses [edge] or [nodes] array...
                 if (jsonObject.ContainsKey(GraphQLFields.Nodes) || jsonObject.ContainsKey(GraphQLFields.Edges))

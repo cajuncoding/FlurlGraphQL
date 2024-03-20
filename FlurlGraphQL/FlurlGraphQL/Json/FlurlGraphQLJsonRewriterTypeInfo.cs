@@ -15,7 +15,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         #region Factory Methods with Caching
         //System.Text.Json currently has a Maximum Json depth support of 64 so there's no need to support
         //  any more levels than that in our TypeInfo models...
-        public const int MAX_DEPTH = 64;
+        public const int MAX_DEPTH = 16;
 
         protected static ConcurrentDictionary<Type, Lazy<FlurlGraphQLJsonRewriterTypeInfo>> JsonTypeInfoCache { get; }
             = new ConcurrentDictionary<Type, Lazy<FlurlGraphQLJsonRewriterTypeInfo>>();
@@ -55,20 +55,28 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
 
         #region Internal Helpers
 
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> BuildTypeCache = new ConcurrentDictionary<Type, PropertyInfo[]>();
+
         protected static IList<FlurlGraphQLJsonRewriterPropInfo> BuildRewriterJsonPropInfosRecursivelyInternal(Type targetType, int depth = 0)
         {
-            if(depth > MAX_DEPTH)
+            if(depth >= MAX_DEPTH)
                 return Array.Empty<FlurlGraphQLJsonRewriterPropInfo>();
 
-            var sanitizedType = targetType.IsGenericType
-                ? targetType.GenericTypeArguments.First()
-                : targetType;
+            var collectionProperties = BuildTypeCache.GetOrAdd(targetType, typeKey =>
+            {
+                var entityType = targetType.IsGenericType
+                    ? targetType.GenericTypeArguments.First()
+                    : targetType.IsArray
+                        ? targetType.GetElementType()
+                        : targetType;
 
-            var collectionProperties = sanitizedType
+                return entityType?
                     .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .Where(p => p.CanWrite && p.PropertyType.InheritsFrom(GraphQLTypeCache.ICollection));
+                    .Where(p => p.CanWrite && p.PropertyType.InheritsFrom(GraphQLTypeCache.ICollection))
+                    .ToArray();
+            });
 
-            var rewriterPropInfos = collectionProperties.Select(propInfo =>
+            var rewriterPropInfos = collectionProperties?.Select(propInfo =>
             {
                 var propertyType = propInfo.PropertyType;
 
@@ -83,8 +91,8 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                     childProperties: BuildRewriterJsonPropInfosRecursivelyInternal(propertyType, depth + 1)
                 );
             }).ToArray();
-
-            return rewriterPropInfos;
+            
+            return rewriterPropInfos ?? Array.Empty<FlurlGraphQLJsonRewriterPropInfo>();
         }
 
         /// <summary>

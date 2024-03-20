@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Flurl.Http.Newtonsoft;
+using FlurlGraphQL.FlurlGraphQL.Json;
 using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.TypeCacheHelpers;
-using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -61,7 +61,7 @@ namespace FlurlGraphQL
 
         #endregion
 
-        #region Json Parsing Extensions
+        #region Json Parsing Extensions - JsonConvert Strategy
 
         internal static IGraphQLQueryResults<TEntityResult> ParseJsonToGraphQLResultsInternal<TEntityResult>(this JToken json, JsonSerializerSettings jsonSerializerSettings = null)
             where TEntityResult : class
@@ -189,6 +189,67 @@ namespace FlurlGraphQL
 
         public static bool IsNullOrUndefinedJson(this JToken jsonToken)
             => jsonToken == null || jsonToken.Type == JTokenType.Null || jsonToken.Type == JTokenType.Undefined;
+
+        #endregion
+
+        #region Json Parsing Extensions - Json Rewrite Strategy
+
+        internal static IGraphQLQueryResults<TEntityResult> ConvertNewtonsoftJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(this JToken json, JsonSerializerSettings jsonSerializerSettings)
+            where TEntityResult : class
+        {
+            if (json == null)
+                return new GraphQLQueryResults<TEntityResult>();
+
+            //Ensure that all json parsing uses a Serializer with the GraphQL Contract Resolver...
+            //NOTE: We still support normal Serializer Default settings via Newtonsoft framework!
+            var newtonsoftJsonSerializer = JsonSerializer.CreateDefault(jsonSerializerSettings);
+
+            //Dynamically parse the data from the results...
+            //NOTE: We process PageInfo as Cursor Paging as the Default (because it's strongly encouraged by GraphQL.org
+            //          & Offset Paging model is a subset of Cursor Paging (less flexible).
+            GraphQLCursorPageInfo pageInfo = null;
+            int? totalCount = null;
+            if (json is JObject jsonObject)
+            {
+                pageInfo = jsonObject.Field(GraphQLFields.PageInfo)?.ToObject<GraphQLCursorPageInfo>(newtonsoftJsonSerializer);
+                totalCount = (int?)jsonObject.Field(GraphQLFields.TotalCount);
+            }
+
+            //Get our Json Rewriter from our Factory (which provides Caching for Types already processed)!
+            var graphqlJsonRewriter = FlurlGraphQLNewtonsoftJsonRewriter.ForType<TEntityResult>();
+
+            var rewriterResults = graphqlJsonRewriter.RewriteJsonAsNeededForEasyGraphQLModelMapping(json);
+
+            var paginationType = rewriterResults.PaginationType;
+            IReadOnlyList<TEntityResult> entityResults = null;
+
+            switch (rewriterResults.Json)
+            {
+                case JArray arrayResults:
+                    entityResults = arrayResults.ToObject<List<TEntityResult>>(newtonsoftJsonSerializer);
+                    break;
+                case JObject objectResult:
+                    var singleEntityResult = objectResult.ToObject<TEntityResult>(newtonsoftJsonSerializer);
+                    entityResults = new[] { singleEntityResult };
+                    break;
+            }
+
+            switch (paginationType)
+            {
+                //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
+                case PaginationType.Cursor:
+                    return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
+                case PaginationType.Offset:
+                    return new GraphQLCollectionSegmentResults<TEntityResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
+                default:
+                    {
+                        //If we have a Total Count then we also must return a valid Paging result because it's possible to request TotalCount by itself without any other PageInfo or Nodes...
+                        return totalCount.HasValue
+                            ? new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo)
+                            : new GraphQLQueryResults<TEntityResult>(entityResults);
+                    }
+            }
+        }
 
         #endregion
     }
