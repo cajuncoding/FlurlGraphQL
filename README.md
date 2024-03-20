@@ -78,6 +78,23 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
       FlurlGraphQLParsingBenchmarks.ParsingWithNewtonsoftJsonConverter: Default -> 1 outlier  was  removed (2.31 s)
       FlurlGraphQLParsingBenchmarks.ParsingWithNewtonsoftJsonRewriting: Default -> 2 outliers were removed (1.18 s, 1.19 s)
       FlurlGraphQLParsingBenchmarks.ParsingWithSystemTextJsonRewriting: Default -> 1 outlier  was  removed (301.52 ms)
+      
+
+    // * Summary *
+
+    BenchmarkDotNet v0.13.12, Windows 11 (10.0.22631.3296/23H2/2023Update/SunValley3)
+    AMD Ryzen 9 5900X, 1 CPU, 24 logical and 12 physical cores
+    .NET SDK 8.0.200-preview.23624.5
+      [Host]     : .NET 6.0.28 (6.0.2824.12007), X64 RyuJIT AVX2
+      DefaultJob : .NET 6.0.28 (6.0.2824.12007), X64 RyuJIT AVX2
+
+
+    | Method                             | Mean       | Error    | StdDev   | Ratio |
+    |----------------------------------- |-----------:|---------:|---------:|------:|
+    | ParsingWithNewtonsoftJsonConverter | 2,421.8 ms | 29.55 ms | 27.64 ms |  1.00 |
+    | ParsingWithNewtonsoftJsonRewriting | 1,025.1 ms | 15.77 ms | 12.31 ms |  0.42 |
+    | ParsingWithSystemTextJsonRewriting |   323.9 ms |  5.77 ms |  5.40 ms |  0.13 |
+
 
 ## Nuget Package (netstandard2.0 & netstandard2.1)
 To use this in your project, add the [FlurlGraphQL.Querying](https://www.nuget.org/packages/FlurlGraphQL.Querying/) NuGet package to your project.

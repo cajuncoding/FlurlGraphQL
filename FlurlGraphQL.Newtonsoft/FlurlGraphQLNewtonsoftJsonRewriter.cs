@@ -9,18 +9,18 @@ using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL.FlurlGraphQL.Json
 {
-    internal class FlurlGraphQLNewtonsoftJsonRewriter
+    internal class FlurlGraphQLNewtonsoftJsonRewriter : IFlurlGraphQLJsonRewriter<JToken>
     {
         #region Factory Methods
         
-        public static FlurlGraphQLNewtonsoftJsonRewriter ForType<T>() 
-            => new FlurlGraphQLNewtonsoftJsonRewriter(FlurlGraphQLJsonRewriterTypeInfo.ForType<T>());
+        public static FlurlGraphQLNewtonsoftJsonRewriter ForType<TEntityRoot>() 
+            => new FlurlGraphQLNewtonsoftJsonRewriter(FlurlGraphQLJsonRewriterTypeInfo.ForType<TEntityRoot>());
 
         #endregion
 
         public FlurlGraphQLJsonRewriterTypeInfo JsonRewriterTypeInfo { get; }
         
-        public FlurlGraphQLNewtonsoftJsonRewriter(FlurlGraphQLJsonRewriterTypeInfo jsonRewriterTypeInfo)
+        protected FlurlGraphQLNewtonsoftJsonRewriter(FlurlGraphQLJsonRewriterTypeInfo jsonRewriterTypeInfo)
         {
             JsonRewriterTypeInfo = jsonRewriterTypeInfo.AssertArgIsNotNull(nameof(jsonRewriterTypeInfo));
         }
@@ -31,7 +31,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
-        public (JToken Json, PaginationType? PaginationType) RewriteJsonAsNeededForEasyGraphQLModelMapping(JToken json)
+        public (JToken Json, PaginationType? PaginationType) RewriteJsonForSimplifiedGraphQLModelMapping(JToken json)
         {
             if (json == null) return (null, null);
 
@@ -48,7 +48,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
 
             //If our ROOT EntityType does not implement IGraphQLResults then we need to Flatten the Root Level first...
             //  This ensures we are accessing the expected data within the [edges], [nodes], or [items] collection for all recursive processing...
-            if(!JsonRewriterTypeInfo.ImplementsIGraphQLQueryResults && json is JObject jsonObject)
+            if(!this.JsonRewriterTypeInfo.ImplementsIGraphQLQueryResults && json is JObject jsonObject)
                 processedJson = RewriteGraphQLJsonObjectAsNeeded(jsonObject, false);
 
             //Secondly, after the Root is prepared we can recursively process the rest of the Json...
@@ -135,7 +135,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
                         //Then Recursively Rewrite all child Json Properties as needed and update our Final Json with the Results!!!
                         //NOTE: WE call back up the generic handler because we don't know if each property is a nested Array or Object so this keeps
                         //          the recursive processing going handling all types consistently...
-                        jsonUpdatedPropNode = RewriteGraphQLJsonAsNeededRecursively(rewrittenJsonPropObject, rewriterPropInfo.ChildPropertiesToRewrite);
+                        jsonUpdatedPropNode = RewriteGraphQLJsonAsNeededRecursively(rewrittenJsonPropObject, rewriterPropInfo.ResolveChildPropertiesToRewrite());
                         break;
                 }
 
@@ -149,7 +149,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
 
         private JToken RewriteGraphQLJsonObjectAsNeeded(JObject json, bool isIGraphQLEdgeImplementedOnProp)
         {
-            IList<JObject> entityNodes = Array.Empty<JObject>();
+            IList<JObject> entityNodes;
 
             //Dynamically resolve the Results from:
             // - the Nodes child of the Data Result (for nodes{} based Cursor Paginated queries)

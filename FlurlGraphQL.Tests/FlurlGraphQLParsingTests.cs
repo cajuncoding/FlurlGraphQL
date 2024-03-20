@@ -152,7 +152,7 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public void TestNewtonsoftJsonParsingOfNestedPaginatedBooksAndAuthorsGraphQLResults()
+        public void TestNewtonsoftJsonParsingOfNestedPaginatedBooksAndAuthorsGraphQLResultsUsingRewriteProcessor()
         {
             //var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
             //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...

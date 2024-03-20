@@ -13,27 +13,27 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
     public class FlurlGraphQLJsonRewriterTypeInfo
     {
         #region Factory Methods with Caching
-        //System.Text.Json currently has a Maximum Json depth support of 64 so there's no need to support
-        //  any more levels than that in our TypeInfo models...
-        public const int MAX_DEPTH = 16;
-
+        
         protected static ConcurrentDictionary<Type, Lazy<FlurlGraphQLJsonRewriterTypeInfo>> JsonTypeInfoCache { get; }
             = new ConcurrentDictionary<Type, Lazy<FlurlGraphQLJsonRewriterTypeInfo>>();
 
         public static FlurlGraphQLJsonRewriterTypeInfo ForType<T>() => ForType(typeof(T));
         
-        public static FlurlGraphQLJsonRewriterTypeInfo ForType(Type targetType)
+        public static FlurlGraphQLJsonRewriterTypeInfo ForType(Type entityType)
         {
-            var jsonTypeInfoLazy = JsonTypeInfoCache.GetOrAdd(targetType, new Lazy<FlurlGraphQLJsonRewriterTypeInfo>(
-                () => new FlurlGraphQLJsonRewriterTypeInfo(targetType)
-            ));
+            var jsonTypeInfoLazy = JsonTypeInfoCache.GetOrAdd(entityType, new Lazy<FlurlGraphQLJsonRewriterTypeInfo>(
+                () =>
+                {
+                    var rewriterTypeInfo = new FlurlGraphQLJsonRewriterTypeInfo(entityType);
+                    return rewriterTypeInfo;
+                }));
 
             return jsonTypeInfoLazy.Value;
         }
 
         #endregion
 
-        public FlurlGraphQLJsonRewriterTypeInfo(Type targetType)
+        protected FlurlGraphQLJsonRewriterTypeInfo(Type targetType)
         {
             var entityType = targetType.AssertArgIsNotNull(nameof(targetType));
             if (targetType.IsGenericType)
@@ -42,7 +42,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
             TypeName = targetType.Name;
             EntityTypeName = (entityType ?? targetType).Name;
             ImplementsIGraphQLQueryResults = entityType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType);
-            AllChildProperties = BuildRewriterJsonPropInfosRecursivelyInternal(targetType);
+            AllChildProperties = GetPropInfosToRewriteForType(targetType);
             ChildPropertiesToRewrite = AllChildProperties.Where(p => p.ShouldBeFlattened).ToArray();
         }
 
@@ -55,42 +55,22 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
 
         #region Internal Helpers
 
-        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> BuildTypeCache = new ConcurrentDictionary<Type, PropertyInfo[]>();
-
-        protected static IList<FlurlGraphQLJsonRewriterPropInfo> BuildRewriterJsonPropInfosRecursivelyInternal(Type targetType, int depth = 0)
+        protected IList<FlurlGraphQLJsonRewriterPropInfo> GetPropInfosToRewriteForType(Type targetType)
         {
-            if(depth >= MAX_DEPTH)
-                return Array.Empty<FlurlGraphQLJsonRewriterPropInfo>();
+            var entityType = targetType.IsGenericType
+                ? targetType.GenericTypeArguments.First()
+                : targetType.IsArray
+                    ? targetType.GetElementType()
+                    : targetType;
 
-            var collectionProperties = BuildTypeCache.GetOrAdd(targetType, typeKey =>
-            {
-                var entityType = targetType.IsGenericType
-                    ? targetType.GenericTypeArguments.First()
-                    : targetType.IsArray
-                        ? targetType.GetElementType()
-                        : targetType;
-
-                return entityType?
-                    .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .Where(p => p.CanWrite && p.PropertyType.InheritsFrom(GraphQLTypeCache.ICollection))
-                    .ToArray();
-            });
-
-            var rewriterPropInfos = collectionProperties?.Select(propInfo =>
-            {
-                var propertyType = propInfo.PropertyType;
-
-                //Construct our Final Rewrite Prop Info and recursively process any Child Properties...
-                return new FlurlGraphQLJsonRewriterPropInfo(
+            var rewriterPropInfos = entityType?
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(p => p.CanWrite && p.PropertyType.InheritsFrom(GraphQLTypeCache.ICollection))
+                .Select(propInfo => new FlurlGraphQLJsonRewriterPropInfo(
+                    propertyType: propInfo.PropertyType,
                     propertyName: propInfo.Name,
-                    propertyMappedJsonName: GetMappedJsonPropertyName(propInfo),
-                    implementsICollection: true, //Always True per the above Linq Query...
-                    implementsIGraphQLQueryResults: propertyType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType),
-                    implementsIGraphQLEdge: propertyType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLEdgeEntityType),
-                    //Recursively traverse and build Child Property Info...
-                    childProperties: BuildRewriterJsonPropInfosRecursivelyInternal(propertyType, depth + 1)
-                );
-            }).ToArray();
+                    propertyMappedJsonName: ResolveMappedJsonPropertyName(propInfo)
+                )).ToArray();
             
             return rewriterPropInfos ?? Array.Empty<FlurlGraphQLJsonRewriterPropInfo>();
         }
@@ -102,7 +82,7 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         /// </summary>
         /// <param name="propInfo"></param>
         /// <returns></returns>
-        protected static string GetMappedJsonPropertyName(PropertyInfo propInfo)
+        protected string ResolveMappedJsonPropertyName(PropertyInfo propInfo)
         {
             var mappingAttribute = propInfo.FindAttributes(
                 SystemTextJsonConstants.JsonPropertyAttributeClassName,
@@ -125,24 +105,18 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
 
     public class FlurlGraphQLJsonRewriterPropInfo
     {
-        public FlurlGraphQLJsonRewriterPropInfo(
-            string propertyName,
-            string propertyMappedJsonName,
-            bool implementsICollection,
-            bool implementsIGraphQLQueryResults,
-            bool implementsIGraphQLEdge,
-            IList<FlurlGraphQLJsonRewriterPropInfo> childProperties = null
-        )
+        public FlurlGraphQLJsonRewriterPropInfo(Type propertyType, string propertyName, string propertyMappedJsonName)
         {
+            PropertyType = propertyType.AssertArgIsNotNull(nameof(propertyType));
             PropertyName = propertyName.AssertArgIsNotNullOrBlank(nameof(propertyName));
             PropertyMappedJsonName = propertyMappedJsonName.AssertArgIsNotNullOrBlank(nameof(propertyMappedJsonName));
-            ImplementsICollection = implementsICollection;
-            ImplementsIGraphQLQueryResults = implementsIGraphQLQueryResults;
-            ImplementsIGraphQLEdge = implementsIGraphQLEdge;
-            AllChildProperties = childProperties ?? Array.Empty<FlurlGraphQLJsonRewriterPropInfo>();
-            ChildPropertiesToRewrite = AllChildProperties.Where(p => p.ShouldBeFlattened).ToArray();
+
+            ImplementsICollection = propertyType.InheritsFrom(GraphQLTypeCache.ICollection);
+            ImplementsIGraphQLQueryResults = propertyType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType);
+            ImplementsIGraphQLEdge = propertyType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLEdgeEntityType);
         }
 
+        public Type PropertyType { get; }
         public string PropertyName { get; }
         public string PropertyMappedJsonName { get; }
         public bool ImplementsICollection { get; }
@@ -151,8 +125,10 @@ namespace FlurlGraphQL.FlurlGraphQL.Json
         //We should ONLY Flatten Properties that are Collections but that do NOT implement our own IGraphQLResults interface
         //  which can be deserialized without flattening/rewriting the results structure!
         public bool ShouldBeFlattened => ImplementsICollection && !ImplementsIGraphQLQueryResults;
-        public IList<FlurlGraphQLJsonRewriterPropInfo> AllChildProperties { get; }
-        public IList<FlurlGraphQLJsonRewriterPropInfo> ChildPropertiesToRewrite { get; }
+
+        public IList<FlurlGraphQLJsonRewriterPropInfo> ResolveChildPropertiesToRewrite()
+            => FlurlGraphQLJsonRewriterTypeInfo.ForType(PropertyType)?.ChildPropertiesToRewrite 
+                ?? Array.Empty<FlurlGraphQLJsonRewriterPropInfo>();
 
         public override string ToString() => $"Prop=[{PropertyName}]::JsonName[{PropertyMappedJsonName}]";
     }
