@@ -2,7 +2,7 @@
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
     internal static class NewtonsoftJsonExtensions
     {

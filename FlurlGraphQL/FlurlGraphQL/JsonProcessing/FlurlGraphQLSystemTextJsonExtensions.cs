@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using FlurlGraphQL.FlurlGraphQL.Json;
 using FlurlGraphQL.SystemTextJsonExtensions;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
     public static class FlurlGraphQLSystemTextJsonExtensions
     {

@@ -4,7 +4,7 @@ using FlurlGraphQL.TypeCacheHelpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
     public class FlurlGraphQLNewtonsoftJsonPaginatedResultsConverter : JsonConverter
     {

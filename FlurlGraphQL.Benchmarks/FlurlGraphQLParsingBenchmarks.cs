@@ -2,6 +2,7 @@
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
 using FlurlGraphQL.Benchmarks.TestData;
+using FlurlGraphQL.JsonProcessing;
 using FlurlGraphQL.Tests.Models;
 
 namespace FlurlGraphQL.Benchmarks
@@ -61,7 +62,7 @@ namespace FlurlGraphQL.Benchmarks
             var graphqlSerializer = FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(new DefaultJsonSerializer());
             var graphqlResult = graphqlSerializer.Deserialize<SystemTextJsonGraphQLResult>(this.JsonSource);
 
-            var systemTextJsonGraphQLProcessor = new FlurlGraphQLSystemTextJsonResponseProcessor(
+            var systemTextJsonGraphQLProcessor = new FlurlGraphQLSystemTextJsonResponseRewriteProcessor(
                 graphqlResult.Data,
                 graphqlResult.Errors,
                 graphqlSerializer as FlurlGraphQLSystemTextJsonSerializer

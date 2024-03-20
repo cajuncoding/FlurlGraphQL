@@ -3,6 +3,7 @@ using System.Linq;
 using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using FlurlGraphQL.JsonProcessing;
 
 namespace FlurlGraphQL.SystemTextJsonExtensions
 {

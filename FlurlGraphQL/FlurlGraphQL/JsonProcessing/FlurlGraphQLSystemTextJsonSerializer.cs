@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -9,7 +8,7 @@ using Flurl.Http.Configuration;
 using FlurlGraphQL.ReflectionExtensions;
 using FlurlGraphQL.ValidationExtensions;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
     public class FlurlGraphQLSystemTextJsonSerializer : IFlurlGraphQLSystemTextJsonSerializer
     {
@@ -71,17 +70,20 @@ namespace FlurlGraphQL
         public virtual async Task<IFlurlGraphQLResponseProcessor> CreateGraphQLResponseProcessorAsync(IFlurlGraphQLResponse graphqlResponse)
         {
             //NOTE: We use the core Flurl GetJsonAsync<>() method here to get our initial results so that we benefit from it's built in performance, simplicity, stream handling, etc.!
-            var graphqlResult = await graphqlResponse.GetJsonAsync<SystemTextJsonGraphQLResult>().ConfigureAwait(false);
-
-            return new FlurlGraphQLSystemTextJsonResponseProcessor(
-                graphqlResult.Data,
-                graphqlResult.Errors,
-                graphqlResponse.GraphQLJsonSerializer as FlurlGraphQLSystemTextJsonSerializer
-            );
+            var systemTextJsonGraphQLResult = await graphqlResponse.GetJsonAsync<SystemTextJsonGraphQLResult>().ConfigureAwait(false);
+            return CreateGraphQLResponseProcessor(systemTextJsonGraphQLResult);
         }
 
         /// <summary>
-        /// Parses only the Errros from a GraphQL response. Used when Flurl throws and HttpException that still contains a valid 
+        /// Internal Helper to Create the correct IFlurlGraphQLResponseProcessor based on this Json Serializer and the provided System.Text.Json GraphQL Result.
+        /// </summary>
+        /// <param name="systemTextJsonGraphQLResult"></param>
+        /// <returns></returns>
+        internal virtual IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(SystemTextJsonGraphQLResult systemTextJsonGraphQLResult)
+            => new FlurlGraphQLSystemTextJsonResponseRewriteProcessor(systemTextJsonGraphQLResult.Data, systemTextJsonGraphQLResult.Errors, this);
+
+        /// <summary>
+        /// Parses only the Errors from a GraphQL response. Used when Flurl throws and HttpException that still contains a valid 
         /// GraphQL Json response.
         /// </summary>
         /// <param name="errorContent"></param>

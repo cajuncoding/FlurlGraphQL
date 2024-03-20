@@ -7,7 +7,7 @@ using FlurlGraphQL.CustomExtensions;
 using FlurlGraphQL.SystemTextJsonExtensions;
 using FlurlGraphQL.ValidationExtensions;
 
-namespace FlurlGraphQL.FlurlGraphQL.Json
+namespace FlurlGraphQL.JsonProcessing
 {
     internal class FlurlGraphQLSystemTextJsonRewriter : IFlurlGraphQLJsonRewriter<JsonNode>
     {

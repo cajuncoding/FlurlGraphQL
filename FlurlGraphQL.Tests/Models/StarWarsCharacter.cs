@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace FlurlGraphQL.Tests.Models
 {
@@ -35,13 +36,22 @@ namespace FlurlGraphQL.Tests.Models
         DarkSide = -1
     }
 
-    internal class StarWarsCharacterWithJsonMappings
+    internal class StarWarsCharacterWithSystemTextJsonMappings
     {
         [JsonPropertyName("personalIdentifier")] public int MyPersonalIdentifier { get; set; }
         [JsonPropertyName("name")] public string MyName { get; set; }
         [JsonPropertyName("height")] public decimal MyHeight { get; set; }
-        [JsonPropertyName("friends")] public List<StarWarsCharacterWithJsonMappings> MyFriends { get; set; }
+        [JsonPropertyName("friends")] public List<StarWarsCharacterWithSystemTextJsonMappings> MyFriends { get; set; }
         [JsonPropertyName("cursor")] public string MyCursor { get; set; }
+    }
+
+    internal class StarWarsCharacterWithNewtonsoftJsonMappings
+    {
+        [JsonProperty("personalIdentifier")] public int MyPersonalIdentifier { get; set; }
+        [JsonProperty("name")] public string MyName { get; set; }
+        [JsonProperty("height")] public decimal MyHeight { get; set; }
+        [JsonProperty("friends")] public List<StarWarsCharacterWithNewtonsoftJsonMappings> MyFriends { get; set; }
+        [JsonProperty("cursor")] public string MyCursor { get; set; }
     }
 
 

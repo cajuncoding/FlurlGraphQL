@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL
+namespace FlurlGraphQL.JsonProcessing
 {
-    public class FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor : FlurlGraphQLNewtonsoftJsonResponseConverterProcessor, IFlurlGraphQLResponseProcessor
+    public class FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor : FlurlGraphQLNewtonsoftJsonResponseBaseProcessor, IFlurlGraphQLResponseProcessor
     {
         public FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor(JObject rawDataJObject, List<GraphQLError> errors, FlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
             : base(rawDataJObject, errors, newtonsoftJsonSerializer)
