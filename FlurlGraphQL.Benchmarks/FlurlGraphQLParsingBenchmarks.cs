@@ -1,10 +1,8 @@
-﻿using System.Diagnostics;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
-using System.IO;
-using System.Linq;
-using FlurlGraphQL.Benchmarks.Models;
+using FlurlGraphQL.Benchmarks.TestData;
+using FlurlGraphQL.Tests.Models;
 
 namespace FlurlGraphQL.Benchmarks
 {
@@ -16,54 +14,60 @@ namespace FlurlGraphQL.Benchmarks
         public void GlobalSetup()
         {
             System.Diagnostics.Debugger.Launch();
-            JsonSource = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), @"TestData\LargeGraphQLTestDataSet.json"));
+
+            var testDataGenerator = new BooksAndAuthorsTestDataGenerator();
+            JsonSource = testDataGenerator.GenerateJsonSource();
+
+            //JsonSource = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), @"TestData\BooksAndAuthorsCursorPaginatedLargeDataSet.json"));
         }
 
         [Benchmark(Baseline = true)]
-        public void ParsingNewtonsoftJson()
+        public void ParsingWithNewtonsoftJsonConverter()
         {
-            var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.JsonSource);
 
-            var characterResults = newtonsoftJsonGraphQLProcessor.LoadTypedResults<BenchmarkModel>().ToGraphQLConnectionResultsInternal();
-        }
-
-        [Benchmark]
-        public void ParsingWithSystemTextJson()
-        {
-            var systemTextJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.JsonSource);
-
-            var characterResults = systemTextJsonGraphQLProcessor.LoadTypedResults<BenchmarkModel>().ToGraphQLConnectionResultsInternal();
-        }
-
-        #region Test Helpers
-
-        private IFlurlGraphQLResponseProcessor CreateDefaultSystemTextJsonGraphQLResponseProcessor(string jsonText)
-        {
-            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
-            var graphqlSerializer = FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(new DefaultJsonSerializer());
-            var graphqlResult = graphqlSerializer.Deserialize<SystemTextJsonGraphQLResult>(jsonText);
-
-            return new FlurlGraphQLSystemTextJsonResponseProcessor(
-                graphqlResult.Data,
-                graphqlResult.Errors,
-                graphqlSerializer as FlurlGraphQLSystemTextJsonSerializer
-            );
-        }
-
-        private IFlurlGraphQLResponseProcessor CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(string jsonText)
-        {
             //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
             var graphqlSerializer = FlurlGraphQLNewtonsoftJsonSerializer.FromFlurlSerializer(new NewtonsoftJsonSerializer());
-            var graphqlResult = graphqlSerializer.Deserialize<NewtonsoftGraphQLResult>(jsonText);
+            var graphqlResult = graphqlSerializer.Deserialize<NewtonsoftGraphQLResult>(this.JsonSource);
 
-            return new FlurlGraphQLNewtonsoftJsonResponseProcessor(
+            var newtonsoftJsonGraphQLProcessor = new FlurlGraphQLNewtonsoftJsonResponseConverterProcessor(
                 graphqlResult.Data,
                 graphqlResult.Errors,
                 graphqlSerializer as FlurlGraphQLNewtonsoftJsonSerializer
             );
+
+            var characterResults = newtonsoftJsonGraphQLProcessor.LoadTypedResults<Book>().ToGraphQLConnectionResultsInternal();
         }
 
-        #endregion
+        [Benchmark]
+        public void ParsingWithNewtonsoftJsonRewriting()
+        {
+            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
+            var graphqlSerializer = FlurlGraphQLNewtonsoftJsonSerializer.FromFlurlSerializer(new NewtonsoftJsonSerializer());
+            var graphqlResult = graphqlSerializer.Deserialize<NewtonsoftGraphQLResult>(this.JsonSource);
 
+            var newtonsoftJsonGraphQLProcessor = new FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor(
+                graphqlResult.Data,
+                graphqlResult.Errors,
+                graphqlSerializer as FlurlGraphQLNewtonsoftJsonSerializer
+            );
+
+            var characterResults = newtonsoftJsonGraphQLProcessor.LoadTypedResults<Book>().ToGraphQLConnectionResultsInternal();
+        }
+
+        [Benchmark]
+        public void ParsingWithSystemTextJsonRewriting()
+        {
+            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
+            var graphqlSerializer = FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(new DefaultJsonSerializer());
+            var graphqlResult = graphqlSerializer.Deserialize<SystemTextJsonGraphQLResult>(this.JsonSource);
+
+            var systemTextJsonGraphQLProcessor = new FlurlGraphQLSystemTextJsonResponseProcessor(
+                graphqlResult.Data,
+                graphqlResult.Errors,
+                graphqlSerializer as FlurlGraphQLSystemTextJsonSerializer
+            );
+
+            var characterResults = systemTextJsonGraphQLProcessor.LoadTypedResults<Book>().ToGraphQLConnectionResultsInternal();
+        }
     }
 }

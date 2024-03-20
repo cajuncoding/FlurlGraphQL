@@ -9,7 +9,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Bogus" Version="35.5.0" />
 		<PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.1" />
+		<PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
 		<PackageReference Include="MSTest.TestAdapter" Version="3.2.2" />
@@ -26,8 +31,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- NOTE: See Directory.Builds.targets for dynamic MSBuild Xml script as provied by the great Blog article at: https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm-->
+		<!-- Dynamically Adds: [assembly: InternalsVisibleTo("FlurlGraphQL.Benchmarks")] -->
+		<InternalsVisibleTo Include="FlurlGraphQL.Benchmarks" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Update="local.settings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="TestData\BooksAndAuthorsCursorPaginatedSmallDataSet.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="TestData\Errors.SimpleTestData.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

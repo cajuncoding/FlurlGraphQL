@@ -19,7 +19,7 @@ namespace FlurlGraphQL
 
         #region Json Parsing Extensions
 
-        internal static IGraphQLQueryResults<TEntityResult> ConvertJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(this JsonNode json, JsonSerializerOptions jsonSerializerOptions)
+        internal static IGraphQLQueryResults<TEntityResult> ConvertSystemTextJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(this JsonNode json, JsonSerializerOptions jsonSerializerOptions)
             where TEntityResult : class
         {
             if (json == null)

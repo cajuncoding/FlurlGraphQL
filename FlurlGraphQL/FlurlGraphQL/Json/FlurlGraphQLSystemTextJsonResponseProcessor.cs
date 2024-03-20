@@ -42,10 +42,10 @@ namespace FlurlGraphQL
             //Extract the data results for the operation name specified, or first results as default (most common use case)...
             //NOTE: GraphQL supports multiple data responses per request so we need to access the correct query type result safely (via Null Coalesce)
             var querySingleResultJson = string.IsNullOrWhiteSpace(queryOperationName)
-                ? (JsonNode)rawDataJson.AsObject().FirstOrDefault().Value
+                ? rawDataJson.AsObject().FirstOrDefault().Value
                 : rawDataJson[queryOperationName];
 
-            var typedResults = querySingleResultJson.ConvertJsonToGraphQLResultsWithJsonSerializerInternal<TResult>(GraphQLJsonSerializer.JsonSerializerOptions);
+            var typedResults = querySingleResultJson.ConvertSystemTextJsonToGraphQLResultsWithJsonSerializerInternal<TResult>(GraphQLJsonSerializer.JsonSerializerOptions);
 
             //Ensure that the Results we return are initialized along with any potential Errors (that have already been parsed/captured)... 
             if (this.Errors != null && typedResults is GraphQLQueryResults<TResult> graphqlResults)

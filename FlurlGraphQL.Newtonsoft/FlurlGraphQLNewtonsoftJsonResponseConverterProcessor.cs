@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL
 {
-    public class FlurlGraphQLNewtonsoftJsonResponseProcessor : IFlurlGraphQLResponseProcessor
+    public class FlurlGraphQLNewtonsoftJsonResponseConverterProcessor : IFlurlGraphQLResponseProcessor
     {
-        public FlurlGraphQLNewtonsoftJsonResponseProcessor(JObject rawDataJObject, List<GraphQLError> errors, FlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
+        public FlurlGraphQLNewtonsoftJsonResponseConverterProcessor(JObject rawDataJObject, List<GraphQLError> errors, FlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
         {
             this.RawDataJObject = rawDataJObject;
             this.Errors = errors?.AsReadOnly();
@@ -36,7 +34,7 @@ namespace FlurlGraphQL
 
         public virtual IGraphQLQueryResults<TResult> LoadTypedResults<TResult>(string queryOperationName = null) where TResult : class
         {
-            var rawDataJson = (JObject)this.RawDataJObject;
+            var rawDataJson = this.RawDataJObject;
 
             //BBernard
             //Extract the data results for the operation name specified, or first results as default (most common use case)...
