@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Flurl.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
@@ -10,9 +11,10 @@ namespace FlurlGraphQL.Tests
     {
 
         [TestMethod]
-        public async Task TestMutationWithQueryResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestMutationWithQueryResultsAsync(IFlurlRequest graphqlApiRequest)
         {
-            var mutationResult = await GraphQLApiEndpoint
+            var mutationResult = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     mutation($reviewInput: CreateReviewInput) {
 	                    createReview(input: $reviewInput) {

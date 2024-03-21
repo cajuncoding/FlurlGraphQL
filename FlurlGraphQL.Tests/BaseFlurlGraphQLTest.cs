@@ -1,8 +1,4 @@
-
-using System;
-using System.Collections.Generic;
 using System.IO;
-using Flurl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FlurlGraphQL.Tests.TestConfig;
 
@@ -25,8 +21,6 @@ namespace FlurlGraphQL.Tests
 
         public string NestedPaginatedBooksAndAuthorsJsonText { get; }
 
-        public string GraphQLApiEndpoint => FlurlGraphQLTestConfiguration.GraphQLApiEndpoint;
-
         public TestContext TestContext { get; set; } = null!;
 
         public string LoadTestData(string fileName)
@@ -34,6 +28,7 @@ namespace FlurlGraphQL.Tests
             var filePath = Path.Combine(CurrentDirectory, @$"TestData\{fileName}");
             if (!File.Exists(filePath))
                 throw new FileNotFoundException($"The Test Data file [{fileName}] could not be found at: [{filePath}].", fileName);
+            
             return File.ReadAllText(Path.Combine(CurrentDirectory, filePath));
         }
     }

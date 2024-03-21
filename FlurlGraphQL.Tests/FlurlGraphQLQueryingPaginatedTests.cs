@@ -59,9 +59,10 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestSingleQueryCursorPagingEdgeResultsAndNestedEdgeResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSingleQueryCursorPagingEdgeResultsAndNestedEdgeResultsAsync(IFlurlRequest graphqlApiRequest)
         {
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($first: Int, $after: String) {
 	                    characters(first: $first, after: $after) {
@@ -128,9 +129,10 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestSingleQueryOffsetPagingResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSingleQueryOffsetPagingResultsAsync(IFlurlRequest graphqlApiRequest)
         {
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query($skip:Int, $take:Int) {
                       charactersWithOffsetPaging(skip: $skip, take: $take) {
@@ -170,9 +172,10 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestCursorPagingRetrieveAllPagesAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestCursorPagingRetrieveAllPagesAsync(IFlurlRequest graphqlApiRequest)
         {
-            var allResultPages = await GraphQLApiEndpoint
+            var allResultPages = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query($first:Int, $after:String) {
                       characters (first:$first, after:$after) {
@@ -213,9 +216,10 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestOffsetPagingRetrieveAllPagesAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestOffsetPagingRetrieveAllPagesAsync(IFlurlRequest graphqlApiRequest)
         {
-            var allResultPages = await GraphQLApiEndpoint
+            var allResultPages = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query($skip:Int, $take:Int) {
                       charactersWithOffsetPaging(skip: $skip, take: $take) {
@@ -256,9 +260,10 @@ namespace FlurlGraphQL.Tests
 #if NET6_0
 
         [TestMethod]
-        public async Task TestCursorPagingRetrievePagesAsAsyncEnumerableStreamAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestCursorPagingRetrievePagesAsAsyncEnumerableStreamAsync(IFlurlRequest graphqlApiRequest)
         {
-            var pagesAsyncEnumerable = GraphQLApiEndpoint
+            var pagesAsyncEnumerable = graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query($first:Int, $after:String) {
                       characters (first:$first, after:$after) {
@@ -311,9 +316,11 @@ namespace FlurlGraphQL.Tests
             TestContext.WriteLine(jsonText);
         }
 
-        public async Task TestOffsetPagingRetrievePagesAsAsyncEnumerableStreamAsync()
+        [TestMethod]
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestOffsetPagingRetrievePagesAsAsyncEnumerableStreamAsync(IFlurlRequest graphqlApiRequest)
         {
-            var pagesAsyncEnumerable = GraphQLApiEndpoint
+            var pagesAsyncEnumerable = graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($skip: Int, $take: Int) {
 	                    charactersWithOffsetPaging(skip: $skip, take: $take) {
@@ -334,7 +341,7 @@ namespace FlurlGraphQL.Tests
                 .ReceiveGraphQLCollectionSegmentPagesAsyncEnumerable<StarWarsCharacter>();
 
             Assert.IsNotNull(pagesAsyncEnumerable);
-            Assert.IsTrue(pagesAsyncEnumerable is IAsyncEnumerable<IGraphQLConnectionResults<StarWarsCharacter>>);
+            Assert.IsTrue(pagesAsyncEnumerable is IAsyncEnumerable<IGraphQLCollectionSegmentResults<StarWarsCharacter>>);
 
             var pageResultsList = new List<IGraphQLCollectionSegmentResults<StarWarsCharacter>>();
 
@@ -365,13 +372,14 @@ namespace FlurlGraphQL.Tests
         }
 
 #endif
-            
+
 #if NET461
 
         [TestMethod]
-        public async Task TestCursorPagingRetrievePagesAsEnumerableTasksAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestCursorPagingRetrievePagesAsEnumerableTasksAsync(IFlurlRequest graphqlApiRequest)
         {
-            var enumerablePageTasks = GraphQLApiEndpoint
+            var enumerablePageTasks = graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query($first:Int, $after:String) {
                       characters (first:$first, after:$after) {
@@ -425,9 +433,10 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestOffsetPagingRetrievePagesAsEnumerableTasksAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestOffsetPagingRetrievePagesAsEnumerableTasksAsync(IFlurlRequest graphqlApiRequest)
         {
-            var enumerablePageTasks = GraphQLApiEndpoint
+            var enumerablePageTasks = graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($skip: Int, $take: Int) {
 	                    charactersWithOffsetPaging(skip: $skip, take: $take) {

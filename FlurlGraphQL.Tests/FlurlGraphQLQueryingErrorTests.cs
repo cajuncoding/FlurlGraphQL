@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Flurl.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FlurlGraphQL.Tests
@@ -8,11 +9,12 @@ namespace FlurlGraphQL.Tests
     public class FlurlGraphQLQueryingErrorTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public async Task TestSingleQueryErrorForBadRequestQueryAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSingleQueryErrorForBadRequestQueryAsync(IFlurlRequest graphqlApiRequest)
         {
             var exc = await ExecuteAndCaptureException(async () =>
             {
-                var json = await GraphQLApiEndpoint
+                var json = await graphqlApiRequest
                     .WithGraphQLQuery(@"
                         query (BAD_REQUEST) {
 	                        MALFORMED QUERY
@@ -35,11 +37,12 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestSingleQueryErrorForMalformedQueryAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSingleQueryErrorForMalformedQueryAsync(IFlurlRequest graphqlApiRequest)
         {
             var exc = await ExecuteAndCaptureException(async () =>
             {
-                var json = await GraphQLApiEndpoint
+                var json = await graphqlApiRequest
                     .WithGraphQLQuery(@"
                         query ($ids: [Int!], $friendsCount: Int!) {
 	                        charactersById(ids: $ids) {
@@ -66,11 +69,12 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestSingleQueryErrorForInvalidSelectionAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSingleQueryErrorForInvalidSelectionAsync(IFlurlRequest graphqlApiRequest)
         {
             var exc = await ExecuteAndCaptureException(async () =>
             {
-                var json = await GraphQLApiEndpoint
+                var json = await graphqlApiRequest
                     .WithGraphQLQuery(@"
                         query ($ids: [Int!]) {
 	                        charactersById(ids: $ids) {

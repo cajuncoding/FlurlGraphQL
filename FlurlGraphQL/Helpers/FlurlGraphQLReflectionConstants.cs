@@ -2,7 +2,7 @@
 {
     internal static class FlurlGraphQLConstants
     {
-        public const string JsonPaginationTypeRewrittenPropertyName = "FlurlGraphQLPaginationType";
+        public const string JsonProcessingNamespace = "FlurlGraphQL.JsonProcessing";
     }
 
     internal static class FlurlConstants
@@ -14,7 +14,6 @@
     internal static class NewtonsoftJsonConstants
     {
         public const string FlurlGraphQLNewtonsoftAssemblyName = "FlurlGraphQL.Newtonsoft";
-        public const string FlurlGraphQLNewtonsoftNamespace = "FlurlGraphQL";
         public const string FlurlGraphQLNewtonsoftJsonSerializerClassName = "FlurlGraphQLNewtonsoftJsonSerializer";
         public const string FlurlGraphQLNewtonsoftJsonSerializerFactoryMethodName = "FromFlurlSerializer";
 

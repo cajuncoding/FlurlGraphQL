@@ -1,5 +1,4 @@
 ﻿using System;
-using FlurlGraphQL.Tests.Models;
 
 namespace FlurlGraphQL.Tests.Models
 {

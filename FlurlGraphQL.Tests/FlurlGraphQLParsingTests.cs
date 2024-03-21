@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Flurl.Http.Configuration;
@@ -17,6 +16,7 @@ namespace FlurlGraphQL.Tests
         {
             NestedJsonStructureFlattenedWithForceEnum = LoadTestData("NestedPreFlattened.StarWarsDataWithForceEnum.json");
         }
+
         #region Sample Json Strings
 
         private string NestedJsonStructureFlattenedWithForceEnum { get; }

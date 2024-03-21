@@ -14,7 +14,8 @@ namespace FlurlGraphQL.Tests
     public class FlurlGraphQLRequestBuildingTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public void TestCloneFlurlGraphQLRequest()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public void TestCloneFlurlGraphQLRequest(IFlurlRequest graphqlApiRequest)
         {
             var query = @"
                 query($first:Int, $after:String) {
@@ -30,7 +31,7 @@ namespace FlurlGraphQL.Tests
 
             var guidCursor = Guid.NewGuid();
 
-            var originalRequest = GraphQLApiEndpoint
+            var originalRequest = graphqlApiRequest
                 .WithGraphQLQuery(query)
                 //.SetGraphQLVariable("first", 2)
                 .SetGraphQLVariables(new { first = 2 })
@@ -57,9 +58,10 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestExecuteRequestWithCustomNewtonsoftJsonSerializerSettings()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestExecuteRequestWithCustomNewtonsoftJsonSerializerSettings(IFlurlRequest graphqlApiRequest)
         {
-            var response = await GraphQLApiEndpoint
+            var response = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query($first:Int) {
                       characters (first:$first) {
@@ -100,9 +102,10 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public async Task TestExecuteRequestWithCustomSystemTextJsonSerializerSettings()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestExecuteRequestWithCustomSystemTextJsonSerializerSettings(IFlurlRequest graphqlApiRequest)
         {
-            var response = await GraphQLApiEndpoint
+            var response = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query($first:Int) {
                       characters (first:$first) {

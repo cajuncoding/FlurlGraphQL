@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Flurl.Http;
 using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -10,9 +11,10 @@ namespace FlurlGraphQL.Tests
     {
  
         [TestMethod]
-        public async Task TestBatchQueryDirectResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestBatchQueryDirectResultsAsync(IFlurlRequest graphqlApiRequest)
         {
-            var batchResults = await GraphQLApiEndpoint
+            var batchResults = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($first: Int) {
 	                    characters(first: $first) {

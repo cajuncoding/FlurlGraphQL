@@ -24,9 +24,12 @@ namespace FlurlGraphQL.Tests
             for (int i = 0; i < maxRuns; i++)
             {
                 timer.Restart();
-                var graphQLSerializer = FlurlGraphQLJsonSerializerFactory.FromFlurlSerializer(flurlSystemTextJsonSerializer);
+                var graphqlSerializer = FlurlGraphQLJsonSerializerFactory.FromFlurlSerializer(flurlSystemTextJsonSerializer);
                 timer.Stop();
                 
+                Assert.IsNotNull(graphqlSerializer);
+                Assert.IsInstanceOfType<FlurlGraphQLSystemTextJsonSerializer>(graphqlSerializer);
+
                 if(i == 0) TestContext.WriteLine($"[SystemTextJson Test] First Execution Time was [{timer.Elapsed.TotalMilliseconds}] ms / [{timer.Elapsed.Ticks}] ticks...");
                 timeEntries.Add(timer.ElapsedTicks);
             }
@@ -40,8 +43,11 @@ namespace FlurlGraphQL.Tests
             for (int i = 0; i < maxRuns; i++)
             {
                 timer.Restart();
-                var graphQLSerializer = FlurlGraphQLJsonSerializerFactory.FromFlurlSerializer(flurlNewtonsoftJsonSerializer);
+                var graphqlSerializer = FlurlGraphQLJsonSerializerFactory.FromFlurlSerializer(flurlNewtonsoftJsonSerializer);
                 timer.Stop();
+
+                Assert.IsNotNull(graphqlSerializer);
+                Assert.IsInstanceOfType<FlurlGraphQLNewtonsoftJsonSerializer>(graphqlSerializer);
 
                 if (i == 0) TestContext.WriteLine($"[NewtonsoftJson Test] First Execution Time was [{timer.Elapsed.TotalMilliseconds}] ms / [{timer.Elapsed.Ticks}] ticks...");
                 timeEntries.Add(timer.ElapsedTicks);

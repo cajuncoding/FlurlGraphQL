@@ -17,7 +17,7 @@ namespace FlurlGraphQL.JsonProcessing
             var newtonsoftType = AppDomain.CurrentDomain.FindType(
                 NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftJsonSerializerClassName,
                 assemblyName: NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftAssemblyName,
-                namespaceName: NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftNamespace
+                namespaceName: FlurlGraphQLConstants.JsonProcessingNamespace
             );
 
             return newtonsoftType.CreateDelegateForMethod<JsonSerializerFactoryDelegate>(NewtonsoftJsonConstants.FlurlGraphQLNewtonsoftJsonSerializerFactoryMethodName);
@@ -36,7 +36,7 @@ namespace FlurlGraphQL.JsonProcessing
             {
                 case FlurlConstants.SystemTextJsonSerializerClassName: return CreateSystemTextJsonSerializer(flurlJsonSerializer);
                 case FlurlConstants.NewtonsoftJsonSerializerClassName: return CreateNewtonsoftJsonSerializer(flurlJsonSerializer);
-                default: throw new InvalidOperationException($"The current Flurl Json Serializer of type [{flurlSerializerTypeName}] is not supported; a DefaultJsonSerializer or NewtonsoftJsonSerializer is expected.");
+                default: throw new InvalidOperationException($"The current Flurl Json Serializer of type [{flurlSerializerTypeName}] is not supported by FlurlGraphQL; an instance of DefaultJsonSerializer or NewtonsoftJsonSerializer is expected.");
             }
         }
 
