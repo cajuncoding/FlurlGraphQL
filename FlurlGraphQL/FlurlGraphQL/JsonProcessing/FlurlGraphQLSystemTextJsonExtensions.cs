@@ -34,15 +34,15 @@ namespace FlurlGraphQL.JsonProcessing
                 totalCount = (int?)jsonObject[GraphQLFields.TotalCount];
             }
 
-            //Get our Json Rewriter from our Factory (which provides Caching for Types already processed)!
-            var graphqlJsonRewriter = FlurlGraphQLSystemTextJsonRewriter.ForType<TEntityResult>();
+            //Get our Json Transformer from our Factory (which provides Caching for Types already processed)!
+            var graphqlJsonTransformer = FlurlGraphQLSystemTextJsonTransformer.ForType<TEntityResult>();
 
-            var rewriterResults = graphqlJsonRewriter.RewriteJsonForSimplifiedGraphQLModelMapping(json);
+            var transformResults = graphqlJsonTransformer.TransformJsonForSimplifiedGraphQLModelMapping(json);
             
-            var paginationType = rewriterResults.PaginationType;
+            var paginationType = transformResults.PaginationType;
             IReadOnlyList<TEntityResult> entityResults = null;
 
-            switch (rewriterResults.Json)
+            switch (transformResults.Json)
             {
                 case JsonArray arrayResults:
                     entityResults = arrayResults.Deserialize<TEntityResult[]>(jsonSerializerOptions);

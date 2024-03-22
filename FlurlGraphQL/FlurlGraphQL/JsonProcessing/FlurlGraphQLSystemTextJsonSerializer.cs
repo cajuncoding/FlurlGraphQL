@@ -80,7 +80,7 @@ namespace FlurlGraphQL.JsonProcessing
         /// <param name="systemTextJsonGraphQLResult"></param>
         /// <returns></returns>
         internal virtual IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(SystemTextJsonGraphQLResult systemTextJsonGraphQLResult)
-            => new FlurlGraphQLSystemTextJsonResponseRewriteProcessor(systemTextJsonGraphQLResult.Data, systemTextJsonGraphQLResult.Errors, this);
+            => new FlurlGraphQLSystemTextJsonResponseTransformProcessor(systemTextJsonGraphQLResult.Data, systemTextJsonGraphQLResult.Errors, this);
 
         /// <summary>
         /// Parses only the Errors from a GraphQL response. Used when Flurl throws and HttpException that still contains a valid 

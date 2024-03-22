@@ -46,7 +46,7 @@ namespace FlurlGraphQL.Benchmarks
             var graphqlSerializer = FlurlGraphQLNewtonsoftJsonSerializer.FromFlurlSerializer(new NewtonsoftJsonSerializer());
             var graphqlResult = graphqlSerializer.Deserialize<NewtonsoftGraphQLResult>(this.JsonSource);
 
-            var newtonsoftJsonGraphQLProcessor = new FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor(
+            var newtonsoftJsonGraphQLProcessor = new FlurlGraphQLNewtonsoftJsonResponseTransformProcessor(
                 graphqlResult.Data,
                 graphqlResult.Errors,
                 graphqlSerializer as FlurlGraphQLNewtonsoftJsonSerializer
@@ -62,7 +62,7 @@ namespace FlurlGraphQL.Benchmarks
             var graphqlSerializer = FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(new DefaultJsonSerializer());
             var graphqlResult = graphqlSerializer.Deserialize<SystemTextJsonGraphQLResult>(this.JsonSource);
 
-            var systemTextJsonGraphQLProcessor = new FlurlGraphQLSystemTextJsonResponseRewriteProcessor(
+            var systemTextJsonGraphQLProcessor = new FlurlGraphQLSystemTextJsonResponseTransformProcessor(
                 graphqlResult.Data,
                 graphqlResult.Errors,
                 graphqlSerializer as FlurlGraphQLSystemTextJsonSerializer

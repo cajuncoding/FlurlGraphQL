@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 
 namespace FlurlGraphQL.Tests
 {
+    [Ignore] //<== Persisted Queries are not Supported by our Azure Function Integration Test Server; and can only be validated running Locally!
     [TestClass]
     public class FlurlGraphQLQueryingPersistedQueryTests : BaseFlurlGraphQLTest
     {

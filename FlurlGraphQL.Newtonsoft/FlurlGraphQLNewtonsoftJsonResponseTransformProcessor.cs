@@ -3,9 +3,9 @@ using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL.JsonProcessing
 {
-    public class FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor : FlurlGraphQLNewtonsoftJsonResponseBaseProcessor, IFlurlGraphQLResponseProcessor
+    public class FlurlGraphQLNewtonsoftJsonResponseTransformProcessor : FlurlGraphQLNewtonsoftJsonResponseBaseProcessor, IFlurlGraphQLResponseProcessor
     {
-        public FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor(JObject rawDataJObject, List<GraphQLError> errors, FlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
+        public FlurlGraphQLNewtonsoftJsonResponseTransformProcessor(JObject rawDataJObject, List<GraphQLError> errors, FlurlGraphQLNewtonsoftJsonSerializer newtonsoftJsonSerializer)
             : base(rawDataJObject, errors, newtonsoftJsonSerializer)
         {
         }

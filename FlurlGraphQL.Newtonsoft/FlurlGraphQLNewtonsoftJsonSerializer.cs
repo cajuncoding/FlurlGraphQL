@@ -70,7 +70,7 @@ namespace FlurlGraphQL.JsonProcessing
         /// <param name="newtonsoftGraphQLResult"></param>
         /// <returns></returns>
         internal IFlurlGraphQLResponseProcessor CreateGraphQLResponseProcessor(NewtonsoftGraphQLResult newtonsoftGraphQLResult)
-            => new FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor(newtonsoftGraphQLResult.Data, newtonsoftGraphQLResult.Errors, this);
+            => new FlurlGraphQLNewtonsoftJsonResponseTransformProcessor(newtonsoftGraphQLResult.Data, newtonsoftGraphQLResult.Errors, this);
 
         /// <summary>
         /// Parses only the Errors from a GraphQL response. Used when Flurl throws and HttpException that still contains a valid 

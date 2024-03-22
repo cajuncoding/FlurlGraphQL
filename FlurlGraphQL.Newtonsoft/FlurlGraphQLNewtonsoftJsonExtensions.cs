@@ -191,7 +191,7 @@ namespace FlurlGraphQL.JsonProcessing
 
         #endregion
 
-        #region Json Parsing Extensions - Json Rewrite Strategy
+        #region Json Parsing Extensions - Json Transformation Strategy
 
         internal static IGraphQLQueryResults<TEntityResult> ConvertNewtonsoftJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(this JToken json, JsonSerializerSettings jsonSerializerSettings)
             where TEntityResult : class
@@ -214,15 +214,15 @@ namespace FlurlGraphQL.JsonProcessing
                 totalCount = (int?)jsonObject.Field(GraphQLFields.TotalCount);
             }
 
-            //Get our Json Rewriter from our Factory (which provides Caching for Types already processed)!
-            var graphqlJsonRewriter = FlurlGraphQLNewtonsoftJsonRewriter.ForType<TEntityResult>();
+            //Get our Json Transformer from our Factory (which provides Caching for Types already processed)!
+            var graphqlJsonTransformer = FlurlGraphQLNewtonsoftJsonTransformer.ForType<TEntityResult>();
 
-            var rewriterResults = graphqlJsonRewriter.RewriteJsonForSimplifiedGraphQLModelMapping(json);
+            var transformationResults = graphqlJsonTransformer.TransformJsonForSimplifiedGraphQLModelMapping(json);
 
-            var paginationType = rewriterResults.PaginationType;
+            var paginationType = transformationResults.PaginationType;
             IReadOnlyList<TEntityResult> entityResults = null;
 
-            switch (rewriterResults.Json)
+            switch (transformationResults.Json)
             {
                 case JArray arrayResults:
                     entityResults = arrayResults.ToObject<List<TEntityResult>>(newtonsoftJsonSerializer);

@@ -6,9 +6,9 @@ using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL.JsonProcessing
 {
-    public class FlurlGraphQLSystemTextJsonResponseRewriteProcessor : IFlurlGraphQLResponseProcessor
+    public class FlurlGraphQLSystemTextJsonResponseTransformProcessor : IFlurlGraphQLResponseProcessor
     {
-        public FlurlGraphQLSystemTextJsonResponseRewriteProcessor(JsonObject rawDataJsonNode, List<GraphQLError> errors, FlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
+        public FlurlGraphQLSystemTextJsonResponseTransformProcessor(JsonObject rawDataJsonNode, List<GraphQLError> errors, FlurlGraphQLSystemTextJsonSerializer systemTextJsonSerializer)
         {
             this.RawDataJsonObject = rawDataJsonNode;
             this.Errors = errors?.AsReadOnly();

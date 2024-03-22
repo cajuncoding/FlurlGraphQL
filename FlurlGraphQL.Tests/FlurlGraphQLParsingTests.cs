@@ -23,13 +23,13 @@ namespace FlurlGraphQL.Tests
 
         #endregion
 
-        #region Newtonsoft Json Parsing tests (using Default Newtonsoft Rewrite Processor)...
+        #region Newtonsoft Json Parsing tests (using Default System.Text.Json Transform Processor)...
 
         [TestMethod]
         public void TestDefaultSystemTextJsonProcessorIsCorrect()
         {
             var newtonsoftJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
-            Assert.IsInstanceOfType<FlurlGraphQLSystemTextJsonResponseRewriteProcessor>(newtonsoftJsonGraphQLProcessor);
+            Assert.IsInstanceOfType<FlurlGraphQLSystemTextJsonResponseTransformProcessor>(newtonsoftJsonGraphQLProcessor);
         }
 
         [TestMethod]
@@ -119,13 +119,13 @@ namespace FlurlGraphQL.Tests
         
         #endregion
         
-        #region Newtonsoft Json Parsing tests (using Default Newtonsoft Rewrite Processor)...
+        #region Newtonsoft Json Parsing tests (using Default Newtonsoft Json Transform Processor)...
 
         [TestMethod]
         public void TestDefaultNewtonsoftJsonProcessorIsCorrect()
         {
             var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
-            Assert.IsInstanceOfType<FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor>(newtonsoftJsonGraphQLProcessor);
+            Assert.IsInstanceOfType<FlurlGraphQLNewtonsoftJsonResponseTransformProcessor>(newtonsoftJsonGraphQLProcessor);
         }
 
 

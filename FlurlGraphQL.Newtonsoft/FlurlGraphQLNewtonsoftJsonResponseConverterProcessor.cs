@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL.JsonProcessing
 {
-    [Obsolete("This is the original/legacy approach to processing Newtonsoft Json via custom converter but is now replaced by the new FlurlGraphQLNewtonsoftJsonResponseRewriteProcessor " +
+    [Obsolete("This is the original/legacy approach to processing Newtonsoft Json via custom converter but is now replaced by the new FlurlGraphQLNewtonsoftJsonResponseTransformProcessor " +
                         "which is optimized and benchmarked to be ~2X faster at processing Json with Newtonsoft.Json")]
     internal class FlurlGraphQLNewtonsoftJsonResponseConverterProcessor : FlurlGraphQLNewtonsoftJsonResponseBaseProcessor, IFlurlGraphQLResponseProcessor
     {

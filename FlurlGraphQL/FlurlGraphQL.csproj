@@ -15,13 +15,17 @@
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
+			- Implement full support for Flurl v4.0+
+			- Completely rewritten Json processing engine to now support both System.Text.Json &amp; Newtonsoft.Json.
+			- System.Text.Json processing with Json transformation strategy is now ~10X faster than the original Newtonsoft.Json processing.
+			- Optimized Newtonsoft.Json processing with new Json transformation strategy (vs Converter) which now benchmarks at ~2X faster.
+
+			Prior Release Notes:
 			- Fix null reference issue in GraphQL/Request Error handling of HttpStatusCode.
 			- Added better support for Mutation handling so that single payload (per Mutation convention best practices) can be returned easily via ReceiveGraphQLMutationResult;
 			this eliminates the need to use ReceiveGraphQLRawJsonResponse for dynamic Mutation response handling.
 			- Fixed bug to ensure Errors are returned on IGraphQLQueryResults when possible (not available on Batch Queries).
 			- Fixed bug in processing logic for paginated reqquests when TotalCount is the only selected field on a paginated request; only affected CollectionSegment/Offset Paging requests.
-
-			Prior Release Notes:
 			- Added support to control the Persisted Query payload field name for other GraphQL servers (e.g. Relay server) which may be different than HotChocolate .NET GraphQL Server.
 			- Added global configuration support via FlurlGraphQLConfig.ConfigureDefaults(config =&gt; ...) so that configurable options can be set once globlly with current support for Persisted Query Field Name and Json Serializer Settings.
 			- Added support for Persisted Queries via .WithGraphQLPersistedQuery() api.
