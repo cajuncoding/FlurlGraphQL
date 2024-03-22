@@ -46,42 +46,6 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 ## Performance with System.Text.Json vs Newtonsoft.Json
     // * Summary *
 
-    BenchmarkDotNet v0.13.12, Windows 11 (10.0.22621.3155/22H2/2022Update/SunValley2)
-    AMD Ryzen 9 5900X, 1 CPU, 24 logical and 12 physical cores
-    .NET SDK 8.0.200-preview.23624.5
-      [Host]     : .NET 6.0.27 (6.0.2724.6912), X64 RyuJIT AVX2 [AttachedDebugger]
-      DefaultJob : .NET 6.0.27 (6.0.2724.6912), X64 RyuJIT AVX2
-
-
-    | Method                    | Mean      | Error    | StdDev   | Ratio |
-    |-------------------------- |----------:|---------:|---------:|------:|
-    | ParsingNewtonsoftJson     | 578.75 ms | 4.985 ms | 4.663 ms |  1.00 |
-    | ParsingWithSystemTextJson |  54.50 ms | 0.738 ms | 0.654 ms |  0.09 |
-
-    // * Summary *
-
-    BenchmarkDotNet v0.13.12, Windows 11 (10.0.22631.3296/23H2/2023Update/SunValley3)
-    AMD Ryzen 9 5900X, 1 CPU, 24 logical and 12 physical cores
-    .NET SDK 8.0.200-preview.23624.5
-      [Host]     : .NET 6.0.28 (6.0.2824.12007), X64 RyuJIT AVX2
-      DefaultJob : .NET 6.0.28 (6.0.2824.12007), X64 RyuJIT AVX2
-
-
-    | Method                             | Mean       | Error    | StdDev   | Median     | Ratio | RatioSD |
-    |----------------------------------- |-----------:|---------:|---------:|-----------:|------:|--------:|
-    | ParsingWithNewtonsoftJsonConverter | 2,212.6 ms | 22.88 ms | 20.29 ms | 2,213.6 ms |  1.00 |    0.00 |
-    | ParsingWithNewtonsoftJsonRewriting | 1,058.9 ms | 20.92 ms | 36.08 ms | 1,042.5 ms |  0.49 |    0.02 |
-    | ParsingWithSystemTextJsonRewriting |   291.2 ms |  3.08 ms |  2.73 ms |   290.2 ms |  0.13 |    0.00 |
-
-    // * Hints *
-    Outliers
-      FlurlGraphQLParsingBenchmarks.ParsingWithNewtonsoftJsonConverter: Default -> 1 outlier  was  removed (2.31 s)
-      FlurlGraphQLParsingBenchmarks.ParsingWithNewtonsoftJsonRewriting: Default -> 2 outliers were removed (1.18 s, 1.19 s)
-      FlurlGraphQLParsingBenchmarks.ParsingWithSystemTextJsonRewriting: Default -> 1 outlier  was  removed (301.52 ms)
-      
-
-    // * Summary *
-
     BenchmarkDotNet v0.13.12, Windows 11 (10.0.22631.3296/23H2/2023Update/SunValley3)
     AMD Ryzen 9 5900X, 1 CPU, 24 logical and 12 physical cores
     .NET SDK 8.0.200-preview.23624.5
@@ -91,9 +55,20 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 
     | Method                             | Mean       | Error    | StdDev   | Ratio |
     |----------------------------------- |-----------:|---------:|---------:|------:|
-    | ParsingWithNewtonsoftJsonConverter | 2,421.8 ms | 29.55 ms | 27.64 ms |  1.00 |
-    | ParsingWithNewtonsoftJsonRewriting | 1,025.1 ms | 15.77 ms | 12.31 ms |  0.42 |
-    | ParsingWithSystemTextJsonRewriting |   323.9 ms |  5.77 ms |  5.40 ms |  0.13 |
+    | ParsingWithNewtonsoftJsonConverter | 2,517.0 ms | 27.39 ms | 24.28 ms |  1.00 |
+    | ParsingWithNewtonsoftJsonTransform | 1,246.9 ms |  9.73 ms |  9.10 ms |  0.50 |
+    | ParsingWithSystemTextJsonTransform |   282.8 ms |  5.60 ms |  7.48 ms |  0.11 |
+
+    // * Hints *
+    Outliers
+      FlurlGraphQLParsingBenchmarks.ParsingWithNewtonsoftJsonConverter: Default -> 1 outlier  was  removed (2.58 s)
+
+    // * Legends *
+      Mean   : Arithmetic mean of all measurements
+      Error  : Half of 99.9% confidence interval
+      StdDev : Standard deviation of all measurements
+      Ratio  : Mean of the ratio distribution ([Current]/[Baseline])
+      1 ms   : 1 Millisecond (0.001 sec)
 
 
 ## Nuget Package (netstandard2.0 & netstandard2.1)

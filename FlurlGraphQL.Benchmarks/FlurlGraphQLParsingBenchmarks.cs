@@ -40,7 +40,7 @@ namespace FlurlGraphQL.Benchmarks
         }
 
         [Benchmark]
-        public void ParsingWithNewtonsoftJsonRewriting()
+        public void ParsingWithNewtonsoftJsonTransform()
         {
             //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
             var graphqlSerializer = FlurlGraphQLNewtonsoftJsonSerializer.FromFlurlSerializer(new NewtonsoftJsonSerializer());
@@ -56,7 +56,7 @@ namespace FlurlGraphQL.Benchmarks
         }
 
         [Benchmark]
-        public void ParsingWithSystemTextJsonRewriting()
+        public void ParsingWithSystemTextJsonTransform()
         {
             //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
             var graphqlSerializer = FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(new DefaultJsonSerializer());
