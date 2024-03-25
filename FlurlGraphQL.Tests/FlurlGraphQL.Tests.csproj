@@ -1,15 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net461;</TargetFrameworks>
+		<!--<TargetFrameworks>net461</TargetFrameworks>-->
+		<TargetFrameworks>net461;net48;net6.0;</TargetFrameworks>
 		<LangVersion>8.0</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<IsPackable>false</IsPackable>
+		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Bogus" Version="35.5.0" />
+		<PackageReference Include="coverlet.msbuild" Version="3.1.2">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.1" />
 		<PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
 		  <PrivateAssets>all</PrivateAssets>
@@ -17,12 +23,8 @@
 		</PackageReference>
 		<PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-		<PackageReference Include="MSTest.TestAdapter" Version="3.2.2" />
-		<PackageReference Include="MSTest.TestFramework" Version="3.2.2" />
-		<PackageReference Include="coverlet.collector" Version="6.0.2">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="MSTest.TestAdapter" Version="2.2.8" />
+		<PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
 	</ItemGroup>
 
 	<ItemGroup>

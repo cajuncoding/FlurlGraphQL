@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<!-- NOTE: Just as with the base Flurl.Http.Newtonsoft library and Microsofts recommendation we now target net6.0 for all new projects, and netstandard2.0 + net461 (because it had big issues using netstandard prior to .NET Framework 4.7) -->
-		<TargetFrameworks>net6.0;netstandard2.0;net461</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Version>2.0.0</Version>
 		<AssemblyVersion>2.0.0</AssemblyVersion>
