@@ -9,18 +9,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Content Remove="C:\Users\Brandon\.nuget\packages\microsoft.testplatform.testhost\17.9.0\build\netcoreapp3.1\x64\testhost.dll" />
-	  <Content Remove="C:\Users\Brandon\.nuget\packages\microsoft.testplatform.testhost\17.9.0\build\netcoreapp3.1\x64\testhost.exe" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Remove="C:\Users\Brandon\.nuget\packages\mstest.testadapter\2.2.8\build\netcoreapp1.0\..\_common\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" />
-	  <None Remove="C:\Users\Brandon\.nuget\packages\mstest.testadapter\2.2.8\build\netcoreapp1.0\..\_common\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" />
-	  <None Remove="C:\Users\Brandon\.nuget\packages\mstest.testadapter\2.2.8\build\netcoreapp1.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" />
-	  <None Remove="C:\Users\Brandon\.nuget\packages\mstest.testadapter\2.2.8\build\netcoreapp1.0\\Microsoft.TestPlatform.AdapterUtilities.dll" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Bogus" Version="35.5.0" />
 		<PackageReference Include="coverlet.msbuild" Version="3.1.2">
 		  <PrivateAssets>all</PrivateAssets>

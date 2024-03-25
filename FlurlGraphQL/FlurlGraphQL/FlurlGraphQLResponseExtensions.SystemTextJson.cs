@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace FlurlGraphQL
 {
