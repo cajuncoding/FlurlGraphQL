@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!--NOTE: WE provide net6 for the latest projects, but also netstandard2.1 which has proper Async streaming support, in addition to netstandard2.0 + net461 for legacy support (because it had big issues using netstandard prior to .NET Framework 4.7 -->
-		<TargetFrameworks>net6.0;netstandard2.0;netstandard2.1;net461</TargetFrameworks>
+		<!--NOTE: Just as with the base Flurl.Http.Newtonsoft library and Microsofts recommendation we now support net6 for the latest projects, but also netstandard2.1 which has proper Async streaming support, 
+				in addition to netstandard2.0 + net461 for legacy support (because netstandard2.0 it had API compatibility issues prior to .NET Framework 4.7.x -->
+		<TargetFrameworks>net461;netstandard2.0;netstandard2.1;net6.0;</TargetFrameworks>
 		<Version>1.3.2</Version>
 		<AssemblyVersion>1.3.2</AssemblyVersion>
 		<FileVersion>1.3.2</FileVersion>
@@ -43,6 +44,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Flurl.Http" Version="4.0.2" />
+	  <PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<!-- NOTE: See Directory.Builds.targets for dynamic MSBuild Xml script as provied by the great Blog article at: https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm-->
 		<!-- Dynamically Adds: [assembly: InternalsVisibleTo("FlurlGraphQL.Newtonsoft")] -->
 		<InternalsVisibleTo Include="FlurlGraphQL.Newtonsoft" />
@@ -51,17 +61,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="..\Directory.Build.targets" Link="Directory.Build.targets" />
-	  <None Include="..\README.md" Link="README.md" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="Flurl.Http" Version="4.0.2" />
-	  <PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
-	  <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
+		<!--<None Include="..\Directory.Build.targets" Link="Directory.Build.targets" />-->
+		<None Include="..\README.md" Link="README.md" />
 	</ItemGroup>
 
 </Project>

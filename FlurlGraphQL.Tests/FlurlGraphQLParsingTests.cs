@@ -29,7 +29,7 @@ namespace FlurlGraphQL.Tests
         public void TestDefaultSystemTextJsonProcessorIsCorrect()
         {
             var newtonsoftJsonGraphQLProcessor = CreateDefaultSystemTextJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
-            Assert.IsInstanceOfType<FlurlGraphQLSystemTextJsonResponseTransformProcessor>(newtonsoftJsonGraphQLProcessor);
+            Assert.IsInstanceOfType(newtonsoftJsonGraphQLProcessor, typeof(FlurlGraphQLSystemTextJsonResponseTransformProcessor));
         }
 
         [TestMethod]
@@ -125,7 +125,7 @@ namespace FlurlGraphQL.Tests
         public void TestDefaultNewtonsoftJsonProcessorIsCorrect()
         {
             var newtonsoftJsonGraphQLProcessor = CreateDefaultNewtonsoftJsonGraphQLResponseProcessor(this.NestedPaginatedStarWarsJsonText);
-            Assert.IsInstanceOfType<FlurlGraphQLNewtonsoftJsonResponseTransformProcessor>(newtonsoftJsonGraphQLProcessor);
+            Assert.IsInstanceOfType(newtonsoftJsonGraphQLProcessor, typeof(FlurlGraphQLNewtonsoftJsonResponseTransformProcessor));
         }
 
 

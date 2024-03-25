@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- NOTE: Just as with the base Flurl.Http.Newtonsoft library and Microsofts recommendation we now target net6.0 for all new projects, and netstandard2.0 + net461 (because it had big issues using netstandard prior to .NET Framework 4.7) -->
+		<!-- NOTE: Just as with the base Flurl.Http.Newtonsoft library and Microsofts recommendation we now target net6.0 for all new projects, and netstandard2.0 + net461 
+					(because it had big issues using netstandard prior to .NET Framework 4.7) -->
 		<TargetFrameworks>net6.0;netstandard2.0;net461</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Version>2.0.0</Version>
@@ -23,16 +24,18 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.1" />
-	  <PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
-	  <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+		<PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.1" />
+		<PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<!--NOTE: FlurlGraphQL requires v13.0.2 (slightly newer than the base Flurl library because it adds support for cloning/copying JsonSerializerSettings
+					via constructor that takes in an existing settings (e.g. the internal settings from Flurl). -->
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\FlurlGraphQL\FlurlGraphQL.csproj" />
+		<ProjectReference Include="..\FlurlGraphQL\FlurlGraphQL.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
