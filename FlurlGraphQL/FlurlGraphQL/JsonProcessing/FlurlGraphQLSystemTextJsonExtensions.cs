@@ -1,73 +1,40 @@
-﻿using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using FlurlGraphQL.SystemTextJsonExtensions;
+﻿using System.Text.Json;
+using Flurl.Http;
 
 namespace FlurlGraphQL.JsonProcessing
 {
     public static class FlurlGraphQLSystemTextJsonExtensions
     {
-        public static bool IsNullOrUndefined(this JsonNode jsonNode)
+        #region Configuration Extension - NewtonsoftJson Serializer Settings (ONLY Available after an IFlurlRequest is initialized)...
+
+        /// <summary>
+        /// Initialize a custom Json Serializer using System.Text.Json, but only for this GraphQL request; isolated from any other GraphQL Requests.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="systemTextJsonOptions"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest UseGraphQLSystemTextJson(this IFlurlRequest request, JsonSerializerOptions systemTextJsonOptions = null)
+            => request.ToGraphQLRequest().UseGraphQLSystemTextJson(systemTextJsonOptions);
+
+        /// <summary>
+        /// Initialize a custom GraphQL Json Serializer using System.Text.Json, but only for this GraphQL request; isolated from any other GraphQL Requests.
+        /// </summary>
+        /// <param name="graphqlRequest"></param>
+        /// <param name="systemTextJsonOptions"></param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest UseGraphQLSystemTextJson(this IFlurlGraphQLRequest graphqlRequest, JsonSerializerOptions systemTextJsonOptions)
         {
-            var jsonValueKind = jsonNode?.GetValueKind() ?? JsonValueKind.Null;
-            return jsonValueKind == JsonValueKind.Null || jsonValueKind == JsonValueKind.Undefined;
-        }
-
-        public static bool IsNotNullOrUndefined(this JsonNode jsonNode) => !jsonNode.IsNullOrUndefined();
-
-        #region Json Parsing Extensions
-
-        internal static IGraphQLQueryResults<TEntityResult> ConvertSystemTextJsonToGraphQLResultsWithJsonSerializerInternal<TEntityResult>(this JsonNode json, JsonSerializerOptions jsonSerializerOptions)
-            where TEntityResult : class
-        {
-            if (json == null)
-                return new GraphQLQueryResults<TEntityResult>();
-
-            //Dynamically parse the data from the results...
-            //NOTE: We process PageInfo as Cursor Paging as the Default (because it's strongly encouraged by GraphQL.org
-            //          & Offset Paging model is a subset of Cursor Paging (less flexible).
-            GraphQLCursorPageInfo pageInfo = null;
-            int? totalCount = null;
-            if (json is JsonObject jsonObject)
+            if (graphqlRequest is FlurlGraphQLRequest flurlGraphQLRequest)
             {
-                pageInfo = jsonObject[GraphQLFields.PageInfo]?.Deserialize<GraphQLCursorPageInfo>(jsonSerializerOptions);
-                totalCount = (int?)jsonObject[GraphQLFields.TotalCount];
+                if (systemTextJsonOptions == null && flurlGraphQLRequest.GraphQLJsonSerializer is IFlurlGraphQLSystemTextJsonSerializer existingSystemTextJsonSerializer)
+                    flurlGraphQLRequest.GraphQLJsonSerializer = existingSystemTextJsonSerializer;
+                else
+                    flurlGraphQLRequest.GraphQLJsonSerializer = new FlurlGraphQLSystemTextJsonSerializer(
+                        systemTextJsonOptions ?? FlurlGraphQLSystemTextJsonSerializer.CreateDefaultSerializerOptions()
+                    );
             }
 
-            //Get our Json Transformer from our Factory (which provides Caching for Types already processed)!
-            var graphqlJsonTransformer = FlurlGraphQLSystemTextJsonTransformer.ForType<TEntityResult>();
-
-            var transformResults = graphqlJsonTransformer.TransformJsonForSimplifiedGraphQLModelMapping(json);
-            
-            var paginationType = transformResults.PaginationType;
-            IReadOnlyList<TEntityResult> entityResults = null;
-
-            switch (transformResults.Json)
-            {
-                case JsonArray arrayResults:
-                    entityResults = arrayResults.Deserialize<TEntityResult[]>(jsonSerializerOptions);
-                    break;
-                case JsonObject objectResult:
-                    var singleEntityResult = objectResult.Deserialize<TEntityResult>(jsonSerializerOptions);
-                    entityResults = new[] { singleEntityResult };
-                    break;
-            }
-
-            switch (paginationType)
-            {
-                //If the results have Paging Info we map to the correct type (Connection/Cursor or CollectionSegment/Offset)...
-                case PaginationType.Cursor:
-                    return new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo);
-                case PaginationType.Offset:
-                    return new GraphQLCollectionSegmentResults<TEntityResult>(entityResults, totalCount, GraphQLOffsetPageInfo.FromCursorPageInfo(pageInfo));
-                default:
-                {
-                    //If we have a Total Count then we also must return a valid Paging result because it's possible to request TotalCount by itself without any other PageInfo or Nodes...
-                    return totalCount.HasValue 
-                        ? new GraphQLConnectionResults<TEntityResult>(entityResults, totalCount, pageInfo) 
-                        : new GraphQLQueryResults<TEntityResult>(entityResults);
-                }
-            }
+            return graphqlRequest;
         }
 
         #endregion

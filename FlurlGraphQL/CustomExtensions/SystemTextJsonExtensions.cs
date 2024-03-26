@@ -34,6 +34,14 @@ namespace FlurlGraphQL.SystemTextJsonExtensions
                 default: return JsonObject.Create(jsonElement);
             }
         }
+
+        public static bool IsNullOrUndefined(this JsonNode jsonNode)
+        {
+            var jsonValueKind = jsonNode?.GetValueKind() ?? JsonValueKind.Null;
+            return jsonValueKind == JsonValueKind.Null || jsonValueKind == JsonValueKind.Undefined;
+        }
+
+        public static bool IsNotNullOrUndefined(this JsonNode jsonNode) => !jsonNode.IsNullOrUndefined();
     }
 
     /// <summary>

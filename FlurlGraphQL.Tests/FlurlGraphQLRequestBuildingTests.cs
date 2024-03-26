@@ -121,7 +121,7 @@ namespace FlurlGraphQL.Tests
                 {
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                     WriteIndented = true,
-                    //NOTE: THIS is switched to true by the framework but we are testing that we can explicitly OVERRIDE it HERE!
+                    //NOTE: THIS is switched to true by the framework but we are testing that we can NOT explicitly OVERRIDE it HERE!
                     PropertyNameCaseInsensitive = false
                 })
                 //.SetGraphQLVariable("first", 2)

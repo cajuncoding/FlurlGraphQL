@@ -12,6 +12,7 @@
 		<Description>GraphQL client extensions for Flurl.Http -- lightweight, simplified, asynchronous, fluent GraphQL client API extensions for the amazing Flurl Http library!</Description>
 		<Copyright>Copyright © 2023</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>flurl-graphql-icon-nuget.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/cajuncoding/FlurlGraphQL</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
@@ -20,6 +21,7 @@
 			- Completely rewritten Json processing engine to now support both System.Text.Json &amp; Newtonsoft.Json.
 			- System.Text.Json processing with Json transformation strategy is now ~10X faster than the original Newtonsoft.Json processing.
 			- Optimized Newtonsoft.Json processing with new Json transformation strategy (vs Converter) which now benchmarks at ~2X faster.
+			- Namespace, Project/Library, and NuGet name has now been simplified to `FlurlGraphQL` (vs `FlurlGraphQL.Querying` in v1.x).
 
 			Prior Release Notes:
 			- Fix null reference issue in GraphQL/Request Error handling of HttpStatusCode.
@@ -63,6 +65,7 @@
 	<ItemGroup>
 		<!--<None Include="..\Directory.Build.targets" Link="Directory.Build.targets" />-->
 		<None Include="..\README.md" Link="README.md" />
+		<None Include="..\FlurlGraphQL.Icons\flurl-graphql-icon-nuget.png" Pack="true" Visible="true" PackagePath="" />
 	</ItemGroup>
 
 </Project>

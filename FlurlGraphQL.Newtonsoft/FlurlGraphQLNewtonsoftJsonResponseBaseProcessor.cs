@@ -12,11 +12,11 @@ namespace FlurlGraphQL.JsonProcessing
         {
             this.RawDataJObject = rawDataJObject;
             this.Errors = errors?.AsReadOnly();
-            this.JsonSerializer = newtonsoftJsonSerializer.AssertArgIsNotNull(nameof(newtonsoftJsonSerializer));
+            this.GraphQLJsonSerializer = newtonsoftJsonSerializer.AssertArgIsNotNull(nameof(newtonsoftJsonSerializer));
         }
 
         #region Non-interface Properties
-        public FlurlGraphQLNewtonsoftJsonSerializer JsonSerializer { get; }
+        public FlurlGraphQLNewtonsoftJsonSerializer GraphQLJsonSerializer { get; }
         #endregion
 
         protected JObject RawDataJObject { get; }
@@ -44,6 +44,6 @@ namespace FlurlGraphQL.JsonProcessing
         }
 
         public virtual string GetErrorContent()
-            => ErrorContentSerialized ?? (ErrorContentSerialized = JsonSerializer.Serialize(this.Errors));
+            => ErrorContentSerialized ?? (ErrorContentSerialized = GraphQLJsonSerializer.Serialize(this.Errors));
     }
 }

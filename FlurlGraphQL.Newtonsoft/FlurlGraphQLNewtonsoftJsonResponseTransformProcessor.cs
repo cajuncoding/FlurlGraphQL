@@ -21,7 +21,7 @@ namespace FlurlGraphQL.JsonProcessing
                 ? rawDataJson.FirstField()
                 : rawDataJson.Field(queryOperationName);
 
-            var typedResults = querySingleResultJson.ConvertNewtonsoftJsonToGraphQLResultsWithJsonSerializerInternal<TResult>(JsonSerializer.JsonSerializerSettings);
+            var typedResults = querySingleResultJson.ConvertNewtonsoftJsonToGraphQLResultsWithJsonSerializerInternal<TResult>(GraphQLJsonSerializer.JsonSerializerSettings);
 
             //Ensure that the Results we return are initialized along with any potential Errors (that have already been parsed/captured)... 
             if (this.Errors != null && typedResults is GraphQLQueryResults<TResult> graphqlResults)

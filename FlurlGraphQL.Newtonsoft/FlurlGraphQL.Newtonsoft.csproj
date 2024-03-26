@@ -10,14 +10,15 @@
 		<FileVersion>2.0.0</FileVersion>
 		<Authors>BBernard / CajunCoding</Authors>
 		<Company>CajunCoding</Company>
-		<Description>Newtonsoft JSON Supportt for FlurlGraphQL -- A GraphQL client extensions for Flurl.Http - lightweight, simplified, asynchronous, fluent GraphQL client API extensions for the amazing Flurl Http library!</Description>
+		<Description>Newtonsoft JSON Supportt for FlurlGraphQL v2.0+ -- A GraphQL client extensions for Flurl.Http - lightweight, simplified, asynchronous, fluent GraphQL client API extensions for the amazing Flurl Http library!</Description>
 		<Copyright>Copyright © 2023</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>flurl-graphql-icon-nuget.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/cajuncoding/FlurlGraphQL</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
-			- Newtonsoft JSON Compatibility implementation for FlurlGraphQL using the all new Flurl v4.0.
+			- Newtonsoft JSON Compatibility implementation for FlurlGraphQL v2.0 using the all new Flurl v4.0+.
 
 		</PackageReleaseNotes>
 		<PackageTags>graphql, graph-ql, graphql client, graphql query, flurl, newtonsoft, rest, http, http client, json, hotchocolate, paging, cursor</PackageTags>
@@ -44,4 +45,7 @@
 		<InternalsVisibleTo Include="FlurlGraphQL.Benchmarks" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Include="..\FlurlGraphQL.Icons\flurl-graphql-icon-nuget.png" Pack="true" Visible="true" PackagePath="" />
+	</ItemGroup>
 </Project>
