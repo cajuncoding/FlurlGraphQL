@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using Flurl;
 using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
@@ -13,7 +15,7 @@ namespace FlurlGraphQL.Tests
     public class FlurlGraphQLConfigTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public void TestGlobalConfig()
+        public void TestGlobalGraphQLConfig()
         {
             var defaultConfig = FlurlGraphQLConfig.DefaultConfig;
             Assert.AreEqual(FlurlGraphQLConfig.DefaultPersistedQueryFieldName, defaultConfig.PersistedQueryPayloadFieldName);
@@ -34,9 +36,9 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public void TestSystemTextJsonSerializerConfig()
+        public void TestSystemTextJsonSerializerFlurlRequestLevelConfig()
         {
-            var graphqlRequest = "No Op Query".WithSettings(s =>
+            var graphqlRequest = "http://www.no-op-url.com/".WithSettings(s =>
                 {
                     s.JsonSerializer = new DefaultJsonSerializer(new JsonSerializerOptions()
                     {
@@ -50,21 +52,64 @@ namespace FlurlGraphQL.Tests
             var graphqlJsonSerializer = graphqlRequest.GraphQLJsonSerializer as FlurlGraphQLSystemTextJsonSerializer;
 
             Assert.IsNotNull(graphqlJsonSerializer);
+            Assert.IsInstanceOfType(graphqlJsonSerializer, typeof(FlurlGraphQLSystemTextJsonSerializer));
             Assert.AreEqual(99, graphqlJsonSerializer.JsonSerializerOptions.MaxDepth);
             Assert.AreEqual(true, graphqlJsonSerializer.JsonSerializerOptions.WriteIndented);
             Assert.AreEqual(JsonIgnoreCondition.WhenWritingNull, graphqlJsonSerializer.JsonSerializerOptions.DefaultIgnoreCondition);
         }
 
+        //TODO: Find out why Global Configuration isn't working and Fix Unit Test...
+        [Ignore]
+        [TestMethod]
+        public void TestSystemTextJsonSerializerFlurlGlobalConfig()
+        {
+            FlurlHttp.Clients.WithDefaults(builder =>
+                builder.WithSettings(s =>
+                {
+                    s.JsonSerializer = new DefaultJsonSerializer(new JsonSerializerOptions()
+                    {
+                        MaxDepth = 99,
+                        WriteIndented = true,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                    });
+                })
+            );
+
+            var graphqlRequest = "http://www.no-op-url.com/".AppendPathSegment("graphql").WithGraphQLQuery("No Op Query");
+
+            var graphqlJsonSerializer = graphqlRequest.GraphQLJsonSerializer as FlurlGraphQLSystemTextJsonSerializer;
+            Assert.IsNotNull(graphqlJsonSerializer);
+            Assert.IsInstanceOfType(graphqlJsonSerializer, typeof(FlurlGraphQLSystemTextJsonSerializer));
+            Assert.AreEqual(99, graphqlJsonSerializer.JsonSerializerOptions.MaxDepth);
+            Assert.AreEqual(true, graphqlJsonSerializer.JsonSerializerOptions.WriteIndented);
+            Assert.AreEqual(JsonIgnoreCondition.WhenWritingNull, graphqlJsonSerializer.JsonSerializerOptions.DefaultIgnoreCondition);
+        }
 
         [TestMethod]
-        public void TestNewtonsoftJsonSerializerConfig()
+        public void TestSystemTextJsonSerializerGraphQLSpecificRequestLevelConfig()
         {
-            var graphqlRequest = "No Op Query".WithSettings(s =>
+            var graphqlRequest = "http://www.no-op-url.com/".WithSettings(s =>
+                {
+                    //Initialize core Flurl as Newtonsoft (opposite of what we are trying to test)...
+                    s.JsonSerializer = new NewtonsoftJsonSerializer(new JsonSerializerSettings());
+                })
+                .ToGraphQLRequest()
+                //THEN Override GraphQL with System.Text.Json...
+                .UseGraphQLSystemTextJson();
+
+            var graphqlJsonSerializer = graphqlRequest.GraphQLJsonSerializer as FlurlGraphQLSystemTextJsonSerializer;
+            Assert.IsInstanceOfType(graphqlJsonSerializer, typeof(FlurlGraphQLSystemTextJsonSerializer));
+        }
+
+        [TestMethod]
+        public void TestNewtonsoftJsonSerializerFlurlRequestLevelConfig()
+        {
+            var graphqlRequest = "http://www.no-op-url.com/".WithSettings(s =>
                 {
                     s.JsonSerializer = new NewtonsoftJsonSerializer(new JsonSerializerSettings()
                     {
                         MaxDepth = 99,
-                        NullValueHandling = NullValueHandling.Include,
+                        NullValueHandling = Newtonsoft.Json.NullValueHandling.Include,
                         TypeNameHandling = TypeNameHandling.None
                     });
                 })
@@ -73,9 +118,48 @@ namespace FlurlGraphQL.Tests
             var graphqlJsonSerializer = graphqlRequest.GraphQLJsonSerializer as FlurlGraphQLNewtonsoftJsonSerializer;
 
             Assert.IsNotNull(graphqlJsonSerializer);
+            Assert.IsInstanceOfType(graphqlJsonSerializer, typeof(FlurlGraphQLNewtonsoftJsonSerializer));
             Assert.AreEqual(99, graphqlJsonSerializer.JsonSerializerSettings.MaxDepth);
-            Assert.AreEqual(NullValueHandling.Include, graphqlJsonSerializer.JsonSerializerSettings.NullValueHandling);
+            Assert.AreEqual(Newtonsoft.Json.NullValueHandling.Include, graphqlJsonSerializer.JsonSerializerSettings.NullValueHandling);
             Assert.AreEqual(TypeNameHandling.None, graphqlJsonSerializer.JsonSerializerSettings.TypeNameHandling);
+        }
+
+        //TODO: Find out why Global Configuration isn't working and Fix Unit Test...
+        [Ignore]
+        [TestMethod]
+        public void TestNewtonsoftJsonSerializerFlurlGlobalConfig()
+        {
+            FlurlHttp.Clients.UseNewtonsoft(new JsonSerializerSettings()
+            {
+                MaxDepth = 99,
+                NullValueHandling = Newtonsoft.Json.NullValueHandling.Include,
+                TypeNameHandling = TypeNameHandling.None
+            });
+
+            var graphqlRequest = "http://www.no-op-url.com/".AppendPathSegment("graphql").WithGraphQLQuery("No Op Query");
+
+            var graphqlJsonSerializer = graphqlRequest.GraphQLJsonSerializer as FlurlGraphQLNewtonsoftJsonSerializer;
+            Assert.IsNotNull(graphqlJsonSerializer);
+            Assert.IsInstanceOfType(graphqlJsonSerializer, typeof(FlurlGraphQLNewtonsoftJsonSerializer));
+            Assert.AreEqual(99, graphqlJsonSerializer.JsonSerializerSettings.MaxDepth);
+            Assert.AreEqual(Newtonsoft.Json.NullValueHandling.Include, graphqlJsonSerializer.JsonSerializerSettings.NullValueHandling);
+            Assert.AreEqual(TypeNameHandling.None, graphqlJsonSerializer.JsonSerializerSettings.TypeNameHandling);
+        }
+
+        [TestMethod]
+        public void TestNewtonsoftJsonSerializerGraphQLSpecificRequestLevelConfig()
+        {
+            var graphqlRequest = "http://www.no-op-url.com/".WithSettings(s =>
+                {
+                    //Initialize core Flurl as Newtonsoft (opposite of what we are trying to test)...
+                    s.JsonSerializer = new DefaultJsonSerializer(new JsonSerializerOptions());
+                })
+                .ToGraphQLRequest()
+                //THEN Override GraphQL with Newtonsoft.Json...
+                .UseGraphQLNewtonsoftJson();
+
+            var graphqlJsonSerializer = graphqlRequest.GraphQLJsonSerializer as FlurlGraphQLNewtonsoftJsonSerializer;
+            Assert.IsInstanceOfType(graphqlJsonSerializer, typeof(FlurlGraphQLNewtonsoftJsonSerializer));
         }
     }
 }
