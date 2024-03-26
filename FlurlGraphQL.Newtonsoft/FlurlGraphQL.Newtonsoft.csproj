@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- NOTE: Just as with the base Flurl.Http.Newtonsoft library and Microsofts recommendation we now target net6.0 for all new projects, and netstandard2.0 + net461 
+					(because it had big issues using netstandard prior to .NET Framework 4.7) -->
+		<TargetFrameworks>net461;netstandard2.0;net6.0</TargetFrameworks>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Version>2.0.0</Version>
+		<AssemblyVersion>2.0.0</AssemblyVersion>
+		<FileVersion>2.0.0</FileVersion>
+		<Authors>BBernard / CajunCoding</Authors>
+		<Company>CajunCoding</Company>
+		<Description>Newtonsoft JSON Supportt for FlurlGraphQL v2.0+ -- A GraphQL client extensions for Flurl.Http - lightweight, simplified, asynchronous, fluent GraphQL client API extensions for the amazing Flurl Http library!</Description>
+		<Copyright>Copyright © 2023</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>flurl-graphql-icon-nuget.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/cajuncoding/FlurlGraphQL</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
+		<PackageReleaseNotes>
+			Release Notes:
+			- Newtonsoft JSON Compatibility implementation for FlurlGraphQL v2.0 using the all new Flurl v4.0+.
+
+		</PackageReleaseNotes>
+		<PackageTags>graphql, graph-ql, graphql client, graphql query, flurl, newtonsoft, rest, http, http client, json, hotchocolate, paging, cursor</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Flurl.Http.Newtonsoft" Version="0.9.1" />
+	  <PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+		<!--NOTE: FlurlGraphQL requires v13.0.2 (slightly newer than the base Flurl library because it adds support for cloning/copying JsonSerializerSettings
+					via constructor that takes in an existing settings (e.g. the internal settings from Flurl). -->
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\FlurlGraphQL\FlurlGraphQL.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- [assembly: InternalsVisibleTo("FlurlGraphQL.Tests")] -->
+		<InternalsVisibleTo Include="FlurlGraphQL.Tests" />
+		<InternalsVisibleTo Include="FlurlGraphQL.Benchmarks" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\FlurlGraphQL.Icons\flurl-graphql-icon-nuget.png" Pack="true" Visible="true" PackagePath="" />
+	</ItemGroup>
+</Project>

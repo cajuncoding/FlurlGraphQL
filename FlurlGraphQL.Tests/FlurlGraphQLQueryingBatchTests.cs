@@ -1,18 +1,20 @@
 using System.Threading.Tasks;
-using FlurlGraphQL.Querying.Tests.Models;
+using Flurl.Http;
+using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLQueryingBatchTests : BaseFlurlGraphQLTest
     {
  
         [TestMethod]
-        public async Task TestBatchQueryDirectResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestBatchQueryDirectResultsAsync(IFlurlRequest graphqlApiRequest)
         {
-            var batchResults = await GraphQLApiEndpoint
+            var batchResults = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($first: Int) {
 	                    characters(first: $first) {

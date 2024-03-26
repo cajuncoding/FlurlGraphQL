@@ -1,120 +1,62 @@
-using System;
+ï»¿using System;
 using System.Threading.Tasks;
+using Flurl.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLMutationTests : BaseFlurlGraphQLTest
     {
- 
-        [TestMethod]
-        public async Task TestMutationWithQueryResultsAsync()
-        {
-            var inputPayload = JArray.Parse(@"
-                [{
-                        ""eventId"": 23,
-                        ""eventUUID"": ""c5cd1cca-fe4d-490d-a948-985023c6185c"",
-                        ""name"": ""RÜFÜS DU SOL"",
-                        ""eventType"": ""ONE_OFF"",
-                        ""status"": ""APPROVED"",
-                        ""eventDate"": ""2018-11-01T07:00:00"",
-                        ""announceDate"": null,
-                        ""onSaleDate"": null,
-                        ""doorTime"": null,
-                        ""newElvisVenueId"": 10811,
-                        ""internalBudget"": 15000.00000000,
-                        ""externalBudget"": 15000.00000000,
-                        ""budgetCurrencyCode"": ""USD"",
-                        ""budgetExchangeRate"": 1.000000,
-                        ""bookerDescription"": null,
-                        ""companyMasterId"": 1,
-                        ""subledger"": ""H6367996"",
-                        ""genreDescription"": ""Dance / Electronic / DJ / Techno / House / Trance"",
-                        ""notes"": null,
-                        ""headlinerArtists"": [{
-                                ""artistMasterId"": 0,
-                                ""artistOrdinalSortId"": 1
-                            }
-                        ],
-                        ""supportingArtists"": [{
-                                ""artistMasterId"": 0,
-                                ""artistOrdinalSortId"": 1
-                            }
-                        ],
-                        ""eventContacts"": null,
-                        ""shows"": [{
-                                ""showId"": 101,
-                                ""showName"": ""Show #3"",
-                                ""showOrdinalSortId"": 3,
-                                ""showDate"": ""2018-11-03T07:00:00"",
-                                ""announceDate"": null,
-                                ""onSaleDate"": null,
-                                ""doorTime"": null
-                            }, {
-                                ""showId"": 102,
-                                ""showName"": ""Show #2"",
-                                ""showOrdinalSortId"": 2,
-                                ""showDate"": ""2018-11-02T07:00:00"",
-                                ""announceDate"": null,
-                                ""onSaleDate"": null,
-                                ""doorTime"": null
-                            }, {
-                                ""showId"": 103,
-                                ""showName"": ""Show #1"",
-                                ""showOrdinalSortId"": 1,
-                                ""showDate"": ""2018-11-01T07:00:00"",
-                                ""announceDate"": null,
-                                ""onSaleDate"": null,
-                                ""doorTime"": null
-                            }
-                        ],
-                        ""createdDate"": ""2018-11-02T21:13:34"",
-                        ""lastUpdatedDate"": ""2020-06-11T10:00:12""
-                    }]
-                ");
 
-            var mutationResult = await "http://localhost:7072/api/v1/graphql?code=Tsk4dixKihdUyRlvlcDu1dHETHYIiCPpLawk%2F27apOsRTr1LbhF7vw%3D%3D"
+        [TestMethod]
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestMutationWithQueryResultsAsync(IFlurlRequest graphqlApiRequest)
+        {
+            var mutationResult = await graphqlApiRequest
                 .WithGraphQLQuery(@"
-                    mutation ($eventInputArray: [EventCreateOrUpdateInput]) {
-	                    eventsCreateOrUpdate(input: $eventInputArray) {
-		                    eventResults {
-			                    eventUUID
-			                    eventId
-		                    }
-		                    errors {
-			                    ... on Error {
-				                    errorCode
-				                    message
-			                    }
+                    mutation($reviewInput: CreateReviewInput) {
+	                    createReview(input: $reviewInput) {
+		                    episode
+		                    review {
+			                    id
+			                    stars
+			                    commentary
 		                    }
 	                    }
                     }
                 ")
-                .SetGraphQLVariables(new { eventInputArray = inputPayload })
+                .SetGraphQLVariable("reviewInput", new { 
+                    episode = "EMPIRE",
+                    stars = 5,
+                    commentary = "I love this Movie!"
+                })
                 .PostGraphQLQueryAsync()
-                .ReceiveGraphQLMutationResult<EventsCreateOrUpdateResult>()
+                .ReceiveGraphQLMutationResult<CreateReviewPayload>()
                 .ConfigureAwait(false);
 
-
             Assert.IsNotNull(mutationResult);
-            Assert.IsTrue(mutationResult.EventResults.Length > 0);
+            Assert.IsFalse(string.IsNullOrEmpty(mutationResult.Episode));
+            Assert.IsNotNull(mutationResult.Review);
+            Assert.IsFalse(string.IsNullOrEmpty(mutationResult.Review.Commentary));
+            Assert.IsNotNull(mutationResult.Review.Id);
+            Assert.AreNotEqual(Guid.Empty, mutationResult.Review.Id);
 
             var jsonText = JsonConvert.SerializeObject(mutationResult, Formatting.Indented);
             TestContext.WriteLine(jsonText);
         }
     }
 
-    public class EventsCreateOrUpdateResult
-    {
-        public EventResult[] EventResults { get; set; }
-    }
+    public class CreateReviewPayload {
+        public string Episode { get; set; }
+        public ReviewResult Review {get; set;}
 
-    public class EventResult
-    {
-        public Guid? EventUUID { get; set; }
-        public int? EventId { get; set; }
+        public class ReviewResult
+        {
+            public Guid Id { get; set; }
+            public int Stars { get; set; }
+            public string Commentary { get; set; }
+        }
     }
 }

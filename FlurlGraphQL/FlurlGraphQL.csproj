@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!--NOTE: Just as with the base Flurl.Http.Newtonsoft library and Microsofts recommendation we now support net6 for the latest projects, but also netstandard2.1 which has proper Async streaming support, 
+				in addition to netstandard2.0 + net461 for legacy support (because netstandard2.0 it had API compatibility issues prior to .NET Framework 4.7.x -->
+		<TargetFrameworks>net461;netstandard2.0;netstandard2.1;net6.0;</TargetFrameworks>
+		<Version>1.3.2</Version>
+		<AssemblyVersion>1.3.2</AssemblyVersion>
+		<FileVersion>1.3.2</FileVersion>
+		<Authors>BBernard / CajunCoding</Authors>
+		<Company>CajunCoding</Company>
+		<Description>GraphQL client extensions for Flurl.Http -- lightweight, simplified, asynchronous, fluent GraphQL client API extensions for the amazing Flurl Http library!</Description>
+		<Copyright>Copyright © 2023</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageIcon>flurl-graphql-icon-nuget.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/cajuncoding/FlurlGraphQL</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
+		<PackageReleaseNotes>
+			Release Notes:
+			- Implement full support for Flurl v4.0+
+			- Completely rewritten Json processing engine to now support both System.Text.Json &amp; Newtonsoft.Json.
+			- System.Text.Json processing with Json transformation strategy is now ~10X faster than the original Newtonsoft.Json processing.
+			- Optimized Newtonsoft.Json processing with new Json transformation strategy (vs Converter) which now benchmarks at ~2X faster.
+			- Namespace, Project/Library, and NuGet name has now been simplified to `FlurlGraphQL` (vs `FlurlGraphQL.Querying` in v1.x).
+
+			Prior Release Notes:
+			- Fix null reference issue in GraphQL/Request Error handling of HttpStatusCode.
+			- Added better support for Mutation handling so that single payload (per Mutation convention best practices) can be returned easily via ReceiveGraphQLMutationResult;
+			this eliminates the need to use ReceiveGraphQLRawJsonResponse for dynamic Mutation response handling.
+			- Fixed bug to ensure Errors are returned on IGraphQLQueryResults when possible (not available on Batch Queries).
+			- Fixed bug in processing logic for paginated reqquests when TotalCount is the only selected field on a paginated request; only affected CollectionSegment/Offset Paging requests.
+			- Added support to control the Persisted Query payload field name for other GraphQL servers (e.g. Relay server) which may be different than HotChocolate .NET GraphQL Server.
+			- Added global configuration support via FlurlGraphQLConfig.ConfigureDefaults(config =&gt; ...) so that configurable options can be set once globlly with current support for Persisted Query Field Name and Json Serializer Settings.
+			- Added support for Persisted Queries via .WithGraphQLPersistedQuery() api.
+			- Added support to execute GraphQL as GET requests for edge cases, though POST requests are highly encouraged.
+			- Improved consistency of use of (optional) custom Json Serialization settings when SetGraphQLNewtonsoftJsonSerializerSettings() is used to override the default GraphQL settings;
+			now initial query payloads sent also use these instead of the default Flurl settings. Some edge cases in GraphQL may require more advanced control over the Json serialization process
+			than the default Flurl Serializer interface offers and the default settings are internal and not accessible so we provide a way to control this for GraphQL specifically.
+			- Initial release of the GraphQL Querying (only) extensions for Flurl.Http.
+			- Supporting querying of typed data results with support for Relay based Cursor Paging, HotChocolate based Offset paging, Batch querying, Flurl style exception handling,
+			and simplified data models when using nested paginated results from GraphQL.
+			- NOTE: This does not currently support Mutations or Subscriptions.
+
+		</PackageReleaseNotes>
+		<PackageTags>graphql, graph-ql, graphql client, graphql query, flurl, rest, http, http client, json, hotchocolate, paging, cursor</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Flurl.Http" Version="4.0.2" />
+	  <PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- NOTE: See Directory.Builds.targets for dynamic MSBuild Xml script as provied by the great Blog article at: https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm-->
+		<!-- Dynamically Adds: [assembly: InternalsVisibleTo("FlurlGraphQL.Newtonsoft")] -->
+		<InternalsVisibleTo Include="FlurlGraphQL.Newtonsoft" />
+		<InternalsVisibleTo Include="FlurlGraphQL.Tests" />
+		<InternalsVisibleTo Include="FlurlGraphQL.Benchmarks" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!--<None Include="..\Directory.Build.targets" Link="Directory.Build.targets" />-->
+		<None Include="..\README.md" Link="README.md" />
+		<None Include="..\FlurlGraphQL.Icons\flurl-graphql-icon-nuget.png" Pack="true" Visible="true" PackagePath="" />
+	</ItemGroup>
+
+</Project>

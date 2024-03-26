@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net48;</TargetFrameworks>
+		<TargetFrameworks>net461;net48;net6.0;net8.0;</TargetFrameworks>
 		<LangVersion>8.0</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
@@ -9,18 +9,47 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
-		<PackageReference Include="MSTest.TestAdapter" Version="2.2.8" />
-		<PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
-		<PackageReference Include="coverlet.collector" Version="3.1.2" />
+		<PackageReference Include="Bogus" Version="35.5.0" />
+		<PackageReference Include="coverlet.msbuild" Version="3.1.2">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="InternalsVisibleTo.MSBuild" Version="1.1.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<!-- NOTE: WARNING DO NOT UPDATE or targeting of net461 will fail due to support being removed at v17.4.x+ -->
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" />
+		<!-- NOTE: WARNING DO NOT UPDATE or targeting of net461 will fail due to support being removed at v2.3.x+ -->
+		<PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
+		<PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\FlurlGraphQL.Querying\FlurlGraphQL.Querying.csproj" />
+	  <ProjectReference Include="..\FlurlGraphQL.Newtonsoft\FlurlGraphQL.Newtonsoft.csproj" />
+	  <ProjectReference Include="..\FlurlGraphQL\FlurlGraphQL.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- NOTE: See Directory.Builds.targets for dynamic MSBuild Xml script as provied by the great Blog article at: https://www.meziantou.net/declaring-internalsvisibleto-in-the-csproj.htm-->
+		<!-- Dynamically Adds: [assembly: InternalsVisibleTo("FlurlGraphQL.Benchmarks")] -->
+		<InternalsVisibleTo Include="FlurlGraphQL.Benchmarks" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Update="local.settings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="TestData\BooksAndAuthorsCursorPaginatedSmallDataSet.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="TestData\Errors.SimpleTestData.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="TestData\NestedPaginated.StarWarsData.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="TestData\NestedPreFlattened.StarWarsDataWithForceEnum.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

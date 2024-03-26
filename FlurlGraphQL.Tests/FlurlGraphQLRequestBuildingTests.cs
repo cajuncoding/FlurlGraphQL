@@ -1,16 +1,21 @@
 using System;
 using System.Threading.Tasks;
-using FlurlGraphQL.Querying.Tests.Models;
+using Flurl.Http;
+using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using FlurlGraphQL.JsonProcessing;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLRequestBuildingTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public void TestCloneFlurlGraphQLRequest()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public void TestCloneFlurlGraphQLRequest(IFlurlRequest graphqlApiRequest)
         {
             var query = @"
                 query($first:Int, $after:String) {
@@ -26,7 +31,7 @@ namespace FlurlGraphQL.Querying.Tests
 
             var guidCursor = Guid.NewGuid();
 
-            var originalRequest = GraphQLApiEndpoint
+            var originalRequest = graphqlApiRequest
                 .WithGraphQLQuery(query)
                 //.SetGraphQLVariable("first", 2)
                 .SetGraphQLVariables(new { first = 2 })
@@ -53,9 +58,10 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestExecuteRequestWithCustomJsonSerializerSettings()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestExecuteRequestWithCustomNewtonsoftJsonSerializerSettings(IFlurlRequest graphqlApiRequest)
         {
-            var response = await GraphQLApiEndpoint
+            var response = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query($first:Int) {
                       characters (first:$first) {
@@ -67,26 +73,79 @@ namespace FlurlGraphQL.Querying.Tests
                       }
                     }
                 ")
-                //.SetGraphQLVariable("first", 2)
-                .SetGraphQLVariables(new { first = 2 })
-                .SetGraphQLNewtonsoftJsonSerializerSettings(new JsonSerializerSettings()
+                .UseGraphQLNewtonsoftJson(new JsonSerializerSettings()
                 {
-                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore,
                     Formatting = Formatting.Indented
                 })
+                //.SetGraphQLVariable("first", 2)
+                .SetGraphQLVariables(new { first = 2 })
                 .PostGraphQLQueryAsync()
                 .ConfigureAwait(false);
 
             Assert.IsTrue(response.GraphQLRequest is FlurlGraphQLRequest);
             var request = response.GraphQLRequest as FlurlGraphQLRequest;
-            Assert.IsTrue(request.ContextBag.ContainsKey(ContextItemKeys.NewtonsoftJsonSerializerSettings));
-            var jsonSerializerSettings = (JsonSerializerSettings)request.ContextBag[ContextItemKeys.NewtonsoftJsonSerializerSettings];
+            Assert.IsTrue(request.GraphQLJsonSerializer is FlurlGraphQLNewtonsoftJsonSerializer);
+
+            var jsonSerializerSettings = ((FlurlGraphQLNewtonsoftJsonSerializer)request.GraphQLJsonSerializer).JsonSerializerSettings;
             Assert.AreEqual(Newtonsoft.Json.NullValueHandling.Ignore, jsonSerializerSettings.NullValueHandling);
             Assert.AreEqual(Formatting.Indented, jsonSerializerSettings.Formatting);
+
+            var baseFlurlSerializer = ((IFlurlRequest)request).Settings.JsonSerializer;
+            Assert.AreEqual(request.GraphQLJsonSerializer, baseFlurlSerializer);
 
             var results = await response.ReceiveGraphQLQueryResults<StarWarsCharacter>().ConfigureAwait(false);
             Assert.IsNotNull(results);
             Assert.AreEqual(2, results.Count);
+            Assert.IsNotNull(results[0].Name);
+            Assert.IsNotNull(results[0].Name);
+        }
+
+        [TestMethod]
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestExecuteRequestWithCustomSystemTextJsonSerializerSettings(IFlurlRequest graphqlApiRequest)
+        {
+            var response = await graphqlApiRequest
+                .WithGraphQLQuery(@"
+                    query($first:Int) {
+                      characters (first:$first) {
+                        nodes {
+                          personalIdentifier
+                          name
+			              height
+                        }
+                      }
+                    }
+                ")
+                .UseGraphQLSystemTextJson(new JsonSerializerOptions()
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    WriteIndented = true,
+                    //NOTE: THIS is switched to true by the framework but we are testing that we can NOT explicitly OVERRIDE it HERE!
+                    PropertyNameCaseInsensitive = false
+                })
+                //.SetGraphQLVariable("first", 2)
+                .SetGraphQLVariables(new { first = 2 })
+                .PostGraphQLQueryAsync()
+                .ConfigureAwait(false);
+
+            Assert.IsTrue(response.GraphQLRequest is FlurlGraphQLRequest);
+            var request = response.GraphQLRequest as FlurlGraphQLRequest;
+            Assert.IsTrue(request.GraphQLJsonSerializer is FlurlGraphQLSystemTextJsonSerializer);
+
+            var jsonSerializerOptions = ((FlurlGraphQLSystemTextJsonSerializer)request.GraphQLJsonSerializer).JsonSerializerOptions;
+            Assert.AreEqual(false, jsonSerializerOptions.PropertyNameCaseInsensitive);
+            Assert.AreEqual(true, jsonSerializerOptions.WriteIndented);
+
+            var baseFlurlSerializer = ((IFlurlRequest)request).Settings.JsonSerializer;
+            Assert.AreEqual(request.GraphQLJsonSerializer, baseFlurlSerializer);
+
+            var results = await response.ReceiveGraphQLQueryResults<StarWarsCharacter>().ConfigureAwait(false);
+            Assert.IsNotNull(results);
+            //We still get 2 results but the values are Null...
+            Assert.AreEqual(2, results.Count);
+            Assert.IsNull(results[0].Name);
+            Assert.IsNull(results[0].Name);
         }
     }
 }

@@ -1,17 +1,19 @@
 using System.Threading.Tasks;
-using FlurlGraphQL.Querying.Tests.Models;
+using Flurl.Http;
+using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLQueryingSimpleGetTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public async Task TestSimpleGetSingleQueryDirectResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSimpleGetSingleQueryDirectResultsAsync(IFlurlRequest graphqlApiRequest)
         {
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($ids: [Int!]) {
 	                    charactersById(ids: $ids) {
@@ -47,13 +49,14 @@ namespace FlurlGraphQL.Querying.Tests
 
 
         [TestMethod]
-        public async Task TestSingleQueryWithOnlyNestedPaginatedResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSingleQueryWithOnlyNestedPaginatedResultsAsync(IFlurlRequest graphqlApiRequest)
         {
             var idArrayParam = new[] { 1000, 2001 };
             var friendCountParam = 1;
 
             //INTENTIONALLY Place the Nested Paginated selection as LAST item to validate functionality!
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($ids: [Int!], $friendsCount: Int!) {
 	                    charactersById(ids: $ids) {

@@ -1,18 +1,23 @@
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using FlurlGraphQL.Querying.Tests.Models;
+using Flurl.Http;
+using FlurlGraphQL.JsonProcessing;
+using FlurlGraphQL.SystemTextJsonExtensions;
+using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
     [TestClass]
     public class FlurlGraphQLQueryingSimplePostTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public async Task TestSimplePostSingleQueryDirectResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSimplePostSingleQueryDirectResultsAsync(IFlurlRequest graphqlApiRequest)
         {
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($ids: [Int!]) {
 	                    charactersById(ids: $ids) {
@@ -47,9 +52,10 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestSimplePostSingleQueryDirectResultsUsingFragmentsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSimplePostSingleQueryDirectResultsUsingFragmentsAsync(IFlurlRequest graphqlApiRequest)
         {
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($ids: [Int!], $friendsCount: Int!) {
 	                    charactersById(ids: $ids) {
@@ -107,10 +113,11 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestSinglePostQueryRawJsonResponseAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSinglePostQueryRawJsonResponseSystemTextJsonAsync(IFlurlRequest graphqlApiRequest)
         {
             //INTENTIONALLY Place the Nested Paginated selection as LAST item to validate functionality!
-            var json = await GraphQLApiEndpoint
+            var json = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($ids: [Int!], $friendsCount: Int!) {
 	                    charactersById(ids: $ids) {
@@ -125,27 +132,63 @@ namespace FlurlGraphQL.Querying.Tests
 	                    }
                     }
                 ")
+                //SHOULD also be Default Behavior!
+                .UseGraphQLSystemTextJson()
                 .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
                 .PostGraphQLQueryAsync()
-                .ReceiveGraphQLRawJsonResponse()
+                .ReceiveGraphQLRawSystemTextJsonResponse()
                 .ConfigureAwait(false);
 
             Assert.IsNotNull(json);
+            Assert.IsTrue(json is JsonObject);
+            Assert.AreEqual(2, json["charactersById"]!.AsArray().Count);
+
+            TestContext.WriteLine(json.ToJsonStringIndented());
+        }
+
+        [TestMethod]
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSinglePostQueryRawJsonResponseNewtonsoftJsonAsync(IFlurlRequest graphqlApiRequest)
+        {
+            //INTENTIONALLY Place the Nested Paginated selection as LAST item to validate functionality!
+            var json = await graphqlApiRequest
+                .WithGraphQLQuery(@"
+                    query ($ids: [Int!], $friendsCount: Int!) {
+	                    charactersById(ids: $ids) {
+		                    personalIdentifier
+		                    name
+		                    friends(first: $friendsCount) {
+			                    nodes {
+				                    personalIdentifier
+				                    name
+			                    }
+		                    }
+	                    }
+                    }
+                ")
+                .UseGraphQLNewtonsoftJson()
+                .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLRawNewtonsoftJsonResponse()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(json);
+            Assert.IsTrue(json is JToken);
             Assert.AreEqual(2, (json["charactersById"] as JArray)?.Count);
 
-            var jsonText = json.ToString(Formatting.Indented);
-            TestContext.WriteLine(jsonText);
+            TestContext.WriteLine(json.ToString(Formatting.Indented));
         }
 
 
         [TestMethod]
-        public async Task TestSinglePostQueryWithOnlyNestedPaginatedResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSinglePostQueryWithOnlyNestedPaginatedResultsAsync(IFlurlRequest graphqlApiRequest)
         {
             var idArrayParam = new[] { 1000, 2001 };
             var friendCountParam = 1;
 
             //INTENTIONALLY Place the Nested Paginated selection as LAST item to validate functionality!
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLQuery(@"
                     query ($ids: [Int!], $friendsCount: Int!) {
 	                    charactersById(ids: $ids) {
@@ -184,20 +227,21 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestSinglePostQueryWithDoubleNestedPagingResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSinglePostQueryWithDoubleNestedPagingResultsAsync(IFlurlRequest graphqlApiRequest)
         {
             var idArrayParam = new[] { 1000, 2001 };
 
             //INTENTIONALLY Place the Nested Paginated selection as FIRST item to validate functionality!
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLQuery(@"
-                    query ($ids: [Int!], $friendsCount: Int!) {
+                    query ($ids: [Int!], $firstLevelFriendsCount: Int!, $secondLevelFriendsCount: Int!) {
 	                    charactersById(ids: $ids) {
-		                    friends(first: $friendsCount) {
+		                    friends(first: $firstLevelFriendsCount) {
 			                    nodes {
 				                    personalIdentifier
 				                    name
-				                    friends(first: 1) {
+				                    friends(first: $secondLevelFriendsCount) {
 					                    nodes {
 						                    name
 						                    personalIdentifier
@@ -210,7 +254,11 @@ namespace FlurlGraphQL.Querying.Tests
 	                    }
                     }
                 ")
-                .SetGraphQLVariables(new { ids = idArrayParam, friendsCount = 2 })
+                .SetGraphQLVariables(new { 
+                    ids = idArrayParam, 
+                    firstLevelFriendsCount = 2, 
+                    secondLevelFriendsCount = 1
+                })
                 .PostGraphQLQueryAsync()
                 .ReceiveGraphQLQueryResults<StarWarsCharacter>()
                 .ConfigureAwait(false);
@@ -227,6 +275,14 @@ namespace FlurlGraphQL.Querying.Tests
                 foreach (var friend in result.Friends)
                 {
                     Assert.AreEqual(1, friend.Friends.Count);
+                    Assert.IsTrue(friend.PersonalIdentifier >= 1000);
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(result.Name));
+
+                    foreach (var secondLevelFriend in friend.Friends)
+                    {
+                        Assert.IsTrue(friend.PersonalIdentifier >= 1000);
+                        Assert.IsFalse(string.IsNullOrWhiteSpace(result.Name));
+                    }
                 }
                 index++;
             }

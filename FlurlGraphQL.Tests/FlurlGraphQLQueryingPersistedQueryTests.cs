@@ -2,19 +2,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using FlurlGraphQL.Querying.Tests.Models;
+using Flurl.Http;
+using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
-namespace FlurlGraphQL.Querying.Tests
+namespace FlurlGraphQL.Tests
 {
+    [Ignore] //<== Persisted Queries are not Supported by our Azure Function Integration Test Server; and can only be validated running Locally!
     [TestClass]
     public class FlurlGraphQLQueryingPersistedQueryTests : BaseFlurlGraphQLTest
     {
         [TestMethod]
-        public async Task TestPersistedPostQuerySingleQueryDirectResultsAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestPersistedPostQuerySingleQueryDirectResultsAsync(IFlurlRequest graphqlApiRequest)
         {
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
                 .SetGraphQLVariables(new { first = 2, friendsCount = 1})
                 .PostGraphQLQueryAsync()
@@ -45,7 +48,8 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestPersistedPostFailsForInvalidOverrideFieldNameAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestPersistedPostFailsForInvalidOverrideFieldNameAsync(IFlurlRequest graphqlApiRequest)
         {
             FlurlGraphQLException graphqlException = null;
             //Use Relay Spec default field name (invalid for HotChocolate...
@@ -53,12 +57,12 @@ namespace FlurlGraphQL.Querying.Tests
             const string RELAY_PERSISTED_QUERY_KEY = "doc_id";
             try
             {
-                var request = GraphQLApiEndpoint
+                var request = graphqlApiRequest
                     .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
                     .SetPersistedQueryPayloadFieldName(RELAY_PERSISTED_QUERY_KEY)
                     .SetGraphQLVariables(new { first = 2, friendsCount = 1 });
 
-                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.ContextBag[ContextItemKeys.PersistedQueryPayloadFieldName]);
+                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.PersistedQueryPayloadFieldName);
 
                 var results = await request.PostGraphQLQueryAsync()
                     .ReceiveGraphQLQueryResults<StarWarsCharacter>()
@@ -75,10 +79,11 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestPersistedPostFailsForInvalidGloballyConfiguredFieldNameAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestPersistedPostFailsForInvalidGloballyConfiguredFieldNameAsync(IFlurlRequest graphqlApiRequest)
         {
             FlurlGraphQLException graphqlException = null;
-            //Use Relay Spec default field name (invalid for HotChocolate...
+            //Use Relay Spec default field name (invalid for HotChocolate)...
             //More info see: https://chillicream.com/docs/hotchocolate/v13/performance/persisted-queries#client-expectations
             const string RELAY_PERSISTED_QUERY_KEY = "doc_id";
 
@@ -89,11 +94,11 @@ namespace FlurlGraphQL.Querying.Tests
 
             try
             {
-                var request = GraphQLApiEndpoint
+                var request = graphqlApiRequest
                     .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
                     .SetGraphQLVariables(new { first = 2, friendsCount = 1 });
 
-                Assert.IsFalse(request.ContextBag.ContainsKey(ContextItemKeys.PersistedQueryPayloadFieldName));
+                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.PersistedQueryPayloadFieldName);
 
                 var results = await request.PostGraphQLQueryAsync()
                     .ReceiveGraphQLQueryResults<StarWarsCharacter>()
@@ -113,9 +118,10 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestPersistedPostQueryReceiveAllPagesAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestPersistedPostQueryReceiveAllPagesAsync(IFlurlRequest graphqlApiRequest)
         {
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
                 .SetGraphQLVariables(new { first = 2, friendsCount = 1 })
                 .PostGraphQLQueryAsync()
@@ -126,9 +132,10 @@ namespace FlurlGraphQL.Querying.Tests
         }
 
         [TestMethod]
-        public async Task TestPersistedGetQueryReceiveAllPagesAsync()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestPersistedGetQueryReceiveAllPagesAsync(IFlurlRequest graphqlApiRequest)
         {
-            var results = await GraphQLApiEndpoint
+            var results = await graphqlApiRequest
                 .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
                 .SetGraphQLVariables(new { first = 2, friendsCount = 1 })
                 .GetGraphQLQueryAsync()
