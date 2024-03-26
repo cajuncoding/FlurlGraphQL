@@ -51,13 +51,13 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 
 ### Now Flurl v4.0+ compatible
 FlurlGraphQL is now fullup updated to support Flurl v4.0+ with some significant performance improvements. Just as when upgrading to Flurl v4+, 
-there may be breaking changes such as those highlighted in the (Flurl upgrade docs)[https://flurl.dev/docs/upgrade/].
+there may be breaking changes such as those highlighted in the [Flurl upgrade docs](https://flurl.dev/docs/upgrade/).
 
 #### Key Changes are:
  - Namespace, Project/Library, and NuGet name has now been simplified to `FlurlGraphQL` (vs `FlurlGraphQL.Querying` in v1.x).
  - Default Json processing now uses System.Text.Json for serialization/de-serialization.
    - The use of System.Text.Json brings along numerous changes associated with its use so it is best to refer to 
-     (Microsoft's migration guide here)[https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/migrate-from-newtonsoft?pivots=dotnet-6-0].
+     [Microsoft's migration guide here](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/migrate-from-newtonsoft?pivots=dotnet-6-0).
      - `System.Text.Json` processing with Json transformation strategy is now **~10X faster** than the original Newtonsoft.Json processing
      - The new `Newtonsoft.Json` processing has also been optimized and which now benchmarks at **~2X faster** *-- using the new Json transformation strategy (vs Converter)*.
  - No longer need to manage Json configuration separately from the core Flurl configuration. We now dynamically initialize the Json Serializer using 
