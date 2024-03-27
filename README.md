@@ -26,7 +26,7 @@ then I do love-me-some-coffee!*
 
 ### Basic Usage:
 
-[Click here to jump to the advanced Usage Docs below...](FlurlGraphQL?tab=readme-ov-file#flurlgraphql-usage)
+[Click here to jump to the advanced Usage Docs below...](#flurlgraphql-usage)
 
 ```csharp
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
