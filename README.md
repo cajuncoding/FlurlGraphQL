@@ -26,7 +26,7 @@ then I do love-me-some-coffee!*
 
 ### Basic Usage:
 
-(Click here to jump to the advanced Usage Docs below...)[#flurlgraphql-usae]
+[Click here to jump to the advanced Usage Docs below...](#flurlgraphql-usae)
 
 ```csharp
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
