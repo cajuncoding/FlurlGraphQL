@@ -58,6 +58,124 @@ namespace FlurlGraphQL.Tests
             TestContext.WriteLine(jsonText);
         }
 
+        [DataTestMethod]
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSingleQueryCursorPagingGraphQLEdgeWrapperAsync(IFlurlRequest graphQLApiRequest)
+        {
+            var results = await graphQLApiRequest
+                .WithGraphQLQuery(@"
+                    query($first:Int) {
+                      characters (first:$first) {
+                        totalCount
+		                pageInfo {
+                          hasNextPage
+                          hasPreviousPage
+                          startCursor
+                          endCursor
+                        }
+                        edges {
+                            cursor
+                            node {
+                                personalIdentifier
+                                name
+			                    height
+                            }
+                        }
+                      }
+                    }
+                ")
+                .SetGraphQLVariables(new { first = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLConnectionResults<GraphQLEdge<StarWarsCharacter>>()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(results);
+            Assert.IsTrue(results is IGraphQLConnectionResults<IGraphQLEdge<StarWarsCharacter>>);
+            Assert.AreEqual(2, results.Count);
+
+            Assert.IsNotNull(results.TotalCount);
+            Assert.IsTrue(results.TotalCount > results.Count);
+            Assert.IsNotNull(results.PageInfo);
+            Assert.IsTrue(results.PageInfo.HasNextPage);
+            Assert.IsFalse(results.PageInfo.HasPreviousPage);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(results.PageInfo.StartCursor));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(results.PageInfo.EndCursor));
+
+            foreach (var edgeResult in results)
+            {
+                Assert.IsNotNull(edgeResult);
+                Assert.IsNotNull(edgeResult.Cursor);
+                Assert.IsNotNull(edgeResult.Node);
+
+                var charNode = edgeResult.Node;
+                Assert.IsTrue(charNode.PersonalIdentifier > 0);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(charNode.Name));
+                Assert.IsTrue(charNode.Height > 0);
+            }
+
+            var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
+        [DataTestMethod]
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public async Task TestSingleQueryCursorPagingGraphQLEdgeWrapperEdgeCaseWhenOnlyNodesAreQueriedAsync(IFlurlRequest graphQLApiRequest)
+        {
+            var results = await graphQLApiRequest
+                .WithGraphQLQuery(@"
+                    query($first:Int) {
+                      characters (first:$first) {
+                        totalCount
+		                pageInfo {
+                          hasNextPage
+                          hasPreviousPage
+                          startCursor
+                          endCursor
+                        }
+                        nodes {
+                          personalIdentifier
+                          name
+			              height
+                        }
+                      }
+                    }
+                ")
+                .SetGraphQLVariables(new { first = 2 })
+                .PostGraphQLQueryAsync()
+                .ReceiveGraphQLConnectionResults<GraphQLEdge<StarWarsCharacter>>()
+                .ConfigureAwait(false);
+
+            Assert.IsNotNull(results);
+            Assert.IsTrue(results is IGraphQLConnectionResults<IGraphQLEdge<StarWarsCharacter>>);
+            Assert.AreEqual(2, results.Count);
+
+            Assert.IsNotNull(results.TotalCount);
+            Assert.IsTrue(results.TotalCount > results.Count);
+            Assert.IsNotNull(results.PageInfo);
+            Assert.IsTrue(results.PageInfo.HasNextPage);
+            Assert.IsFalse(results.PageInfo.HasPreviousPage);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(results.PageInfo.StartCursor));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(results.PageInfo.EndCursor));
+
+            foreach (var edgeResult in results)
+            {
+                Assert.IsNotNull(edgeResult);
+                //*****************************************************************************************
+                //NOTE: Cursor MUST be NULL because it is NOT available when ONLY nodes{} is queried!
+                //*****************************************************************************************
+                Assert.IsNull(edgeResult.Cursor);
+                Assert.IsNotNull(edgeResult.Node);
+
+                var charNode = edgeResult.Node;
+                Assert.IsTrue(charNode.PersonalIdentifier > 0);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(charNode.Name));
+                Assert.IsTrue(charNode.Height > 0);
+            }
+
+            var jsonText = JsonConvert.SerializeObject(results, Formatting.Indented);
+            TestContext.WriteLine(jsonText);
+        }
+
         [TestMethod]
         [TestDataExecuteWithAllFlurlSerializerRequests]
         public async Task TestSingleQueryCursorPagingEdgeResultsAndNestedEdgeResultsAsync(IFlurlRequest graphqlApiRequest)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json.Nodes;
 using FlurlGraphQL.CustomExtensions;
 using FlurlGraphQL.ValidationExtensions;
 using Newtonsoft.Json;
@@ -49,7 +50,7 @@ namespace FlurlGraphQL.JsonProcessing
             //If our ROOT EntityType does not implement IGraphQLResults then we need to Flatten the Root Level first...
             //  This ensures we are accessing the expected data within the [edges], [nodes], or [items] collection for all recursive processing...
             if(!this.JsonTransformTypeInfo.ImplementsIGraphQLQueryResults && json is JObject jsonObject)
-                processedJson = TransformGraphQLJsonObjectAsNeeded(jsonObject, false);
+                processedJson = TransformGraphQLJsonObjectAsNeeded(jsonObject, this.JsonTransformTypeInfo.ImplementsIGraphQLEdge);
 
             //Secondly, after the Root is prepared we can recursively process the rest of the Json...
             var rewrittenJson = TransformGraphQLJsonAsNeededRecursively(processedJson);
@@ -157,7 +158,12 @@ namespace FlurlGraphQL.JsonProcessing
             // - finally use the (non-nested) array of results if not a Paginated result set of any kind above...
             if (json.Field(GraphQLFields.Nodes) is JArray nodesJson)
             {
-                entityNodes = nodesJson.OfType<JObject>();
+                entityNodes = isIGraphQLEdgeImplementedOnProp
+                    //Handle the edge case (pun intended) where the GraphQLEdge<T> is used though only nodes{} was queried in the GraphQL query;
+                    //  in this case we must map the Node to an Edge structure (with null cursor) for proper de-serialization.
+                    ? ConvertGraphQLNodesToEdgesJsonArray(nodesJson)
+                    : nodesJson.OfType<JObject>();
+                
                 //NOTE: Clearing the Parent is not needed with Newtonsoft.Json so we save a little work here...
                 //nodesJson.Clear();
             }
@@ -226,6 +232,19 @@ namespace FlurlGraphQL.JsonProcessing
                     return node;
                 })
                 .Where(i => i != null);
+        }
+
+        private IEnumerable<JObject> ConvertGraphQLNodesToEdgesJsonArray(JArray nodesArray)
+        {
+            return nodesArray
+                //NOW re-map the node objects into an Edge Structure for proper de-serialization (e.g. when GraphQLEdge<T> but only nodes {} are requested)...
+                //When converting from a Node, we don't have a Cursor property so it is simply null, but we are building the structure for proper de-serialization to GraphQLEdge<T>...
+                //NOTE: For performance we set the values directly as they are expected (vs serializing an anonymous object which would have a lot more overhead)...
+                .Select(node => new JObject
+                {
+                    [GraphQLFields.Cursor] = null,
+                    [GraphQLFields.Node] = node
+                });
         }
 
         private PaginationType? DeterminePaginationType(JToken json)

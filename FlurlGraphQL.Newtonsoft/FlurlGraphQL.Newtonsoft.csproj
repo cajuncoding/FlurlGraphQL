@@ -5,9 +5,9 @@
 					(because it had big issues using netstandard prior to .NET Framework 4.7) -->
 		<TargetFrameworks>net461;netstandard2.0;net6.0</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
-		<Version>2.0.0</Version>
-		<AssemblyVersion>2.0.0</AssemblyVersion>
-		<FileVersion>2.0.0</FileVersion>
+		<Version>2.0.1</Version>
+		<AssemblyVersion>2.0.1</AssemblyVersion>
+		<FileVersion>2.0.1</FileVersion>
 		<Authors>BBernard / CajunCoding</Authors>
 		<Company>CajunCoding</Company>
 		<Description>Newtonsoft JSON Supportt for FlurlGraphQL v2.0+ -- A GraphQL client extensions for Flurl.Http - lightweight, simplified, asynchronous, fluent GraphQL client API extensions for the amazing Flurl Http library!</Description>
@@ -18,8 +18,10 @@
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
-			- Newtonsoft JSON Compatibility implementation for FlurlGraphQL v2.0 using the all new Flurl v4.0+.
+			- Fix issue with incorrect deserialization when using wrapper convenience class GraphQLEdge&lt;T&gt;.
 
+			Prior Release Notes:
+			- Newtonsoft JSON Compatibility implementation for FlurlGraphQL v2.0 using the all new Flurl v4.0+.
 		</PackageReleaseNotes>
 		<PackageTags>graphql, graph-ql, graphql client, graphql query, flurl, newtonsoft, rest, http, http client, json, hotchocolate, paging, cursor</PackageTags>
 	</PropertyGroup>

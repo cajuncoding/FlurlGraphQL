@@ -58,7 +58,7 @@ namespace FlurlGraphQL.Tests
             Assert.AreEqual(JsonIgnoreCondition.WhenWritingNull, graphqlJsonSerializer.JsonSerializerOptions.DefaultIgnoreCondition);
         }
 
-        //TODO: Find out why Global Configuration isn't working and Fix Unit Test...
+        //TODO: Update to execute Full Request so that clients are actually initialized to fix this Test!
         [Ignore]
         [TestMethod]
         public void TestSystemTextJsonSerializerFlurlGlobalConfig()
@@ -124,7 +124,7 @@ namespace FlurlGraphQL.Tests
             Assert.AreEqual(TypeNameHandling.None, graphqlJsonSerializer.JsonSerializerSettings.TypeNameHandling);
         }
 
-        //TODO: Find out why Global Configuration isn't working and Fix Unit Test...
+        //TODO: Update to execute Full Request so that clients are actually initialized to fix this Test!
         [Ignore]
         [TestMethod]
         public void TestNewtonsoftJsonSerializerFlurlGlobalConfig()

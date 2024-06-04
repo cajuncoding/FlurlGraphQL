@@ -49,7 +49,7 @@ namespace FlurlGraphQL.JsonProcessing
             //If our ROOT EntityType does not implement IGraphQLResults then we need to Flatten the Root Level first...
             //  This ensures we are accessing the expected data within the [edges], [nodes], or [items] collection for all recursive processing...
             if(!JsonTransformTypeInfo.ImplementsIGraphQLQueryResults && json is JsonObject jsonObject)
-                processedJson = TransformGraphQLJsonObjectAsNeeded(jsonObject, false);
+                processedJson = TransformGraphQLJsonObjectAsNeeded(jsonObject, this.JsonTransformTypeInfo.ImplementsIGraphQLEdge);
 
             var rewrittenJson = TransformGraphQLJsonAsNeededRecursively(processedJson);
 
@@ -152,14 +152,21 @@ namespace FlurlGraphQL.JsonProcessing
             //Dynamically resolve the Results from:
             // - the Nodes child of the Data Result (for nodes{} based Cursor Paginated queries)
             // - the Items child of the Data Result (for items{} based Offset Paginated queries)
-            // - the Edges->Node child of the the Data Result (for Edges based queries that provide access to the Cursor)
+            // - the Edges->Node child of the Data Result (for Edges based queries that provide access to the Cursor)
             // - finally use the (non-nested) array of results if not a Paginated result set of any kind above...
             //NOTE: When relocating the nodes we must Clear the original parent Node to explicitly remove all children so that the Nodes can be re-assigned
             //          to a new location in the Json; as System.Text.Json will throw exceptions otherwise!
             if (json[GraphQLFields.Nodes] is JsonArray nodesJson)
             {
                 entityNodes = nodesJson.OfType<JsonObject>().ToArray();
+                
+                //We must Remove the Nodes from the Parent to allow us to re-assign them to the new structure; clearing the parent JsonArray seems to be the most efficient approach.
                 nodesJson.Clear();
+
+                //Handle the edge case (pun intended) where the GraphQLEdge<T> is used though only nodes{} was queried in the GraphQL query;
+                //  in this case we must map the Node to an Edge structure (with null cursor) for proper de-serialization.
+                if (isIGraphQLEdgeImplementedOnProp)
+                    entityNodes = ConvertGraphQLNodesToEdgesJsonArray(entityNodes);
             }
             else if (json[GraphQLFields.Items] is JsonArray itemsJson)
             {
@@ -170,13 +177,16 @@ namespace FlurlGraphQL.JsonProcessing
             else if (json[GraphQLFields.Edges] is JsonArray edgesJson)
             {
                 //Handle case where GraphQLEdge<TNode> wrapper class is used to simplify retrieving the Edges (maintaining the more complex GraphQL model).
-                //  Otherwise we simplify/flatten the edge hierarchy into an Array of Objects for simplified model mapping/deserialization!
-                entityNodes = isIGraphQLEdgeImplementedOnProp
-                    ? edgesJson.OfType<JsonObject>().ToArray()
-                    : FlattenGraphQLEdgesToJsonArray(edgesJson);
+                //  Otherwise, we simplify/flatten the edge hierarchy into an Array of Objects for simplified model mapping/deserialization!
+                entityNodes = edgesJson.OfType<JsonObject>().ToArray();
 
-                //We don't actually need to Clear the Edges (so we save a little work here) because the parent of each item was actually the [node] child within the [edge]!
-                //edgesJson.Clear();
+                //We must Remove the Nodes from the Parent to allow us to re-assign them to the new structure; clearing the parent JsonArray seems to be the most efficient approach.
+                edgesJson.Clear();
+
+                //Handle the edge case (pun intended) where the GraphQLEdge<T> is used though only nodes{} was queried in the GraphQL query;
+                //  in this case we must map the Node to an Edge structure (with null cursor) for proper de-serialization.
+                if (!isIGraphQLEdgeImplementedOnProp)
+                    entityNodes = FlattenGraphQLEdgesToSimplifiedModelJsonArray(entityNodes);
             }
             else
             {
@@ -187,10 +197,9 @@ namespace FlurlGraphQL.JsonProcessing
             return rewrittenJsonArray;
         }
 
-        private IList<JsonObject> FlattenGraphQLEdgesToJsonArray(JsonArray edgesArray)
+        private IList<JsonObject> FlattenGraphQLEdgesToSimplifiedModelJsonArray(IList<JsonObject> edgesArray)
         {
             return edgesArray
-                .OfType<JsonObject>()
                 .Select(edge =>
                 {
                     var node = edge[GraphQLFields.Node] as JsonObject;
@@ -221,6 +230,21 @@ namespace FlurlGraphQL.JsonProcessing
                     }
 
                     return node;
+                })
+                .Where(i => i.IsNotNullOrUndefined())
+                .ToArray();
+        }
+
+        private IList<JsonObject> ConvertGraphQLNodesToEdgesJsonArray(IList<JsonObject> nodesArray)
+        {
+            return nodesArray
+                //NOW re-map the node objects into an Edge Structure for proper de-serialization (e.g. when GraphQLEdge<T> but only nodes {} are requested)...
+                //When converting from a Node, we don't have a Cursor property so it is simply null, but we are building the structure for proper de-serialization to GraphQLEdge<T>...
+                //NOTE: For performance we set the values directly as they are expected (vs serializing an anonymous object which would have a lot more overhead)...
+                .Select(node => new JsonObject()
+                {
+                    [GraphQLFields.Cursor] = null,
+                    [GraphQLFields.Node] = node
                 })
                 .Where(i => i.IsNotNullOrUndefined())
                 .ToArray();

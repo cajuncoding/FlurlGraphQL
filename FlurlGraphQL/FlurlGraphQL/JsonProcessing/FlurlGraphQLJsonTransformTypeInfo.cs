@@ -38,7 +38,10 @@ namespace FlurlGraphQL.JsonProcessing
 
             TypeName = targetType.Name;
             EntityTypeName = (entityType ?? targetType).Name;
-            ImplementsIGraphQLQueryResults = entityType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType);
+            
+            ImplementsIGraphQLQueryResults = targetType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLQueryResultsType);
+            ImplementsIGraphQLEdge = targetType.IsDerivedFromGenericParent(GraphQLTypeCache.IGraphQLEdgeEntityType);
+
             AllChildProperties = GetPropInfosToTransformForType(targetType);
             ChildPropertiesToTransform = AllChildProperties.Where(p => p.ShouldBeFlattened).ToArray();
         }
@@ -46,6 +49,7 @@ namespace FlurlGraphQL.JsonProcessing
         public string TypeName { get; }
         public string EntityTypeName { get; }
         public bool ImplementsIGraphQLQueryResults { get; }
+        public bool ImplementsIGraphQLEdge { get; }
 
         public IList<FlurlGraphQLJsonTransformPropInfo> AllChildProperties { get; }
         public IList<FlurlGraphQLJsonTransformPropInfo> ChildPropertiesToTransform { get; }

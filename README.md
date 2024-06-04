@@ -118,6 +118,9 @@ To use this in your project, add the [FlurlGraphQL](https://www.nuget.org/packag
 To use this in your project with `Newtonsoft.Json` processing then add the add the [FlurlGraphQL.Newtonsoft](https://www.nuget.org/packages/FlurlGraphQL.Newtonsoft/) NuGet package to your project.
 
 ## Release Notes:
+### v2.0.1
+- Fix issue with incorrect deserialization when using wrapper convenience class GraphQLEdge&lt;T&gt;
+
 ### v2.0 (compatible with Flurl v4.0+) 🚀
 - Implement full support for Flurl v4.0+
 - Completely rewritten Json processing engine to now support both System.Text.Json &amp; Newtonsoft.Json.
