@@ -557,6 +557,7 @@ var batchResults = await "https://graphql-star-wars.azurewebsites.net/api/graphq
 	            height
 		}
 	    }
+
 	    charactersCount: characters {
                 totalCount
 	    }
