@@ -50,7 +50,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 ```
 
 ### Now Flurl v4.0+ compatible
-FlurlGraphQL is now fullup updated to support Flurl v4.0+ with some significant performance improvements. Just as when upgrading to Flurl v4+, 
+FlurlGraphQL is now fully updated to support Flurl v4.0+ with some significant performance improvements. Just as when upgrading to Flurl v4+, 
 there may be breaking changes such as those highlighted in the [Flurl upgrade docs](https://flurl.dev/docs/upgrade/).
 
 #### Key Changes are:
