@@ -238,7 +238,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         query ($first: Int, $after: String) {
 	        characters(first: $first, after: $after) {
                 totalCount
-		        pageInfo {
+                    pageInfo {
                     hasNextPage
                     hasPreviousPage
                     startCursor
@@ -247,7 +247,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
                 nodes {
                     personalIdentifier
                     name
-	                height
+	            height
                 }
             }
         }
@@ -466,18 +466,18 @@ public class StarWarsCharacter
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($ids: [Int!], $friendsCount: Int!) {
-	        charactersById(ids: $ids) {
-	            friends(first: $friendsCount) {
-	                nodes {
-		                friends(first: $friendsCount) {
-		                    nodes {
-			                    name
-			                    personalIdentifier
-			                }
-		                }
-		            }
+	    charactersById(ids: $ids) {
+	        friends(first: $friendsCount) {
+	            nodes {
+	                friends(first: $friendsCount) {
+	                    nodes {
+	                        name
+	                        personalIdentifier
+	                    }
 		        }
+		    }
 	        }
+	    }
         }
     ")
     .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 3 })
@@ -516,17 +516,17 @@ var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         mutation ($newCharacter: Character) {
             characterCreateOrUpdate(input: $newCharacter) {
-		        result {
+                result {
                     personalIdentifier
-	                name
-		        }
-		        errors {
-			        ... on Error {
-				        errorCode
-				        message
-			        }
-		        }
-	        }
+	            name
+		}
+		errors {
+		    ... on Error {
+		        errorCode
+			message
+		    }
+		}
+	    }
         }
     ")
     .SetGraphQLVariables(new { newCharacter: newCharacterModel })
@@ -550,17 +550,16 @@ Here's an example of a batch query that uses an alias to run multiple queries an
 var batchResults = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($first: Int) {
-	        characters(first: $first) {
+            characters(first: $first) {
                 nodes {
-	                personalIdentifier
-		            name
-	                height
-		        }
-	        }
-
-	        charactersCount: characters {
+	            personalIdentifier
+		    name
+	            height
+		}
+	    }
+	    charactersCount: characters {
                 totalCount
-	        }
+	    }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -591,11 +590,11 @@ var jsonObject = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         query ($first: Int) {
             characters(first: $first) {
                 nodes {
-	                personalIdentifier
-	                name
-	                height
-		        }
-	        }
+	            personalIdentifier
+		    name
+	            height
+		}
+	    }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -608,11 +607,11 @@ var jsonObject = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         query ($first: Int) {
             characters(first: $first) {
                 nodes {
-	                personalIdentifier
-	                name
-	                height
-		        }
-	        }
+	            personalIdentifier
+		    name
+	            height
+		}
+	    }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -631,7 +630,7 @@ try
     var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         .WithGraphQLQuery(@"
             query (BAD_REQUEST) {
-	            MALFORMED QUERY
+	        MALFORMED QUERY
             }
         ")
         .PostGraphQLQueryAsync()
