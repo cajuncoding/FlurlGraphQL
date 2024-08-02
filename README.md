@@ -66,15 +66,17 @@ there may be breaking changes such as those highlighted in the [Flurl upgrade do
  - `Newtonsoft.Json` is still fully supported but requires explicitly referencing the `FlurlGraphQL.Newtonsoft` library also available on Nuget.
    - To then enable `Newtonsoft.Json` processing you need to either:
      1. Initialize your global Flurl settings and/or clients with the out-of-the-box Flurl `NewtonsoftJsonSerializer` via Flurl Global or Request level Configuration.
-        - Flurl Global Config Example: `clientOrRequest.Settings.JsonSerializer = new NewtonsoftJsonSerializer(new JsonSerializerSettings())`
+        - Flurl Global Config Example: `FlurlHttp.Clients.UseNewtonsoft();`
+        - Flurl Request or Client level Example: `clientOrRequest.WithSettigns(settings => settings.JsonSerializer = new NewtonsoftJsonSerializer(new JsonSerializerSettings()))...`
         - Doing this will automatically implement Newtonsoft processing for any/all GraphQL requests as the defautl also.
+        - See Flurl docs for more info:  [Flurl.Http.Newtonsoft](https://github.com/tmenier/Flurl/tree/dev/src/Flurl.Http.Newtonsoft#flurlhttpnewtonsoft)
      2. Or initialize it at the request level using the `.UseGraphQLNewtonsoftJson(...)` extension method available in ``FlurlGraphQL.Newtonsoft``.
         - The Json processing can always be customized/overridden at the request level for any specific GraphQL Request to use either 
-          System.Text.Json (via `.UseGraphQLSystemTextJson()`) or Newtonsoft.Json via (`.UseGraphQLNewtonsoftJson()`).
-   - Dynamics are now only supported when using Newtonsoft.Json
+          `System.Text.Json` (via `.UseGraphQLSystemTextJson()`) or `Newtonsoft.Json` via (`.UseGraphQLNewtonsoftJson()`).
+   - Dynamics are now only supported when using `Newtonsoft.Json` which is consistent with Flurl v4+.
  - Retrieving the Raw Json responses now have dedicated APIs due to the different Json object models that each Json processing library uses.
-   - If using System.Text.Json then you must now use the `.ReceiveGraphQLRawSystemTextJsonResponse()` method which returns a `JsonObject`.
-   - If using Newtonsoft.Json then you must now use the `.ReceiveGraphQLRawNewtonsoftJsonResponse()` method which returns a `JObject`.
+   - If using `System.Text.Json` then you must now use the `.ReceiveGraphQLRawSystemTextJsonResponse()` method which returns a `JsonObject`.
+   - If using `Newtonsoft.Json` then you must now use the `.ReceiveGraphQLRawNewtonsoftJsonResponse()` method which returns a `JObject`.
 
 
 ## Performance with System.Text.Json vs Newtonsoft.Json
