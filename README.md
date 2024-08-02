@@ -230,7 +230,7 @@ These interfaces both expose `PageInfo` & `TotalCount` properties that may optio
 ### Cursor Paging Example to simply retrieve a single Page...
 
 Cursor paging is the approach that is strongly recommended by GraphQL.org however, offset based paging (aka CollectionSegment - 
-*using from HotChocolate .NET GraphQL Server naming convention*)) is availble also (see below)[#offsetslice-paging-results-via-collectionsegment].
+*using from HotChocolate .NET GraphQL Server naming convention*)) is availble also [(see below)](#offsetslice-paging-results-via-collectionsegment).
 
 ```csharp
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
