@@ -443,7 +443,7 @@ foreach (var pageTask in graphqlPagesTasks)
 ```
 
 ### Data Models with Nested Paginated results...
-In GraphQL it's easy to expose nested selections of a result than itself is a paginated set of data. Thats why de-serializing this into
+In GraphQL it's easy to expose nested selections of a result that itself is a paginated set of data. Thats why de-serializing this into
 a normal model is complex and usually results in dedicated data models that are cluttered / polluted with unecessary elements such as `Nodes`, `Items`, `Edges`, or `PageInfo`, `Cursor`, etc.
 
 You can still use these models if you like but in many cases with these nested data elements we primarily care about the results and
