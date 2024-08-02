@@ -1,5 +1,5 @@
 ﻿# FlurlGraphQL
-`FlurlGraphQL`` is a lightweight, simplified, asynchronous, fluent GraphQL client querying API extensions for the amazing Flurl Http library!
+`FlurlGraphQL` is a lightweight, simplified, asynchronous, fluent GraphQL client querying API extensions for the amazing Flurl Http library!
 
 This makes it super easy to execute ad-hoc and simple or advanced queries against a GraphQL API such as the awesome [HotChocolate .NET GraphQL Server](https://chillicream.com/docs/hotchocolate/v13).
 
