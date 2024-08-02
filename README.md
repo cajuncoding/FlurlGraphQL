@@ -80,12 +80,12 @@ there may be breaking changes such as those highlighted in the [Flurl upgrade do
 
 
 ## Performance with System.Text.Json vs Newtonsoft.Json
-The System.Text.Json processing with Json transformation strategy is now **~10X faster** than the original Newtonsoft.Json processing.
+The `System.Text.Json` processing with the new Json transformation strategy is now **~10X faster** than the original `Newtonsoft.Json` processing in my tests; your results will vary and may be higher.
 
-And the newly optimized Newtonsoft.Json processing with new Json transformation strategy (vs Converter) also now benchmarks **~2X faster**.
+And the newly optimized `Newtonsoft.Json` processing with new Json transformation strategy (vs Converter in original implementation) also now benchmarks **~2X faster**; a suprising benefit.
 
-The following Benchmarks were run using .NET 6. As one might assume older versions of .NET are slower while newer versions are even faster.
-For example, .NET 4.6.1 is quite slow compared to .NET 6, however .NET 8 is noticeably faster.
+The following Benchmarks were run using .NET 6. And, as one might assume newer versions are likely even faster.
+For example, .NET 4.6.1 is quite slow compared to .NET 6, and .NET 8 is noticeably faster.
 
     // * Benchmark.NET Summary using .NET 6 *
 
