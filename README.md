@@ -55,8 +55,8 @@ there may be breaking changes such as those highlighted in the [Flurl upgrade do
 
 #### Key Changes are:
  - Namespace, Project/Library, and NuGet name has now been simplified to `FlurlGraphQL` (vs `FlurlGraphQL.Querying` in v1.x).
- - Default Json processing now uses System.Text.Json for serialization/de-serialization.
-   - The use of System.Text.Json brings along numerous changes associated with its use so it is best to refer to 
+ - Default Json processing now uses `System.Text.Json` for serialization/de-serialization.
+   - The use of `System.Text.Json` brings along numerous changes associated with its use so it is best to refer to 
      [Microsoft's migration guide here](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/migrate-from-newtonsoft?pivots=dotnet-6-0).
      - `System.Text.Json` processing with Json transformation strategy is now **~10X faster** than the original Newtonsoft.Json processing
      - The new `Newtonsoft.Json` processing has also been optimized and which now benchmarks at **~2X faster** *-- using the new Json transformation strategy (vs Converter)*.
