@@ -152,7 +152,7 @@ namespace FlurlGraphQL
                 throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
                     "Unable to enumerate all pages because the pageInfo.hasNextPage and/or the pageInfo.endCursor values are not available in the GraphQL query response.");
             
-            if (endCursor == priorEndCursor)
+            if (hasNextPageFlag == true && endCursor != null && endCursor == priorEndCursor)
                 throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
                     "Unable to enumerate all pages because the pageInfo.endCursor is returning the same value. Check that the query is correct and that it correctly implements the (after:$after) variable.");
 
