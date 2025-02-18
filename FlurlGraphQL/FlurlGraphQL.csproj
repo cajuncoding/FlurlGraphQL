@@ -17,7 +17,7 @@
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
-			- Fix bug resulting in incorrect Exceptions when automatically enumerating (as IAsyncEnumerable) Connection Pages when a request returns with no results (NextPage = false & EndCursor = null).
+			- Fix bug resulting in incorrect Exceptions when automatically enumerating (as IAsyncEnumerable) Connection Pages when a request returns with no results (NextPage = false &amp; EndCursor = null).
 
 			Prior Release Notes:
 			- Fix issue with incorrect deserialization when using wrapper convenience class GraphQLEdge&lt;T&gt;.
