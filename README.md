@@ -1,5 +1,5 @@
 ﻿# FlurlGraphQL
-`FlurlGraphQL`` is a lightweight, simplified, asynchronous, fluent GraphQL client querying API extensions for the amazing Flurl Http library!
+`FlurlGraphQL` is a lightweight, simplified, asynchronous, fluent GraphQL client querying API extensions for the amazing Flurl Http library!
 
 This makes it super easy to execute ad-hoc and simple or advanced queries against a GraphQL API such as the awesome [HotChocolate .NET GraphQL Server](https://chillicream.com/docs/hotchocolate/v13).
 
@@ -50,13 +50,13 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
 ```
 
 ### Now Flurl v4.0+ compatible
-FlurlGraphQL is now fullup updated to support Flurl v4.0+ with some significant performance improvements. Just as when upgrading to Flurl v4+, 
+FlurlGraphQL is now fully updated to support Flurl v4.0+ with some significant performance improvements. Just as when upgrading to Flurl v4+, 
 there may be breaking changes such as those highlighted in the [Flurl upgrade docs](https://flurl.dev/docs/upgrade/).
 
 #### Key Changes are:
  - Namespace, Project/Library, and NuGet name has now been simplified to `FlurlGraphQL` (vs `FlurlGraphQL.Querying` in v1.x).
- - Default Json processing now uses System.Text.Json for serialization/de-serialization.
-   - The use of System.Text.Json brings along numerous changes associated with its use so it is best to refer to 
+ - Default Json processing now uses `System.Text.Json` for serialization/de-serialization.
+   - The use of `System.Text.Json` brings along numerous changes associated with its use so it is best to refer to 
      [Microsoft's migration guide here](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/migrate-from-newtonsoft?pivots=dotnet-6-0).
      - `System.Text.Json` processing with Json transformation strategy is now **~10X faster** than the original Newtonsoft.Json processing
      - The new `Newtonsoft.Json` processing has also been optimized and which now benchmarks at **~2X faster** *-- using the new Json transformation strategy (vs Converter)*.
@@ -66,24 +66,26 @@ there may be breaking changes such as those highlighted in the [Flurl upgrade do
  - `Newtonsoft.Json` is still fully supported but requires explicitly referencing the `FlurlGraphQL.Newtonsoft` library also available on Nuget.
    - To then enable `Newtonsoft.Json` processing you need to either:
      1. Initialize your global Flurl settings and/or clients with the out-of-the-box Flurl `NewtonsoftJsonSerializer` via Flurl Global or Request level Configuration.
-        - Flurl Global Config Example: `clientOrRequest.Settings.JsonSerializer = new NewtonsoftJsonSerializer(new JsonSerializerSettings())`
+        - Flurl Global Config Example: `FlurlHttp.Clients.UseNewtonsoft();`
+        - Flurl Request or Client level Example: `clientOrRequest.WithSettigns(settings => settings.JsonSerializer = new NewtonsoftJsonSerializer(new JsonSerializerSettings()))...`
         - Doing this will automatically implement Newtonsoft processing for any/all GraphQL requests as the defautl also.
+        - See Flurl docs for more info:  [Flurl.Http.Newtonsoft](https://github.com/tmenier/Flurl/tree/dev/src/Flurl.Http.Newtonsoft#flurlhttpnewtonsoft)
      2. Or initialize it at the request level using the `.UseGraphQLNewtonsoftJson(...)` extension method available in ``FlurlGraphQL.Newtonsoft``.
         - The Json processing can always be customized/overridden at the request level for any specific GraphQL Request to use either 
-          System.Text.Json (via `.UseGraphQLSystemTextJson()`) or Newtonsoft.Json via (`.UseGraphQLNewtonsoftJson()`).
-   - Dynamics are now only supported when using Newtonsoft.Json
+          `System.Text.Json` (via `.UseGraphQLSystemTextJson()`) or `Newtonsoft.Json` via (`.UseGraphQLNewtonsoftJson()`).
+   - Dynamics are now only supported when using `Newtonsoft.Json` which is consistent with Flurl v4+.
  - Retrieving the Raw Json responses now have dedicated APIs due to the different Json object models that each Json processing library uses.
-   - If using System.Text.Json then you must now use the `.ReceiveGraphQLRawSystemTextJsonResponse()` method which returns a `JsonObject`.
-   - If using Newtonsoft.Json then you must now use the `.ReceiveGraphQLRawNewtonsoftJsonResponse()` method which returns a `JObject`.
+   - If using `System.Text.Json` then you must now use the `.ReceiveGraphQLRawSystemTextJsonResponse()` method which returns a `JsonObject`.
+   - If using `Newtonsoft.Json` then you must now use the `.ReceiveGraphQLRawNewtonsoftJsonResponse()` method which returns a `JObject`.
 
 
 ## Performance with System.Text.Json vs Newtonsoft.Json
-The System.Text.Json processing with Json transformation strategy is now **~10X faster** than the original Newtonsoft.Json processing.
+The `System.Text.Json` processing with the new Json transformation strategy is now **~10X faster** than the original `Newtonsoft.Json` processing in my tests; your results will vary and may be higher.
 
-And the newly optimized Newtonsoft.Json processing with new Json transformation strategy (vs Converter) also now benchmarks **~2X faster**.
+And the newly optimized `Newtonsoft.Json` processing with new Json transformation strategy (vs Converter in original implementation) also now benchmarks **~2X faster**; a suprising benefit.
 
-The following Benchmarks were run using .NET 6. As one might assume older versions of .NET are slower while newer versions are even faster.
-For example, .NET 4.6.1 is quite slow compared to .NET 6, however .NET 8 is noticeably faster.
+The following Benchmarks were run using .NET 6. And, as one might assume newer versions are likely even faster.
+For example, .NET 4.6.1 is quite slow compared to .NET 6, and .NET 8 is noticeably faster.
 
     // * Benchmark.NET Summary using .NET 6 *
 
@@ -228,7 +230,7 @@ These interfaces both expose `PageInfo` & `TotalCount` properties that may optio
 ### Cursor Paging Example to simply retrieve a single Page...
 
 Cursor paging is the approach that is strongly recommended by GraphQL.org however, offset based paging (aka CollectionSegment - 
-*using from HotChocolate .NET GraphQL Server naming convention*)) is availble also (see below)[#offsetslice-paging-results-via-collectionsegment].
+*using from HotChocolate .NET GraphQL Server naming convention*)) is availble also [(see below)](#offsetslice-paging-results-via-collectionsegment).
 
 ```csharp
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
@@ -236,7 +238,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         query ($first: Int, $after: String) {
 	        characters(first: $first, after: $after) {
                 totalCount
-		        pageInfo {
+                    pageInfo {
                     hasNextPage
                     hasPreviousPage
                     startCursor
@@ -245,7 +247,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
                 nodes {
                     personalIdentifier
                     name
-	                height
+	            height
                 }
             }
         }
@@ -441,7 +443,7 @@ foreach (var pageTask in graphqlPagesTasks)
 ```
 
 ### Data Models with Nested Paginated results...
-In GraphQL it's easy to expose nested selections of a result than itself is a paginated set of data. Thats why de-serializing this into
+In GraphQL it's easy to expose nested selections of a result that itself is a paginated set of data. Thats why de-serializing this into
 a normal model is complex and usually results in dedicated data models that are cluttered / polluted with unecessary elements such as `Nodes`, `Items`, `Edges`, or `PageInfo`, `Cursor`, etc.
 
 You can still use these models if you like but in many cases with these nested data elements we primarily care about the results and
@@ -464,18 +466,18 @@ public class StarWarsCharacter
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($ids: [Int!], $friendsCount: Int!) {
-	        charactersById(ids: $ids) {
-	            friends(first: $friendsCount) {
-	                nodes {
-		                friends(first: $friendsCount) {
-		                    nodes {
-			                    name
-			                    personalIdentifier
-			                }
-		                }
-		            }
+	    charactersById(ids: $ids) {
+	        friends(first: $friendsCount) {
+	            nodes {
+	                friends(first: $friendsCount) {
+	                    nodes {
+	                        name
+	                        personalIdentifier
+	                    }
 		        }
+		    }
 	        }
+	    }
         }
     ")
     .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 3 })
@@ -514,17 +516,17 @@ var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         mutation ($newCharacter: Character) {
             characterCreateOrUpdate(input: $newCharacter) {
-		        result {
+                result {
                     personalIdentifier
-	                name
-		        }
-		        errors {
-			        ... on Error {
-				        errorCode
-				        message
-			        }
-		        }
-	        }
+	            name
+		}
+		errors {
+		    ... on Error {
+		        errorCode
+			message
+		    }
+		}
+	    }
         }
     ")
     .SetGraphQLVariables(new { newCharacter: newCharacterModel })
@@ -548,17 +550,17 @@ Here's an example of a batch query that uses an alias to run multiple queries an
 var batchResults = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($first: Int) {
-	        characters(first: $first) {
+            characters(first: $first) {
                 nodes {
-	                personalIdentifier
-		            name
-	                height
-		        }
-	        }
+	            personalIdentifier
+		    name
+	            height
+		}
+	    }
 
-	        charactersCount: characters {
+	    charactersCount: characters {
                 totalCount
-	        }
+	    }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -589,11 +591,11 @@ var jsonObject = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         query ($first: Int) {
             characters(first: $first) {
                 nodes {
-	                personalIdentifier
-	                name
-	                height
-		        }
-	        }
+	            personalIdentifier
+		    name
+	            height
+		}
+	    }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -606,11 +608,11 @@ var jsonObject = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         query ($first: Int) {
             characters(first: $first) {
                 nodes {
-	                personalIdentifier
-	                name
-	                height
-		        }
-	        }
+	            personalIdentifier
+		    name
+	            height
+		}
+	    }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -629,7 +631,7 @@ try
     var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         .WithGraphQLQuery(@"
             query (BAD_REQUEST) {
-	            MALFORMED QUERY
+	        MALFORMED QUERY
             }
         ")
         .PostGraphQLQueryAsync()
