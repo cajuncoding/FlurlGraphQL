@@ -79,13 +79,13 @@ namespace FlurlGraphQL
 
             var originalGraphQLRequest = flurlGraphQLResponse.GraphQLRequest;
 
-            //If there is another page then Update our Variables and request the NEXT Page Asynchronously;
+            //If there is another page then Update our Variables and request the NEXT Page Asynchronously,
             //  otherwise set our iteration to null to stop processing!
-            var iterationResponseTask = !hasNextPage
-                ? null
-                : originalGraphQLRequest
+            var iterationResponseTask = hasNextPage
+                ? originalGraphQLRequest
                     .SetGraphQLVariable(GraphQLConnectionArgs.After, endCursor)
-                    .PostGraphQLQueryAsync(cancellationToken);
+                    .PostGraphQLQueryAsync(cancellationToken)
+                : null;
 
             //Update our tracking endCursor to the new one we recieved for the next iteration...
             return (pageResult, endCursor, iterationResponseTask);
@@ -136,7 +136,7 @@ namespace FlurlGraphQL
         }
 
         internal static (bool HasNextPage, string EndCursor) AssertCursorPageIsValidForEnumeration(
-            IGraphQLCursorPageInfo pageInfo, 
+            IGraphQLCursorPageInfo pageInfo,
             IFlurlGraphQLResponseProcessor graphqlResponseProcessor, 
             FlurlGraphQLResponse flurlGraphQLResponse, 
             string priorEndCursor
@@ -148,10 +148,11 @@ namespace FlurlGraphQL
             bool? hasNextPageFlag = pageInfo.HasNextPage;
             string endCursor = pageInfo.EndCursor;
 
-            if (hasNextPageFlag == null || endCursor == null)
+            if (hasNextPageFlag == null || (hasNextPageFlag == true && endCursor == null))
                 throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
                     "Unable to enumerate all pages because the pageInfo.hasNextPage and/or the pageInfo.endCursor values are not available in the GraphQL query response.");
-            else if (endCursor == priorEndCursor)
+            
+            if (endCursor == priorEndCursor)
                 throw NewGraphQLException(graphqlResponseProcessor, flurlGraphQLResponse,
                     "Unable to enumerate all pages because the pageInfo.endCursor is returning the same value. Check that the query is correct and that it correctly implements the (after:$after) variable.");
 
