@@ -664,6 +664,7 @@ and how the response is parsed when being de-serailized back into your model.*
         .WithGraphQLQuery("...")
         .UseGraphQLSystemTextJson(new JsonSerializerOptions() //<== System.Text.Json Options!
         {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             WriteIndented = true,
             //NOTE: THIS settings will not actually have any effect as the Framework always switches it ON to enable `case insensitive` processing.
