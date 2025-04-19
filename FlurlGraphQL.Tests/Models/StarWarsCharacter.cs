@@ -15,23 +15,40 @@ namespace FlurlGraphQL.Tests.Models
         public string Cursor { get; set; }
     }
 
-    internal class StarWarsCharacterWithEnum
+    internal class StarWarsCharacterWithEnumMember
     {
         public int PersonalIdentifier { get; set; }
         public string Name { get; set; }
         public decimal Height { get; set; }
-        public List<StarWarsCharacterWithEnum> Friends { get; set; }
+        public List<StarWarsCharacterWithEnumMember> Friends { get; set; }
+        public string Cursor { get; set; }
+        public TheForceWithEnumMembers TheForce { get; set; }
+    }
+
+    internal enum TheForceWithEnumMembers
+    {
+        [EnumMember(Value = "NONE")]
+        NoneAtAll = 0,
+        [EnumMember(Value = "LIGHT_SIDE")]
+        LightSideForGood = 1,
+        [EnumMember(Value = "DARK_SIDE")]
+        DarkSideForEvil = -1
+    }
+
+    internal class StarWarsCharacterWithSimpleEnum
+    {
+        public int PersonalIdentifier { get; set; }
+        public string Name { get; set; }
+        public decimal Height { get; set; }
+        public List<StarWarsCharacterWithSimpleEnum> Friends { get; set; }
         public string Cursor { get; set; }
         public TheForce TheForce { get; set; }
     }
 
     internal enum TheForce
     {
-        [EnumMember(Value = "NONE")]
         None = 0,
-        [EnumMember(Value = "LIGHT_SIDE")]
         LightSide = 1,
-        [EnumMember(Value = "DARK_SIDE")]
         DarkSide = -1
     }
 

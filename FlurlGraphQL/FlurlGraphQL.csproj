@@ -4,9 +4,9 @@
 		<!--NOTE: Just as with the base Flurl.Http.Newtonsoft library and Microsofts recommendation we now support net6 for the latest projects, but also netstandard2.1 which has proper Async streaming support, 
 				in addition to netstandard2.0 + net461 for legacy support (because netstandard2.0 it had API compatibility issues prior to .NET Framework 4.7.x -->
 		<TargetFrameworks>net461;netstandard2.0;netstandard2.1;net6.0;</TargetFrameworks>
-		<Version>2.0.3</Version>
-		<AssemblyVersion>2.0.3</AssemblyVersion>
-		<FileVersion>2.0.3</FileVersion>
+		<Version>2.0.4</Version>
+		<AssemblyVersion>2.0.4</AssemblyVersion>
+		<FileVersion>2.0.4</FileVersion>
 		<Authors>BBernard / CajunCoding</Authors>
 		<Company>CajunCoding</Company>
 		<Description>GraphQL client extensions for Flurl.Http -- lightweight, simplified, asynchronous, fluent GraphQL client API extensions for the amazing Flurl Http library!</Description>
@@ -17,9 +17,12 @@
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
-			- Fix bug resulting in incorrect Exceptions when automatically enumerating (as IAsyncEnumerable) Connection Pages when a request returns with no results (NextPage = false &amp; EndCursor = null).
+			- Improve handling of Enums so that automatic processing as SCREAMING_CASE is handled now without the need to have [EnumMember("")] attributes on every enum value when the names match.
+			- Improve handling of GraphQL Serialization to now automatically use CamelCase for System.Text.Json &amp; Newtonsoft.Json; it was already being handled when de-serializing but not when serializing.
+			- Added new methods to help streamline the configuration of Json Serializer options/settings; a simple action/lambda can now be used to set Json Serialization Options/Settings.
 
 			Prior Release Notes:
+			- Fix bug resulting in incorrect Exceptions when automatically enumerating (as IAsyncEnumerable) Connection Pages when a request returns with no results (NextPage = false &amp; EndCursor = null).
 			- Fix issue with incorrect deserialization when using wrapper convenience class GraphQLEdge&lt;T&gt;.
 			- Implement full support for Flurl v4.0+
 			- Completely rewritten Json processing engine to now support both System.Text.Json &amp; Newtonsoft.Json.

@@ -43,7 +43,7 @@ namespace FlurlGraphQL.JsonProcessing
         private static IFlurlGraphQLJsonSerializer CreateSystemTextJsonSerializer(ISerializer flurlJsonSerializer)
             => FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(flurlJsonSerializer);
 
-        //Because Newtonsoft is now extracted into it's own Library that may be optionally included we don't know at compile time
+        //Because Newtonsoft is now extracted into its own Library that may be optionally included we don't know at compile time
         // if it is loaded and therefore must use runtime reflection to safely initialize it.
         //NOTE: WE will throw a runtime exception if not available because that means that something is mis-configured and not initialized
         //      to support the use of Newtonsoft Json.

@@ -205,7 +205,7 @@ namespace FlurlGraphQL.Tests
 	                    }
                     }
                 ")
-                .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = friendCountParam })
+                .SetGraphQLVariables(new { ids = idArrayParam, friendsCount = friendCountParam })
                 .PostGraphQLQueryAsync()
                 .ReceiveGraphQLQueryResults<StarWarsCharacter>()
                 .ConfigureAwait(false);

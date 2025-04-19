@@ -12,7 +12,7 @@ namespace FlurlGraphQL
         string GraphQLQuery { get; }
         IReadOnlyDictionary<string, object> GraphQLVariables { get; }
         IFlurlGraphQLJsonSerializer GraphQLJsonSerializer { get; }
-        string PersistedQueryPayloadFieldName { get; }
+        IFlurlGraphQLConfig GraphQLConfig { get; }
 
         IFlurlGraphQLRequest SetGraphQLVariable(string name, object value, NullValueHandling nullValueHandling = NullValueHandling.Remove);
         IFlurlGraphQLRequest SetGraphQLVariables(object variables, NullValueHandling nullValueHandling = NullValueHandling.Remove);

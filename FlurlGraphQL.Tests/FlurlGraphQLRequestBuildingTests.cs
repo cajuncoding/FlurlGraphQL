@@ -1,10 +1,9 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Flurl.Http;
 using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using FlurlGraphQL.JsonProcessing;
 
@@ -66,17 +65,21 @@ namespace FlurlGraphQL.Tests
                     query($first:Int) {
                       characters (first:$first) {
                         nodes {
-                          personalIdentifier
+                          PERSONALIDENTIFIER: personalIdentifier
                           name
-			              height
                         }
                       }
                     }
                 ")
-                .UseGraphQLNewtonsoftJson(new JsonSerializerSettings()
+                .BeforeCall(call =>
                 {
-                    NullValueHandling = NullValueHandling.Ignore,
-                    Formatting = Formatting.Indented
+                    var serializer = call.Request.Settings.JsonSerializer;
+                    Assert.IsTrue(serializer is IFlurlGraphQLNewtonsoftJsonSerializer);
+                })
+                .UseGraphQLNewtonsoftJson(s =>
+                {
+                    s.NullValueHandling = NullValueHandling.Ignore;
+                    s.Formatting = Formatting.Indented;
                 })
                 //.SetGraphQLVariable("first", 2)
                 .SetGraphQLVariables(new { first = 2 })
@@ -97,8 +100,14 @@ namespace FlurlGraphQL.Tests
             var results = await response.ReceiveGraphQLQueryResults<StarWarsCharacter>().ConfigureAwait(false);
             Assert.IsNotNull(results);
             Assert.AreEqual(2, results.Count);
-            Assert.IsNotNull(results[0].Name);
-            Assert.IsNotNull(results[0].Name);
+            foreach (var result in results)
+            {
+                //Name should be Populated ✅
+                Assert.IsTrue(!string.IsNullOrWhiteSpace(result.Name));
+                Assert.AreNotEqual(0, result.PersonalIdentifier);
+                //Height should be 0 due to not being populated ❎
+                Assert.AreEqual(0, result.Height);
+            }
         }
 
         [TestMethod]
@@ -110,19 +119,23 @@ namespace FlurlGraphQL.Tests
                     query($first:Int) {
                       characters (first:$first) {
                         nodes {
-                          personalIdentifier
+                          PERSONALIDENTIFIER: personalIdentifier
                           name
-			              height
                         }
                       }
                     }
                 ")
-                .UseGraphQLSystemTextJson(new JsonSerializerOptions()
+                .BeforeCall(call =>
                 {
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                    WriteIndented = true,
-                    //NOTE: THIS is switched to true by the framework but we are testing that we can NOT explicitly OVERRIDE it HERE!
-                    PropertyNameCaseInsensitive = false
+                    var serializer = call.Request.Settings.JsonSerializer;
+                    Assert.IsTrue(serializer is IFlurlGraphQLSystemTextJsonSerializer);
+                })
+                .UseGraphQLSystemTextJson(o =>
+                {
+                    o.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                    o.WriteIndented = true;
+                    //NOTE: THIS is switched to true by the framework, but we are testing that we can NOT explicitly OVERRIDE it HERE!
+                    o.PropertyNameCaseInsensitive = false;
                 })
                 //.SetGraphQLVariable("first", 2)
                 .SetGraphQLVariables(new { first = 2 })
@@ -134,18 +147,24 @@ namespace FlurlGraphQL.Tests
             Assert.IsTrue(request.GraphQLJsonSerializer is FlurlGraphQLSystemTextJsonSerializer);
 
             var jsonSerializerOptions = ((FlurlGraphQLSystemTextJsonSerializer)request.GraphQLJsonSerializer).JsonSerializerOptions;
-            Assert.AreEqual(false, jsonSerializerOptions.PropertyNameCaseInsensitive);
-            Assert.AreEqual(true, jsonSerializerOptions.WriteIndented);
+            Assert.IsFalse(jsonSerializerOptions.PropertyNameCaseInsensitive);
+            Assert.IsTrue(jsonSerializerOptions.WriteIndented);
 
             var baseFlurlSerializer = ((IFlurlRequest)request).Settings.JsonSerializer;
             Assert.AreEqual(request.GraphQLJsonSerializer, baseFlurlSerializer);
 
             var results = await response.ReceiveGraphQLQueryResults<StarWarsCharacter>().ConfigureAwait(false);
             Assert.IsNotNull(results);
-            //We still get 2 results but the values are Null...
+            //We still get 2 results but some values are Null due to Case Insensitivity being Disabled!
             Assert.AreEqual(2, results.Count);
-            Assert.IsNull(results[0].Name);
-            Assert.IsNull(results[0].Name);
+            foreach (var result in results)
+            {
+                //Name should be Populated ✅
+                Assert.IsTrue(!string.IsNullOrWhiteSpace(result.Name));
+                //PersonalIdentifier & Height should be 0 due to not being populated ❎
+                Assert.AreEqual(0, result.PersonalIdentifier);
+                Assert.AreEqual(0, result.Height);
+            }
         }
     }
 }

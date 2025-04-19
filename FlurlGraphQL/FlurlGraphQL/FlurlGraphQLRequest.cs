@@ -27,7 +27,7 @@ namespace FlurlGraphQL
     public class FlurlGraphQLRequest : IFlurlGraphQLRequest
     {
         protected IFlurlRequest BaseFlurlRequest { get; set; }
-        
+
         internal FlurlGraphQLRequest(IFlurlRequest baseRequest)
         {
             BaseFlurlRequest = baseRequest.AssertArgIsNotNull(nameof(baseRequest));
@@ -35,7 +35,7 @@ namespace FlurlGraphQL
             //Initialize a valid GraphQL Json serializer from the BaseFlurl Request (e.g. System.Text.Json vs Newtonsoft.Json)...
             GraphQLJsonSerializer = FlurlGraphQLJsonSerializerFactory.FromFlurlSerializer(baseRequest.Settings.JsonSerializer);
 
-            PersistedQueryPayloadFieldName = FlurlGraphQLConfig.DefaultConfig.PersistedQueryPayloadFieldName;
+            GraphQLConfig = FlurlGraphQLConfig.DefaultConfig.Clone();
         }
 
         public GraphQLQueryType GraphQLQueryType { get; protected set; }
@@ -46,7 +46,7 @@ namespace FlurlGraphQL
         /// The GraphQL Serializer may be customized only for this request though this is usually done with one of the helpers methods 
         /// (e.g. UseGraphQLNewtonsoftJsonSerializerSettings()).
         /// 
-        /// Therefore this will also update the base Flurl serializer for this request with the GraphQL (wrapped) serializer so the entire pipeline 
+        /// Therefore, this will also update the base Flurl serializer for this request with the GraphQL (wrapped) serializer so the entire pipeline 
         /// is now consistent and using the very same Serializer!
         /// 
         /// NOTE: The GraphQL Json Serializer is a valid ISerializer for Flurl so we can simply set/update it on the base Settings
@@ -58,7 +58,23 @@ namespace FlurlGraphQL
             internal set => BaseFlurlRequest.Settings.JsonSerializer = value;
         }
 
-        public string PersistedQueryPayloadFieldName { get; internal set; }
+        #region Configuration
+
+        public IFlurlGraphQLConfig GraphQLConfig { get; internal set; }
+
+        public IFlurlGraphQLRequest Configure(Action<FlurlGraphQLConfig> configAction)
+        {
+            var newConfig = GraphQLConfig.Clone();
+
+            configAction
+                .AssertArgIsNotNull(nameof(configAction))
+                .Invoke(newConfig);
+
+            GraphQLConfig = newConfig;
+            return this;
+        }
+
+        #endregion
 
         #region GraphQL Variables
 
@@ -167,7 +183,13 @@ namespace FlurlGraphQL
 
         public IFlurlGraphQLRequest Clone()
         {
-            var clone = (IFlurlGraphQLRequest)new FlurlGraphQLRequest(this.BaseFlurlRequest);
+            IFlurlGraphQLRequest clone = new FlurlGraphQLRequest(this.BaseFlurlRequest)
+            {
+                GraphQLConfig = this.GraphQLConfig,
+                GraphQLJsonSerializer = this.GraphQLJsonSerializer
+            };
+
+            clone.SetGraphQLVariables(this.GraphQLVariablesInternal);
 
             switch (this.GraphQLQueryType)
             {
@@ -181,9 +203,6 @@ namespace FlurlGraphQL
                 //default:
                 //    throw new ArgumentOutOfRangeException(nameof(GraphQLQueryType), "The GraphQL Query Type is undefined or invalid.");
             }
-
-            clone.SetGraphQLVariables(this.GraphQLVariablesInternal);
-            ((FlurlGraphQLRequest)clone).GraphQLJsonSerializer = this.GraphQLJsonSerializer;
 
             return clone;
         }
@@ -252,7 +271,7 @@ namespace FlurlGraphQL
                     graphqlPayload.Add("query", this.GraphQLQuery);
                     break;
                 case GraphQLQueryType.PersistedQuery:
-                    graphqlPayload.Add(PersistedQueryPayloadFieldName, this.GraphQLQuery);
+                    graphqlPayload.Add(GraphQLConfig.PersistedQueryPayloadFieldName, this.GraphQLQuery);
                     break;
                 default: 
                     throw new ArgumentOutOfRangeException(nameof(this.GraphQLQueryType), $"GraphQL payload for Query Type [{this.GraphQLQueryType}] cannot be initialized.");
@@ -301,7 +320,7 @@ namespace FlurlGraphQL
                         this.SetQueryParam("query", this.GraphQLQuery); 
                         break;
                     case GraphQLQueryType.PersistedQuery: 
-                        this.SetQueryParam(PersistedQueryPayloadFieldName, this.GraphQLQuery); 
+                        this.SetQueryParam(GraphQLConfig.PersistedQueryPayloadFieldName, this.GraphQLQuery); 
                         break;
                     default: 
                         throw new ArgumentOutOfRangeException(nameof(graphqlQueryType), $"GraphQL Query Type [{graphqlQueryType}] cannot be initialized.");

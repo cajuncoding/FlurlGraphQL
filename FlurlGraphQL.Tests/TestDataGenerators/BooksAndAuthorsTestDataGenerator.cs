@@ -10,7 +10,6 @@ namespace FlurlGraphQL.Benchmarks.TestData
 {
     internal class BooksAndAuthorsTestDataGenerator
     {
-
         public GraphQLConnectionTestResponse<GraphQLBooksAndAuthors> GenerateConnectionPagedMockData()
         {
             var books = CreateBookFaker(1).Generate(100);

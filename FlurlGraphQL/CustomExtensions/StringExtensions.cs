@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace FlurlGraphQL
@@ -7,7 +8,32 @@ namespace FlurlGraphQL
     internal static class StringExtensions
     {
         public const string SPACE = " ";
+        public const char UNDERSCORE = '_';
         private static readonly char[] _sentencePunctuationChars = { ' ', '.', ';', '?', '!' };
+
+        public static string ToScreamingCase(this string input)
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+
+            ReadOnlySpan<char> inputSpan = input.AsSpan();
+            //Estimate max possible length (input length + potential underscores)
+            Span<char> outputSpan = stackalloc char[input.Length * 2];
+
+            int index = 0;
+            for (int i = 0; i < inputSpan.Length; i++)
+            {
+                char c = inputSpan[i];
+
+                //Insert an underscore before uppercase letters (except first letter)
+                if (i > 0 && char.IsUpper(c))
+                    outputSpan[index++] = UNDERSCORE;
+
+                outputSpan[index++] = char.ToUpper(c, CultureInfo.InvariantCulture);
+            }
+
+            //return new string(outputSpan[..index]); // Convert the span into a string
+            return new string(outputSpan.Slice(0, index).ToArray());
+        }
 
         public static string EndSentence(this string sentence, char endSentenceCharIfNoneExists = '.')
         {

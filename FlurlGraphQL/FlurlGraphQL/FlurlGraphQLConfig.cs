@@ -6,24 +6,28 @@ namespace FlurlGraphQL
     public interface IFlurlGraphQLConfig
     {
         string PersistedQueryPayloadFieldName { get; }
+        bool EnableAutomaticHandlingOfEnumsAsScreamingCaseStrings { get; }
+        FlurlGraphQLConfig Clone();
     }
 
     public sealed class FlurlGraphQLConfig : IFlurlGraphQLConfig
     {
         public const string DefaultPersistedQueryFieldName = "id";
 
-        public string PersistedQueryPayloadFieldName { get; set; }
+        public string PersistedQueryPayloadFieldName { get; set; } = DefaultPersistedQueryFieldName;
+
+        public bool EnableAutomaticHandlingOfEnumsAsScreamingCaseStrings { get; set; } = true;
 
         public static IFlurlGraphQLConfig DefaultConfig { get; private set; } = new FlurlGraphQLConfig();
 
         private FlurlGraphQLConfig()
         {
-            PersistedQueryPayloadFieldName = DefaultPersistedQueryFieldName;
         }
 
-        private FlurlGraphQLConfig Clone() => new FlurlGraphQLConfig()
+        public FlurlGraphQLConfig Clone() => new FlurlGraphQLConfig()
         {
-            PersistedQueryPayloadFieldName = this.PersistedQueryPayloadFieldName
+            PersistedQueryPayloadFieldName = this.PersistedQueryPayloadFieldName,
+            EnableAutomaticHandlingOfEnumsAsScreamingCaseStrings = this.EnableAutomaticHandlingOfEnumsAsScreamingCaseStrings
         };
 
         /// <summary>
@@ -32,7 +36,7 @@ namespace FlurlGraphQL
         /// <param name="configAction"></param>
         public static void ConfigureDefaults(Action<FlurlGraphQLConfig> configAction)
         {
-            var newConfig = ((FlurlGraphQLConfig)DefaultConfig).Clone();
+            var newConfig = DefaultConfig.Clone();
             
             configAction
                 .AssertArgIsNotNull(nameof(configAction))

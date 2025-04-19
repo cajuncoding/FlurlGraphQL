@@ -62,7 +62,7 @@ namespace FlurlGraphQL.Tests
                     .SetPersistedQueryPayloadFieldName(RELAY_PERSISTED_QUERY_KEY)
                     .SetGraphQLVariables(new { first = 2, friendsCount = 1 });
 
-                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.PersistedQueryPayloadFieldName);
+                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.GraphQLConfig.PersistedQueryPayloadFieldName);
 
                 var results = await request.PostGraphQLQueryAsync()
                     .ReceiveGraphQLQueryResults<StarWarsCharacter>()
@@ -98,7 +98,7 @@ namespace FlurlGraphQL.Tests
                     .WithGraphQLPersistedQuery("AllCharactersWithFriendsPaginated-v1")
                     .SetGraphQLVariables(new { first = 2, friendsCount = 1 });
 
-                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.PersistedQueryPayloadFieldName);
+                Assert.AreEqual(RELAY_PERSISTED_QUERY_KEY, request.GraphQLConfig.PersistedQueryPayloadFieldName);
 
                 var results = await request.PostGraphQLQueryAsync()
                     .ReceiveGraphQLQueryResults<StarWarsCharacter>()

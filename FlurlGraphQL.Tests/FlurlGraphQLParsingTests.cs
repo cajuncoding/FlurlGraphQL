@@ -1,11 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
+using Flurl.Http;
 using Flurl.Http.Configuration;
 using Flurl.Http.Newtonsoft;
 using FlurlGraphQL.CustomExtensions;
 using FlurlGraphQL.JsonProcessing;
 using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace FlurlGraphQL.Tests
 {
@@ -45,12 +49,85 @@ namespace FlurlGraphQL.Tests
         }
 
         [TestMethod]
-        public void TestSimpleSystemTextJsonParsingOfPreFlattenedJsonWithStringEnumWithAnnotationJsonConverter()
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public void TestSimpleSystemTextJsonParsingOfPreFlattenedJsonWithStringEnumWithEnumMemberAnnotationConversion(IFlurlRequest flurlRequest)
         {
-            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
-            var graphqlSerializer = FlurlGraphQLSystemTextJsonSerializer.FromFlurlSerializer(new DefaultJsonSerializer());
+            var graphqlApiRequest = flurlRequest.ToGraphQLRequest();
+            //Be sure that we ignore Null properties so that the serialization Comparison at the end works as expected!
+            switch (graphqlApiRequest.GraphQLJsonSerializer)
+            {
+                case FlurlGraphQLSystemTextJsonSerializer _:
+                    graphqlApiRequest.UseGraphQLSystemTextJson(o =>
+                    {
+                        o.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                    });
+                    break;
+                case FlurlGraphQLNewtonsoftJsonSerializer _:
+                    graphqlApiRequest.UseGraphQLNewtonsoftJson(s =>
+                    {
+                        s.NullValueHandling = NullValueHandling.Ignore;
+                    });
+                    break;
+            }
 
-            var characterResults = graphqlSerializer.Deserialize<List<StarWarsCharacterWithEnum>>(NestedJsonStructureFlattenedWithForceEnum);
+            //NOTE: We leverage Internal Methods and Classes here to get lower level access for Unit Testing and Quicker Debugging...
+            var graphqlSerializer = graphqlApiRequest.GraphQLJsonSerializer;
+
+            var characterResults = graphqlSerializer.Deserialize<List<StarWarsCharacterWithEnumMember>>(NestedJsonStructureFlattenedWithForceEnum);
+
+            Assert.IsNotNull(characterResults);
+            Assert.AreEqual(2, characterResults.Count);
+            Assert.AreEqual(TheForceWithEnumMembers.LightSideForGood, characterResults.First(c => c.Name.StartsWith("Luke")).TheForce);
+            Assert.AreEqual(TheForceWithEnumMembers.DarkSideForEvil, characterResults.First(c => c.Name.StartsWith("Darth")).TheForce);
+
+            foreach (var result in characterResults)
+            {
+                TestContext.WriteLine($"Character [{result.PersonalIdentifier}] [{result.Name}] [{result.Height}]");
+
+                foreach (var friend in result.Friends)
+                {
+                    Assert.IsNotNull(friend);
+                    Assert.AreEqual(TheForceWithEnumMembers.NoneAtAll, friend.TheForce);
+                    TestContext.WriteLine($"   Friend [{friend.PersonalIdentifier}] [{friend.Name}] [{friend.Height}]");
+                }
+            }
+
+            //TEST Re-serialization should Match the original Json!
+            var json = graphqlSerializer.Serialize(characterResults);
+            bool isEqual = JToken.DeepEquals(
+                JArray.Parse(NestedJsonStructureFlattenedWithForceEnum), //The Test Data
+                JArray.Parse(json) //The Round Trip Serialized data
+            );
+
+            Assert.IsTrue(isEqual, "The Test Json and the Round Trip Serialized Json do not match!");
+        }
+
+
+        [TestMethod]
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public void TestSimpleSystemTextJsonParsingOfPreFlattenedJsonWithStringEnumDirectConversion(IFlurlRequest flurlRequest)
+        {
+            var graphqlApiRequest = flurlRequest.ToGraphQLRequest();
+            //Be sure that we ignore Null properties so that the serialization Comparison at the end works as expected!
+            switch (graphqlApiRequest.GraphQLJsonSerializer)
+            {
+                case FlurlGraphQLSystemTextJsonSerializer _:
+                    graphqlApiRequest.UseGraphQLSystemTextJson(o =>
+                    {
+                        o.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                    });
+                    break;
+                case FlurlGraphQLNewtonsoftJsonSerializer _:
+                    graphqlApiRequest.UseGraphQLNewtonsoftJson(s =>
+                    {
+                        s.NullValueHandling = NullValueHandling.Ignore;
+                    });
+                    break;
+            }
+
+            var graphqlSerializer = graphqlApiRequest.GraphQLJsonSerializer;
+
+            var characterResults = graphqlSerializer.Deserialize<List<StarWarsCharacterWithSimpleEnum>>(NestedJsonStructureFlattenedWithForceEnum);
 
             Assert.IsNotNull(characterResults);
             Assert.AreEqual(2, characterResults.Count);
@@ -68,6 +145,15 @@ namespace FlurlGraphQL.Tests
                     TestContext.WriteLine($"   Friend [{friend.PersonalIdentifier}] [{friend.Name}] [{friend.Height}]");
                 }
             }
+
+            //TEST Re-serialization should Match the original Json!
+            var json = graphqlSerializer.Serialize(characterResults);
+            bool isEqual = JToken.DeepEquals(
+                JArray.Parse(NestedJsonStructureFlattenedWithForceEnum), //The Test Data
+                JArray.Parse(json) //The Round Trip Serialized data
+            );
+
+            Assert.IsTrue(isEqual, "The Test Json and the Round Trip Serialized Json do not match!");
         }
 
         [TestMethod]

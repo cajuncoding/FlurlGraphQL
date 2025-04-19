@@ -4,10 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using Flurl.Http.Newtonsoft;
+using FlurlGraphQL.JsonProcessing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace FlurlGraphQL.JsonProcessing
+//NOTE: To ensure these Extensions are readily discoverable we use the root FlurlGraphQL namespace!
+namespace FlurlGraphQL
 {
     public static class FlurlGraphQLNewtonsoftJsonExtensions
     {
@@ -41,16 +43,40 @@ namespace FlurlGraphQL.JsonProcessing
         /// <param name="graphqlRequest"></param>
         /// <param name="newtonsoftJsonSettings"></param>
         /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
-        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJson(this IFlurlGraphQLRequest graphqlRequest, JsonSerializerSettings newtonsoftJsonSettings)
+        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJson(this IFlurlGraphQLRequest graphqlRequest, JsonSerializerSettings newtonsoftJsonSettings = null)
         {
             if (graphqlRequest is FlurlGraphQLRequest flurlGraphQLRequest)
             {
-                if (newtonsoftJsonSettings == null && flurlGraphQLRequest.GraphQLJsonSerializer is IFlurlGraphQLNewtonsoftJsonSerializer existingNewtonsoftJsonSerializer)
-                    flurlGraphQLRequest.GraphQLJsonSerializer = existingNewtonsoftJsonSerializer;
-                else
-                    flurlGraphQLRequest.GraphQLJsonSerializer = new FlurlGraphQLNewtonsoftJsonSerializer(
-                        newtonsoftJsonSettings ?? FlurlGraphQLNewtonsoftJsonSerializer.CreateDefaultSerializerSettings()
-                    );
+                flurlGraphQLRequest.GraphQLJsonSerializer = new FlurlGraphQLNewtonsoftJsonSerializer(
+                    newtonsoftJsonSettings ?? FlurlGraphQLNewtonsoftJsonSerializer.CreateDefaultSerializerSettings()
+                );
+            }
+
+            return graphqlRequest;
+        }
+
+        /// <summary>
+        /// Initialize a custom GraphQL Json Serializer using Newtonsoft.Json, but only for this GraphQL request; isolated from any other GraphQL Requests.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="configureJsonSerializerSettings">Action method to configure the existing options as needed.</param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJson(this IFlurlRequest request, Action<JsonSerializerSettings> configureJsonSerializerSettings)
+            => request.ToGraphQLRequest().UseGraphQLNewtonsoftJson(configureJsonSerializerSettings);
+
+        /// <summary>
+        /// Configure the GraphQL Json Serializer settings using Newtonsoft.Json, but only for this GraphQL request; isolated from any other GraphQL Requests.
+        /// </summary>
+        /// <param name="graphqlRequest"></param>
+        /// <param name="configureJsonSerializerSettings">Action method to configure the existing options as needed.</param>
+        /// <returns>Returns an IFlurlGraphQLRequest for ready to chain for further initialization or execution.</returns>
+        public static IFlurlGraphQLRequest UseGraphQLNewtonsoftJson(this IFlurlGraphQLRequest graphqlRequest, Action<JsonSerializerSettings> configureJsonSerializerSettings)
+        {
+            if (graphqlRequest is FlurlGraphQLRequest flurlGraphQLRequest)
+            {
+                var graphqlJsonSerializerOptions = FlurlGraphQLNewtonsoftJsonSerializer.CreateDefaultSerializerSettings();
+                configureJsonSerializerSettings?.Invoke(graphqlJsonSerializerOptions);
+                flurlGraphQLRequest.UseGraphQLNewtonsoftJson(graphqlJsonSerializerOptions);
             }
 
             return graphqlRequest;
@@ -59,8 +85,6 @@ namespace FlurlGraphQL.JsonProcessing
         #endregion
 
         #region Json Parsing Extensions - JsonConvert Strategy
-
- 
 
         internal static JArray FlattenGraphQLEdgesJsonToArrayOfNodes(this JArray edgesJson)
         {

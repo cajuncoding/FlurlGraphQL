@@ -19,7 +19,7 @@ namespace FlurlGraphQL
             BaseFlurlResponse = response.AssertArgIsNotNull(nameof(response));
             GraphQLQuery = originalGraphQLRequest.GraphQLQuery;
             //NOTE: We Clone the original request so that any processing of the Response is Disconnected from the original
-            //      and does not accidentally mutate it! For consistency we do this here so that it's ALWAYS enforced!
+            //      and does not accidentally mutate it! For consistency, we do this here so that it's ALWAYS enforced!
             GraphQLRequest = originalGraphQLRequest.AssertArgIsNotNull(nameof(originalGraphQLRequest)).Clone();
             GraphQLJsonSerializer = originalGraphQLRequest.GraphQLJsonSerializer.AssertArgIsNotNull(nameof(GraphQLJsonSerializer));
         }
