@@ -33,31 +33,38 @@ namespace FlurlGraphQL.JsonProcessing
                 ? new JsonSerializerOptions(originalJsonOptions)
                 : new JsonSerializerOptions();
 
+
+            var defaultJsonConfig = FlurlGraphQLConfig.DefaultConfig;
+
             //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we always enable case-insensitive Field Matching with System.Text.Json.
             //This is also helpful since GraphQL Json (and Json in general) use CamelCase and nearly always mismatch C# Naming Pascal Case standards of C# Class Models, etc...
             //NOTE: WE are operating on a copy of the original Json Settings so this does NOT mutate the core/original settings from Flurl or those specified for the GraphQL request, etc.
-            graphqlJsonOptions.PropertyNameCaseInsensitive = true;
+            if(defaultJsonConfig.IsJsonProcessingFlagEnabled(JsonDefaults.EnableCaseInsensitiveJsonHandling))
+                graphqlJsonOptions.PropertyNameCaseInsensitive = true;
 
             //For compatibility when actually serializing we still need to enforce CamelCase (as noted above for parsing/de-serializing) because most JSON frameworks
             //  (e.g. HotChocolate for .NET) the GraphQL json is generally expected to be in camelCase format otherwise parsing on the GraphQL Server side may fail.
             //This is likely a critical element missed by many developers so we enable it by default here to streamline and simplify working with GraphQL.
-            graphqlJsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-
-            var graphqlConfig = FlurlGraphQLConfig.DefaultConfig;
+            if (defaultJsonConfig.IsJsonProcessingFlagEnabled(JsonDefaults.EnableCamelCaseSerialization))
+                graphqlJsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 
             //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we need to provide support for String to Enum conversion along with support for enum annotations
             //  via [EnumMember(Value ="CustomName")] annotation (compatible with Newtonsoft.Json). In addition, we now also support [Description("CustomName")] annotation for
             //  easier syntax that is arguably more intuitive to use.
-            //NOTE: For performance we KNOW we need ot add this if original options were not provided (e.g. null)
-            if (originalJsonOptions is null || !originalJsonOptions.Converters.OfType<JsonStringEnumMemberConverter>().Any())
-                graphqlJsonOptions.Converters.Add(new JsonStringEnumMemberConverter(
+            if (defaultJsonConfig.IsJsonProcessingFlagEnabled(JsonDefaults.EnableStringEnumHandling))
+            {
+                //NOTE: For performance we KNOW we need to add this if the original options were not provided (e.g. null)...
+                if (originalJsonOptions is null || !originalJsonOptions.Converters.OfType<JsonStringEnumMemberConverter>().Any())
+                {
                     //To simplify working with GraphQL Enums (e.g. with HotChocolate .NET) the Json should use SCREAMING_CASE for the values.
                     //You can customize/override this with [EnumMember()] attributes, but this simplifies when the names should simply match!
-                    namingPolicy: graphqlConfig.EnableAutomaticHandlingOfEnumsAsScreamingCaseStrings 
+                    var namingPolicy = defaultJsonConfig.IsJsonProcessingFlagEnabled(JsonDefaults.EnableScreamingCaseEnums)
                         ? new FlurlGraphQLSystemTextJsonScreamingCaseNamingPolicy()
-                        : null,
-                    allowIntegerValues: true
-                ));
+                        : null;
+
+                    graphqlJsonOptions.Converters.Add(new JsonStringEnumMemberConverter(namingPolicy, allowIntegerValues: true));
+                }
+            }
 
             return graphqlJsonOptions;
         }

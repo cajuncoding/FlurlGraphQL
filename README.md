@@ -120,6 +120,20 @@ To use this in your project, add the [FlurlGraphQL](https://www.nuget.org/packag
 To use this in your project with `Newtonsoft.Json` processing then add the add the [FlurlGraphQL.Newtonsoft](https://www.nuget.org/packages/FlurlGraphQL.Newtonsoft/) NuGet package to your project.
 
 ## Release Notes:
+### v2.0.5
+- Improve configuration support for Defeault Json Processing now with Enum Flags to make enabling/disabling the GraphQL Json Defaults much easier.
+
+### v2.0.4
+- Improve handling of Enums so that automatic processing as SCREAMING_CASE is handled now without the need to have [EnumMember("")] attributes on every enum value when the names match.
+- Improve handling of GraphQL Serialization to now automatically use CamelCase for System.Text.Json &amp; Newtonsoft.Json; it was already being handled when de-serializing but not when serializing.
+- Added new methods to help streamline the configuration of Json Serializer options/settings; a simple action/lambda can now be used to set Json Serialization Options/Settings.
+
+### v.2.0.3
+- Fix bug resulting in incorrect Exceptions when automatically enumerating (as IAsyncEnumerable) Connection Pages when a request returns with no results (NextPage = false &amp; EndCursor = null).
+
+### v2.0.2
+- Fix issue with incorrect deserialization when using wrapper convenience class GraphQLEdge&lt;T&gt;.
+
 ### v2.0.1
 - Fix issue with incorrect deserialization when using wrapper convenience class GraphQLEdge&lt;T&gt;
 
@@ -649,9 +663,19 @@ catch(FlurlGraphQLException graphqlException)
 ```
 
 ## Need direct control over the Json Serialization Settings?
-Now with version 2.0 we dynamically inherit and implement all the settings from the base/core Flurl request!
+Now with version 2.0 we dynamically inherit and implement all the settings from the base/core Flurl request! 
+In general, there is no need to explicitly set the settings for only GraphQL requests anymore, however you may continue to do so.
 
-Therefore there is no need to explicitly set the settings for only GraphQL requests anymore, however you may continue to do so.
+NOTE: However to streamlinea and simplify the most common Json serialization issues we still enforce some Json processing defaults via 
+the `JsonDefaults` enum flags that can be set on the default configuration using the `JsonProcessingDefaults` property:
+ - `EnableStringEnumHandling` -- Ensures that Enum String conversion is automatically handled as GraphQL uses sring enum values.
+ - `EnableScreamingCaseEnums` -- Ensures that Enum strings are automatically converted to SCREAMING_CASE as is the default for GraphQL enums (e.g. HotChocolate GraphQL Server).
+   - This has no effect if the above `EnableStringEnumHandling` is disabled; unless you manually implement the screaming case naming policies/strategy (e.g. `FlurlGraphQLSystemTextJsonScreamingCaseNamingPolicy`).
+ - `EnableCamelCaseSerialization` -- Ensures that the Json serialization is compatible with GraphQL JSON conventions which use camelCase and are usually case sensitive (e.g. HotChocolate GraphQL Server).
+ - `EnableCaseInsensitiveJsonHandling` -- Ensures that Json de-serialziation is not case sensitive because C# conventions for `PascalCase` will nearly always fail due to JSON conventions for `camelCase`.
+   - NOTE: This *ONLY* applies to `System.Text.Json` because case-insensitive matching cannot be disabled with `Newtonsoft.Json`.
+ - `EnableAll` -- a convenience flag used by default to ensure all of the above are enabled to greatly simplify the common pitfalls for Json handlingw between C# & GraphQL.
+
 
 We still provide support to manually control the Json serializer settings specifically for individual GraphQL request processing.
 
@@ -659,7 +683,19 @@ We still provide support to manually control the Json serializer settings specif
 and how the response is parsed when being de-serailized back into your model.*
 
 ```csharp
+    //Control how default Json Options/Settings are initialzied (for either System.Text.Json or Newtonsoft)
+    //NOTE: If Enabled, these global GraphQL Defaults will be enforced on any settings specified, even at the Request level.
+    FlurlGraphQLConfig.ConfigureDefaults(config =>
+    {
+        config.JsonProcessingDefaults = JsonDefaults.EnableAll;
+        //Or Disable all default value enforcement so the system will use the Json Settings exactly as you specify in Flurl (or in Newtonsoft default configuration)
+        config.JsonProssingDefaults = JsonDefaults.None;
+        //Or some custom combination: this will remove Case-insensitivity, and CamelCase serialization....
+        config.JsonProssingDefaults = JsonDefaults.EnableStringEnumHandling | EnableScreamingCaseEnums;
+    });
+
     //Override the Json Serialization Settings per request...
+    //NOTE: The above Defaults will be enforced on any settings you specify if enabled in the FlurlGraphQLConfig...
     var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         .WithGraphQLQuery("...")
         .UseGraphQLSystemTextJson(new JsonSerializerOptions() //<== System.Text.Json Options!
@@ -677,6 +713,7 @@ and how the response is parsed when being de-serailized back into your model.*
         .ReceiveGraphQLRawSystemTextJsonResponse();
 
     //OR for Newtonsoft.Json then you need to use the following for each request...
+    //NOTE: The above Defaults will be enforced on any settings you specify if enabled in the FlurlGraphQLConfig...
     var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         .WithGraphQLQuery("...")
         .UseGraphQLNewtonsoftJson(new JsonSerializerSettings() //<== Newtonsof.Json Settings!

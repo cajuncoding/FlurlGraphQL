@@ -3,10 +3,26 @@ using FlurlGraphQL.ValidationExtensions;
 
 namespace FlurlGraphQL
 {
+    [Flags]
+    public enum JsonDefaults
+    {
+        None = 0, // No settings enabled
+        EnableStringEnumHandling = 1 << 0,
+        EnableScreamingCaseEnums = 1 << 1,
+        /// <summary>
+        /// This ONLY applies to System.Text.Json. Case-insensitive matching cannot be disabled with Newtonsoft.Json.
+        /// </summary>
+        EnableCaseInsensitiveJsonHandling = 1 << 2,
+        EnableCamelCaseSerialization = 1 << 3,
+        // Combine all to simplify the Common Case!
+        EnableAll = EnableStringEnumHandling | EnableScreamingCaseEnums | EnableCaseInsensitiveJsonHandling | EnableCamelCaseSerialization
+    }
+
     public interface IFlurlGraphQLConfig
     {
         string PersistedQueryPayloadFieldName { get; }
-        bool EnableAutomaticHandlingOfEnumsAsScreamingCaseStrings { get; }
+        JsonDefaults JsonProcessingDefaults { get; }
+        bool IsJsonProcessingFlagEnabled(JsonDefaults jsonFlag);
         FlurlGraphQLConfig Clone();
     }
 
@@ -16,7 +32,9 @@ namespace FlurlGraphQL
 
         public string PersistedQueryPayloadFieldName { get; set; } = DefaultPersistedQueryFieldName;
 
-        public bool EnableAutomaticHandlingOfEnumsAsScreamingCaseStrings { get; set; } = true;
+        public JsonDefaults JsonProcessingDefaults { get; set; } = JsonDefaults.EnableAll;
+
+        public bool IsJsonProcessingFlagEnabled(JsonDefaults jsonFlag) => JsonProcessingDefaults.HasFlag(jsonFlag);
 
         public static IFlurlGraphQLConfig DefaultConfig { get; private set; } = new FlurlGraphQLConfig();
 
@@ -27,7 +45,7 @@ namespace FlurlGraphQL
         public FlurlGraphQLConfig Clone() => new FlurlGraphQLConfig()
         {
             PersistedQueryPayloadFieldName = this.PersistedQueryPayloadFieldName,
-            EnableAutomaticHandlingOfEnumsAsScreamingCaseStrings = this.EnableAutomaticHandlingOfEnumsAsScreamingCaseStrings
+            JsonProcessingDefaults = this.JsonProcessingDefaults
         };
 
         /// <summary>
