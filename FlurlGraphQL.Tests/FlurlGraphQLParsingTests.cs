@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -10,6 +11,9 @@ using FlurlGraphQL.Tests.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Reflection;
+using Bogus.DataSets;
+using System.Runtime.Serialization;
 
 namespace FlurlGraphQL.Tests
 {
@@ -154,6 +158,55 @@ namespace FlurlGraphQL.Tests
             );
 
             Assert.IsTrue(isEqual, "The Test Json and the Round Trip Serialized Json do not match!");
+        }
+
+        [TestMethod]
+        [TestDataExecuteWithAllFlurlSerializerRequests]
+        public void TestJsonParsingForAllStringEnumTestCases(IFlurlRequest flurlRequest)
+        {
+            //The DEFAULT options for FlurlGraphQL System.Text.Json Serializer should already have the String Enum Converter added...
+            //var flurlGraphQLSystemTextJsonSerializer = new FlurlGraphQLSystemTextJsonSerializer(FlurlGraphQLSystemTextJsonSerializer.CreateDefaultSerializerOptions());
+            var graphqlApiRequest = flurlRequest.ToGraphQLRequest();
+
+            var graphqlJsonSerializer = graphqlApiRequest.GraphQLJsonSerializer;
+
+            TestContext.WriteLine($"[{graphqlJsonSerializer.GetType().Name}] Enum Test Cases Parsing ...");
+            bool isUsingSystemTextJson = graphqlJsonSerializer is FlurlGraphQLSystemTextJsonSerializer;
+
+            foreach (int enumIntValue in Enum.GetValues(typeof(EnumTestCase)))
+            {
+                var enumValue = (EnumTestCase)enumIntValue;
+                var enumField = enumValue.GetType().GetField(enumValue.ToString());
+                
+                var expectedEnumStringValue =
+                    enumField.GetCustomAttribute<EnumMemberAttribute>(true)?.Value
+                    //JsonPropertyName is ONLY supported by System.Text.Json; Newtonsoft did not support this attribute for Enums...
+                    ?? (isUsingSystemTextJson ? enumField.GetCustomAttribute<JsonPropertyNameAttribute>(true)?.Name : null)
+                    ?? enumValue.ToString().ToScreamingSnakeCase();
+
+                //Serialize the enum test case...
+                var serializedEnumValue = graphqlJsonSerializer.Serialize(enumValue);
+
+                //The serialized value should be a quoted string output from Json Serialization...
+                Assert.AreEqual($"\"{expectedEnumStringValue}\"", serializedEnumValue, $"The Enum Value [{enumValue}] did not serialize to the expected string value [{expectedEnumStringValue}]!");
+                
+                //Deserialize back to the Enum Value...
+                var deserializedEnumValue = graphqlJsonSerializer.Deserialize<EnumTestCase>(serializedEnumValue);
+                Assert.AreEqual(enumValue, deserializedEnumValue, $"The Enum Value [{enumValue}] did not deserialize back correctly from the serialized value [{serializedEnumValue}]!");
+
+                //Valdate actual values for the OVERRIDE cases using Attributes...
+                switch (enumValue)
+                {
+                    case EnumTestCase.TestPacalCaseEnumMember:
+                        Assert.AreEqual("TEST_PASCAL_CASE_ENUM_MEMBER_OVERRIDE", expectedEnumStringValue);
+                        break;
+                    case EnumTestCase.TestJsonPropertyNameSupportedBySystemTextJson when isUsingSystemTextJson:
+                        Assert.AreEqual("TEST.JsonPropertyName.Supported.By.System.Text.Json", expectedEnumStringValue);
+                        break;
+                }
+
+                TestContext.WriteLine($"Success: [{enumValue}] <==> [{serializedEnumValue}]");
+            }
         }
 
         [TestMethod]

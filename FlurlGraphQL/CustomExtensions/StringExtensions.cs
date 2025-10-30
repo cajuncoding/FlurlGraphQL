@@ -9,9 +9,13 @@ namespace FlurlGraphQL
     {
         public const string SPACE = " ";
         public const char UNDERSCORE = '_';
+        //This is a character literal representing the Unicode character with code point 0, also known as 
+        // the null terminator or NUL character. And often used to initialize a char variable to a known default or empty state.
+        public const char NULL_CHAR = '\0';
+
         private static readonly char[] _sentencePunctuationChars = { ' ', '.', ';', '?', '!' };
 
-        public static string ToScreamingCase(this string input)
+        public static string ToScreamingSnakeCase(this string input)
         {
             if (string.IsNullOrEmpty(input)) return input;
 
@@ -22,13 +26,23 @@ namespace FlurlGraphQL
             int index = 0;
             for (int i = 0; i < inputSpan.Length; i++)
             {
-                char c = inputSpan[i];
+                char currentChar = inputSpan[i];
+                char previousChar = i > 0 ? inputSpan[i - 1] : NULL_CHAR;
+                char nextChar = i < inputSpan.Length - 1 ? inputSpan[i + 1] : NULL_CHAR;
 
-                //Insert an underscore before uppercase letters (except first letter)
-                if (i > 0 && char.IsUpper(c))
+                //Insert an underscore before uppercase letters except when:
+                // - Currently on the first letter
+                // - When current, previous, or next character is already an Underscore
+                // - When already contiguous capital letters
+                // - When contingous lower-case (non-capital) letters; implicitly (by processing only Capital Letters)
+                if (i > 0
+                    && currentChar != UNDERSCORE && previousChar != UNDERSCORE && nextChar != UNDERSCORE
+                    && char.IsUpper(currentChar) && !char.IsUpper(previousChar)
+                ) {
                     outputSpan[index++] = UNDERSCORE;
+                }
 
-                outputSpan[index++] = char.ToUpper(c, CultureInfo.InvariantCulture);
+                outputSpan[index++] = char.ToUpper(currentChar, CultureInfo.InvariantCulture);
             }
 
             //return new string(outputSpan[..index]); // Convert the span into a string

@@ -27,9 +27,10 @@ namespace FlurlGraphQL.Tests
 	                    }
                     }
                 ")
-                .SetGraphQLVariable("reviewInput", new { 
+                .SetGraphQLVariable("reviewInput", new {
                     episode = "EMPIRE",
                     stars = 5,
+                    StarsEnum = StarsEnum.FiveStars,
                     commentary = "I love this Movie!"
                 })
                 .PostGraphQLQueryAsync()
@@ -47,6 +48,15 @@ namespace FlurlGraphQL.Tests
             TestContext.WriteLine(jsonText);
         }
     }
+
+    public enum StarsEnum
+    {
+        OneStar = 1,
+        TwoStars = 2,
+        ThreeStars = 3,
+        FourStars = 4,
+        FiveStars = 5
+    };
 
     public class CreateReviewPayload {
         public string Episode { get; set; }

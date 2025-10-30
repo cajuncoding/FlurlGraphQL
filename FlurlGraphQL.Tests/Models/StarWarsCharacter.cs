@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
@@ -33,6 +34,31 @@ namespace FlurlGraphQL.Tests.Models
         LightSideForGood = 1,
         [EnumMember(Value = "DARK_SIDE")]
         DarkSideForEvil = -1
+    }
+
+    internal enum EnumTestCase
+    {
+        //Use Description to Override Behavior
+        [EnumMember(Value = "TEST_PASCAL_CASE_ENUM_MEMBER_OVERRIDE")]
+        TestPacalCaseEnumMember = 0,
+        //Use JsonPropertyName to Override Behavior
+        [JsonPropertyName("TEST.JsonPropertyName.Supported.By.System.Text.Json")]
+        TestJsonPropertyNameSupportedBySystemTextJson = 8,
+        //Auto-Coversion tests with no attribute...
+        TestPascalCaseAutoConversion = 2,
+        //Auto-Coversion tests with no attribute...
+        TestV2 = 3,
+        //Auto-Coversion tests with no attribute...
+        Test__Strange__Pascal__Snake__Case__2 = 4,
+        //Auto-Coversion tests with no attribute...
+        testCamelCase = 5,
+        //Auto-Coversion tests with no attribute...
+        test_snake_case = 6,
+        //Auto-Coversion tests with no attribute...
+        TEST_SCREAMING_SNAKE_CASE = 7,
+        //JsonPropertyAttribute Test...
+        [Description("TEST.Description.Attribute")]
+        TestDescriptionAttribute = 9
     }
 
     internal class StarWarsCharacterWithSimpleEnum

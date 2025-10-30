@@ -4,6 +4,6 @@ namespace FlurlGraphQL.JsonProcessing
 {
     public class FlurlGraphQLSystemTextJsonScreamingCaseNamingPolicy : JsonNamingPolicy
     {
-        public override string ConvertName(string name) => name.ToScreamingCase();
+        public override string ConvertName(string name) => name.ToScreamingSnakeCase();
     }
 }

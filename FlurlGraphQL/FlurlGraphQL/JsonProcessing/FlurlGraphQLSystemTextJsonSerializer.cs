@@ -49,8 +49,8 @@ namespace FlurlGraphQL.JsonProcessing
                 graphqlJsonOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 
             //For compatibility with FlurlGraphQL v1 behavior (using Newtonsoft.Json) we need to provide support for String to Enum conversion along with support for enum annotations
-            //  via [EnumMember(Value ="CustomName")] annotation (compatible with Newtonsoft.Json). In addition, we now also support [Description("CustomName")] annotation for
-            //  easier syntax that is arguably more intuitive to use.
+            //  via [EnumMember(Value ="CustomName")] annotation (compatible with Newtonsoft.Json). In addition, we now also inherently support [JsonPropertyName("CustomName")] annotation for
+            //  easier syntax that is arguably more intuitive to use as this is provided natively by System.Text.Json.
             if (defaultJsonConfig.IsJsonProcessingFlagEnabled(JsonDefaults.EnableStringEnumHandling))
             {
                 //NOTE: For performance we KNOW we need to add this if the original options were not provided (e.g. null)...

@@ -120,6 +120,9 @@ To use this in your project, add the [FlurlGraphQL](https://www.nuget.org/packag
 To use this in your project with `Newtonsoft.Json` processing then add the add the [FlurlGraphQL.Newtonsoft](https://www.nuget.org/packages/FlurlGraphQL.Newtonsoft/) NuGet package to your project.
 
 ## Release Notes:
+### v2.0.6
+- Improve String Enum hanlding for additional use cases to ensure resulting Enums are properly formed (e.g. no unnecessary underscores being inserted in various cases).
+
 ### v2.0.5
 - Improve configuration support for Defeault Json Processing now with Enum Flags to make enabling/disabling the GraphQL Json Defaults much easier.
 
