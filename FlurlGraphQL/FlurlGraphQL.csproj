@@ -17,7 +17,7 @@
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
-			- Improve String Enum hanlding for additional use cases to ensure resulting Enums are properly formed (e.g. no unnecessary underscores being inserted in various cases).
+			- Improve String Enum handling for additional use cases to ensure resulting Enums are properly formed (e.g. no unnecessary underscores being inserted in various cases).
 
 			Prior Release Notes:
 			- Improve configuration support for Default Json Processing now with Enum Flags to make enabling/disabling the GraphQL Json Defaults much easier.

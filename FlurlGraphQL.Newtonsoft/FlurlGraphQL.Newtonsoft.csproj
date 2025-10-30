@@ -5,9 +5,9 @@
 					(because it had big issues using netstandard prior to .NET Framework 4.7) -->
 		<TargetFrameworks>net461;netstandard2.0;net6.0</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
-		<Version>2.0.3</Version>
-		<AssemblyVersion>2.0.3</AssemblyVersion>
-		<FileVersion>2.0.3</FileVersion>
+		<Version>2.0.6</Version>
+		<AssemblyVersion>2.0.6</AssemblyVersion>
+		<FileVersion>2.0.6</FileVersion>
 		<Authors>BBernard / CajunCoding</Authors>
 		<Company>CajunCoding</Company>
 		<Description>Newtonsoft JSON Supportt for FlurlGraphQL v2.0+ -- A GraphQL client extensions for Flurl.Http - lightweight, simplified, asynchronous, fluent GraphQL client API extensions for the amazing Flurl Http library!</Description>
@@ -18,9 +18,11 @@
 		<RepositoryUrl>https://github.com/cajuncoding/FlurlGraphQL</RepositoryUrl>
 		<PackageReleaseNotes>
 			Release Notes:
-			- Improve configuration support for Defeault Json Processing now with Enum Flags to make enabling/disabling the GraphQL Json Defaults much easier.
+			- Sync up the version with the base package FlurlGraphQL v2.0.6 to ensure compatibility and clarity on supported features from the core package.
+			- Improve String Enum handling for additional use cases to ensure resulting Enums are properly formed (e.g. no unnecessary underscores being inserted in various cases).
 
 			Prior Release Notes:
+			- Improve configuration support for Defeault Json Processing now with Enum Flags to make enabling/disabling the GraphQL Json Defaults much easier.
 			- Improve handling of Enums so that automatic processing as SCREAMING_CASE is handled now without the need to have [EnumMember("")] attributes on every enum value when the names match.
 			- Improve handling of GraphQL Serialization to now automatically use CamelCase for System.Text.Json &amp; Newtonsoft.Json; it was already being handled when de-serializing but not when serializing.
 			- Added new methods to help streamline the configuration of Json Serializer options/settings; a simple action/lambda can now be used to set Json Serialization Options/Settings.

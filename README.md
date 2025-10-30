@@ -121,7 +121,8 @@ To use this in your project with `Newtonsoft.Json` processing then add the add t
 
 ## Release Notes:
 ### v2.0.6
-- Improve String Enum hanlding for additional use cases to ensure resulting Enums are properly formed (e.g. no unnecessary underscores being inserted in various cases).
+- Improve String Enum handling for additional use cases to ensure resulting Enums are properly formed (e.g. no unnecessary underscores being inserted in various cases).
+- Sync up the FlurlGraphQL.Newtonsoft library version with the base package to ensure compatibility and clarity on supported features from the core package.
 
 ### v2.0.5
 - Improve configuration support for Defeault Json Processing now with Enum Flags to make enabling/disabling the GraphQL Json Defaults much easier.
