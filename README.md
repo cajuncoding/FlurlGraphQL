@@ -256,7 +256,7 @@ var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
         query ($first: Int, $after: String) {
 	        characters(first: $first, after: $after) {
                 totalCount
-                    pageInfo {
+                pageInfo {
                     hasNextPage
                     hasPreviousPage
                     startCursor
