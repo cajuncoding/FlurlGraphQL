@@ -32,7 +32,7 @@ then I do love-me-some-coffee!*
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($ids: [Int!], $friendsCount: Int!) {
-	    charactersById(ids: $ids) {
+	        charactersById(ids: $ids) {
                 personalIdentifier
                 name
                 friends(first: $friendsCount) {
@@ -484,28 +484,32 @@ public class StarWarsCharacter
 var results = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($ids: [Int!], $friendsCount: Int!) {
-	    charactersById(ids: $ids) {
-	        friends(first: $friendsCount) {
-	            nodes {
-	                friends(first: $friendsCount) {
-	                    nodes {
-	                        name
-	                        personalIdentifier
-	                    }
-		        }
-		    }
+	        charactersById(ids: $ids) {
+	            name
+	            personalIdentifier
+	            friends(first: $friendsCount) {
+	                nodes {
+	                    name
+	                    personalIdentifier
+	                    friends(first: $friendsCount) {
+	                        nodes {
+	                            name
+	                            personalIdentifier
+	                        }
+		                }
+		            }
+	            }
 	        }
-	    }
         }
     ")
     .SetGraphQLVariables(new { ids = new[] { 1000, 2001 }, friendsCount = 3 })
     .PostGraphQLQueryAsync()
     .ReceiveGraphQLQueryResults<StarWarsCharacter>();
 
-foreach (var result in results)
+foreach (var character in results)
 {
     //... process each of the 2 initial results by Id...
-    foreach (var friend in result.Friends)
+    foreach (var friend in character.Friends)
     {
         //... process each of the nested friend results, but without the need for 
         //     our Model to be complicated by the fact that this is a paginated result from GraphQL...
@@ -536,15 +540,15 @@ var json = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
             characterCreateOrUpdate(input: $newCharacter) {
                 result {
                     personalIdentifier
-	            name
-		}
-		errors {
-		    ... on Error {
-		        errorCode
-			message
-		    }
-		}
-	    }
+	                name
+		        }
+		        errors {
+		            ... on Error {
+		                errorCode
+			            message
+		            }
+		        }
+	        }
         }
     ")
     .SetGraphQLVariables(new { newCharacter: newCharacterModel })
@@ -570,15 +574,14 @@ var batchResults = await "https://graphql-star-wars.azurewebsites.net/api/graphq
         query ($first: Int) {
             characters(first: $first) {
                 nodes {
-	            personalIdentifier
-		    name
-	            height
-		}
-	    }
-
-	    charactersCount: characters {
+	                personalIdentifier
+		            name
+	                height
+		        }
+	        }
+	        charactersCount: characters {
                 totalCount
-	    }
+	        }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -598,22 +601,21 @@ You can always request the raw Json response that was returned by the GraphQL se
 Simply use the respective API based on if you want are using System.Text.Json (via `.ReceiveGraphQLRawSystemTextJsonResponse()`) 
 or Newtonsoft.Json (via `.ReceiveGraphQLRawNewtonsoftJsonResponse()`).
 
-*NOTE: You cannot receive `Newtonsoft.Json` raw json if the request was initialzied and executing using `System.Text.Json` serailizer and vice-versa; 
+*NOTE: You cannot receive `Newtonsoft.Json` raw json if the request was initialzied and executing using the `System.Text.Json` serailizer and vice-versa; 
 a runtime exception will be thrown becuase this would be a large performance impact that would likely go unnoticed if it was allowed.*
 
 ```csharp
-
 //For System.Text.Json Raw GraphQL response processing you will get a `JsonObject` result back for RAW Json handling!
 var jsonObject = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($first: Int) {
             characters(first: $first) {
                 nodes {
-	            personalIdentifier
-		    name
-	            height
-		}
-	    }
+	                personalIdentifier
+		            name
+	                height
+		        }
+	        }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -621,16 +623,16 @@ var jsonObject = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .ReceiveGraphQLRawSystemTextJsonResponse();
 
 //OR For Newtonsoft.Json Raw GraphQL response processing you will get a `JObject` result back (just as with v1.x) for RAW Json handling!
-var jsonObject = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
+var jObject = await "https://graphql-star-wars.azurewebsites.net/api/graphql"
     .WithGraphQLQuery(@"
         query ($first: Int) {
             characters(first: $first) {
                 nodes {
-	            personalIdentifier
-		    name
-	            height
-		}
-	    }
+	                personalIdentifier
+		            name
+	                height
+		        }
+	        }
         }
     ")
     .SetGraphQLVariables(new { first = 2 })
@@ -676,7 +678,7 @@ the `JsonDefaults` enum flags that can be set on the default configuration using
  - `EnableScreamingCaseEnums` -- Ensures that Enum strings are automatically converted to SCREAMING_CASE as is the default for GraphQL enums (e.g. HotChocolate GraphQL Server).
    - This has no effect if the above `EnableStringEnumHandling` is disabled; unless you manually implement the screaming case naming policies/strategy (e.g. `FlurlGraphQLSystemTextJsonScreamingCaseNamingPolicy`).
  - `EnableCamelCaseSerialization` -- Ensures that the Json serialization is compatible with GraphQL JSON conventions which use camelCase and are usually case sensitive (e.g. HotChocolate GraphQL Server).
- - `EnableCaseInsensitiveJsonHandling` -- Ensures that Json de-serialziation is not case sensitive because C# conventions for `PascalCase` will nearly always fail due to JSON conventions for `camelCase`.
+ - `EnableCaseInsensitiveJsonHandling` -- Ensures that Json de-serialziation is not case sensitive because otherwise C# conventions for `PascalCase` will nearly always fail due to JSON conventions for `camelCase`.
    - NOTE: This *ONLY* applies to `System.Text.Json` because case-insensitive matching cannot be disabled with `Newtonsoft.Json`.
  - `EnableAll` -- a convenience flag used by default to ensure all of the above are enabled to greatly simplify the common pitfalls for Json handlingw between C# & GraphQL.
 
@@ -689,6 +691,7 @@ and how the response is parsed when being de-serailized back into your model.*
 ```csharp
     //Control how default Json Options/Settings are initialzied (for either System.Text.Json or Newtonsoft)
     //NOTE: If Enabled, these global GraphQL Defaults will be enforced on any settings specified, even at the Request level.
+    //NOTE: These are usually be set in your program.cs or other bootstrapping code on application startup.
     FlurlGraphQLConfig.ConfigureDefaults(config =>
     {
         config.JsonProcessingDefaults = JsonDefaults.EnableAll;
@@ -707,7 +710,7 @@ and how the response is parsed when being de-serailized back into your model.*
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             WriteIndented = true,
-            //NOTE: THIS settings will not actually have any effect as the Framework always switches it ON to enable `case insensitive` processing.
+            //NOTE: THIS settings will not actually have any effect as the FlurlGraphQL framework always switches it ON to enable `case insensitive` processing.
             //      This is due to the fact that GraphQL Json and C# often have different naming conventions for the Json so the vast majority of requests 
             //      would fail if not enabled automatically!
             PropertyNameCaseInsensitive = true
